@@ -1,0 +1,545 @@
+/*
+ * PokeSight theme: dark surfaces for a second screen, Pokédex red header, Pokémon logo yellow as accent.
+ * Spacing follows a 4/8 px grid. Type colours: Scarlet/Violet palette (WikiDex); the label colour of each type
+ * was chosen for WCAG contrast >= 4.5:1 where white fails.
+ */
+.root {
+    /* Palette */
+    ps-pokedex-red: #e3350d;
+    ps-pokedex-red-dark: #b3200a;
+    ps-pokemon-yellow: #ffcb05;
+    ps-pokemon-blue: #2a75bb;
+    ps-surface-0: #121419;
+    ps-surface-1: #1b1e25;
+    ps-surface-2: #252932;
+    ps-surface-3: #313641;
+    ps-text: #f2f3f5;
+    ps-text-muted: #9aa0ae;
+    ps-good: #3ddc84;
+
+    /* Type colours (Scarlet/Violet) */
+    type-normal: #9fa19f;
+    type-fighting: #ff8000;
+    type-flying: #81b9ef;
+    type-poison: #9141cb;
+    type-ground: #915121;
+    type-rock: #afa981;
+    type-bug: #91a119;
+    type-ghost: #704170;
+    type-steel: #60a1b8;
+    type-fire: #e62829;
+    type-water: #2980ef;
+    type-grass: #3fa129;
+    type-electric: #fac000;
+    type-psychic: #ef4179;
+    type-ice: #3fd8ff;
+    type-dragon: #5060e1;
+    type-dark: #50413f;
+    type-fairy: #ef70ef;
+
+    -fx-base: ps-surface-3;
+    -fx-background: ps-surface-0;
+    -fx-control-inner-background: ps-surface-2;
+    -fx-accent: ps-pokedex-red;
+    -fx-focus-color: ps-pokemon-yellow;
+    -fx-faint-focus-color: transparent;
+    -fx-text-fill: ps-text;
+    -fx-font-size: 14px;
+    -fx-background-color: ps-surface-0;
+}
+
+.label {
+    -fx-text-fill: ps-text;
+}
+
+/* ---------- Buttons ---------- */
+.button, .toggle-button {
+    -fx-background-color: ps-surface-3;
+    -fx-background-radius: 10;
+    -fx-text-fill: ps-text;
+    -fx-padding: 8 14;
+    -fx-cursor: hand;
+}
+
+.button:hover, .toggle-button:hover {
+    -fx-background-color: derive(ps-surface-3, 20%);
+}
+
+.button.primary {
+    -fx-background-color: ps-pokedex-red;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.button.primary:hover {
+    -fx-background-color: derive(ps-pokedex-red, 12%);
+}
+
+.button.accent {
+    -fx-background-color: ps-pokemon-yellow;
+    -fx-text-fill: #1d1d1f;
+    -fx-font-weight: bold;
+}
+
+.button.accent:hover {
+    -fx-background-color: derive(ps-pokemon-yellow, 15%);
+}
+
+.button.ghost, .toggle-button.ghost {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(255, 255, 255, 0.35);
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+
+.button.ghost:hover, .toggle-button.ghost:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+}
+
+.toggle-button.ghost:selected {
+    -fx-background-color: rgba(255, 255, 255, 0.25);
+    -fx-border-color: white;
+}
+
+.button.small, .toggle-button.small {
+    -fx-font-size: 12px;
+    -fx-padding: 4 10;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+/* ---------- Inputs ---------- */
+.text-field, .combo-box {
+    -fx-background-color: ps-surface-2;
+    -fx-background-radius: 10;
+    -fx-border-color: ps-surface-3;
+    -fx-border-radius: 10;
+    -fx-text-fill: ps-text;
+    -fx-prompt-text-fill: ps-text-muted;
+    -fx-padding: 6 10;
+}
+
+.text-field:focused, .combo-box:focused {
+    -fx-border-color: ps-pokemon-yellow;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: ps-text;
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: ps-surface-2;
+}
+
+.combo-box-popup .list-cell:filled:hover, .combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: ps-pokedex-red;
+    -fx-text-fill: white;
+}
+
+.action-bar .search-field {
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-pref-width: 240;
+}
+
+.context-menu {
+    -fx-background-color: ps-surface-2;
+    -fx-background-radius: 10;
+    -fx-padding: 4;
+}
+
+.context-menu .menu-item:focused {
+    -fx-background-color: ps-pokedex-red;
+    -fx-background-radius: 6;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: ps-text;
+}
+
+/* ---------- Start screen ---------- */
+.start-view {
+    -fx-background-color: radial-gradient(center 50% 0%, radius 90%, #2a1416 0%, ps-surface-0 60%);
+    -fx-padding: 32;
+}
+
+.start-card {
+    -fx-background-color: ps-surface-1;
+    -fx-background-radius: 20;
+    -fx-padding: 32;
+    -fx-spacing: 24;
+    -fx-max-width: 620;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 24, 0, 0, 8);
+}
+
+.title {
+    -fx-font-family: "Fredoka SemiBold";
+    -fx-font-size: 36px;
+}
+
+.subtitle {
+    -fx-text-fill: ps-text-muted;
+}
+
+.form {
+    -fx-hgap: 16;
+    -fx-vgap: 12;
+}
+
+.form-label {
+    -fx-text-fill: ps-text-muted;
+    -fx-font-weight: bold;
+}
+
+.form .combo-box {
+    -fx-pref-width: 260;
+}
+
+.area-row {
+    -fx-spacing: 8;
+}
+
+.area-value {
+    -fx-background-color: ps-surface-2;
+    -fx-background-radius: 12;
+    -fx-padding: 4 10;
+    -fx-text-fill: ps-text-muted;
+    -fx-min-width: 210;
+}
+
+.area-value.selected {
+    -fx-text-fill: ps-good;
+}
+
+.hint {
+    -fx-text-fill: ps-text-muted;
+    -fx-font-size: 12px;
+}
+
+.start-button {
+    -fx-font-size: 16px;
+    -fx-padding: 12 0;
+    -fx-max-width: infinity;
+    -fx-background-radius: 12;
+}
+
+/* ---------- Area selection overlay ---------- */
+.area-selector {
+    -fx-background-color: rgba(0, 0, 0, 0.35);
+}
+
+.area-selection {
+    -fx-fill: rgba(255, 203, 5, 0.12);
+    -fx-stroke: ps-pokemon-yellow;
+    -fx-stroke-width: 2;
+}
+
+.area-hint {
+    -fx-font-size: 18px;
+    -fx-padding: 8 14;
+    -fx-background-color: rgba(18, 20, 25, 0.9);
+    -fx-background-radius: 10;
+}
+
+/* ---------- Battle view ---------- */
+/* The app's own title bar (HeaderBar); the native window buttons sit to its right. */
+.title-bar {
+    -fx-background-color: #0d0f13;
+    -fx-border-color: transparent transparent ps-pokedex-red transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-padding: 6 12 6 12;
+    -fx-min-height: 48;
+}
+
+.title-bar-controls {
+    -fx-padding: 0 12 0 0;
+}
+
+.app-title {
+    -fx-font-family: "Fredoka SemiBold";
+    -fx-font-size: 17px;
+    -fx-text-fill: white;
+}
+
+.app-subtitle {
+    -fx-font-size: 11px;
+    -fx-text-fill: ps-text-muted;
+}
+
+.status-pill {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-background-radius: 14;
+    -fx-padding: 4 12;
+    -fx-text-fill: ps-text;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+}
+
+.status-pill.state-in-battle {
+    -fx-background-color: ps-good;
+    -fx-text-fill: #0b2e1a;
+}
+
+.status-pill.state-error {
+    -fx-background-color: ps-pokemon-yellow;
+    -fx-text-fill: #1d1d1f;
+}
+
+.title-bar .button.ghost, .title-bar .toggle-button.ghost {
+    -fx-text-fill: ps-text;
+    -fx-border-color: rgba(255, 255, 255, 0.2);
+}
+
+.title-bar .toggle-button.ghost:selected {
+    -fx-background-color: ps-pokedex-red;
+    -fx-border-color: ps-pokedex-red;
+    -fx-text-fill: white;
+}
+
+/* ---------- Dialogs (undecorated, so they need their own frame) ---------- */
+.dialog-pane {
+    -fx-background-color: ps-surface-1;
+    -fx-border-color: ps-pokedex-red;
+    -fx-border-width: 2 0 0 0;
+}
+
+.dialog-pane > .header-panel {
+    -fx-background-color: ps-surface-2;
+}
+
+.dialog-pane > .header-panel .label {
+    -fx-font-family: "Fredoka SemiBold";
+    -fx-font-size: 16px;
+}
+
+.dialog-pane > .content.label {
+    -fx-text-fill: ps-text;
+}
+
+.action-bar {
+    -fx-background-color: ps-surface-1;
+    -fx-padding: 8 16;
+    -fx-spacing: 8;
+}
+
+.cards {
+    -fx-hgap: 16;
+    -fx-vgap: 16;
+    -fx-padding: 16;
+    -fx-row-valignment: top;
+}
+
+.scroll-pane, .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.empty-state {
+    -fx-spacing: 12;
+    -fx-padding: 48;
+}
+
+.empty-title {
+    -fx-font-family: "Fredoka SemiBold";
+    -fx-font-size: 22px;
+}
+
+.empty-text {
+    -fx-text-fill: ps-text-muted;
+}
+
+/* ---------- Pokémon card ---------- */
+.pokemon-card {
+    -fx-background-color: ps-surface-1;
+    -fx-background-radius: 16;
+    -fx-padding: 16;
+    -fx-spacing: 12;
+    -fx-pref-width: 440;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 12, 0, 0, 4);
+}
+
+.card-header {
+    -fx-spacing: 12;
+}
+
+.sprite-frame {
+    -fx-background-color: radial-gradient(radius 60%, rgba(255, 255, 255, 0.10), transparent);
+    -fx-background-radius: 40;
+    -fx-min-width: 80;
+    -fx-min-height: 80;
+}
+
+.pokemon-name {
+    -fx-font-family: "Fredoka SemiBold";
+    -fx-font-size: 24px;
+}
+
+.pokemon-meta {
+    -fx-text-fill: ps-text-muted;
+    -fx-font-size: 13px;
+}
+
+.read-text {
+    -fx-text-fill: ps-text-muted;
+    -fx-font-size: 12px;
+    -fx-font-style: italic;
+}
+
+.badges {
+    -fx-hgap: 6;
+    -fx-vgap: 6;
+}
+
+.type-badge {
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-padding: 3 12;
+    -fx-background-radius: 12;
+    -fx-text-fill: #1d1d1f;
+}
+
+.type-normal   { -fx-background-color: type-normal; }
+.type-fighting { -fx-background-color: type-fighting; }
+.type-flying   { -fx-background-color: type-flying; }
+.type-poison   { -fx-background-color: type-poison;   -fx-text-fill: white; }
+.type-ground   { -fx-background-color: type-ground;   -fx-text-fill: white; }
+.type-rock     { -fx-background-color: type-rock; }
+.type-bug      { -fx-background-color: type-bug; }
+.type-ghost    { -fx-background-color: type-ghost;    -fx-text-fill: white; }
+.type-steel    { -fx-background-color: type-steel; }
+.type-fire     { -fx-background-color: type-fire;     -fx-text-fill: white; }
+.type-water    { -fx-background-color: type-water; }
+.type-grass    { -fx-background-color: type-grass; }
+.type-electric { -fx-background-color: type-electric; }
+.type-psychic  { -fx-background-color: type-psychic; }
+.type-ice      { -fx-background-color: type-ice; }
+.type-dragon   { -fx-background-color: type-dragon;   -fx-text-fill: white; }
+.type-dark     { -fx-background-color: type-dark;     -fx-text-fill: white; }
+.type-fairy    { -fx-background-color: type-fairy; }
+
+.matchup-section {
+    -fx-spacing: 6;
+}
+
+.section-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: ps-text-muted;
+}
+
+.matchup-row {
+    -fx-spacing: 8;
+    -fx-alignment: center-left;
+}
+
+.multiplier {
+    -fx-font-family: "Fredoka SemiBold";
+    -fx-font-size: 13px;
+    -fx-min-width: 40;
+    -fx-alignment: center;
+    -fx-padding: 2 0;
+    -fx-background-radius: 8;
+    -fx-text-fill: white;
+}
+
+.multiplier.weak-4   { -fx-background-color: ps-pokedex-red; }
+.multiplier.weak     { -fx-background-color: #f0812a; -fx-text-fill: #1d1d1f; }
+.multiplier.resist   { -fx-background-color: ps-pokemon-blue; }
+.multiplier.resist-4 { -fx-background-color: #1c4f80; }
+.multiplier.immune   { -fx-background-color: ps-surface-3; }
+.multiplier.neutral  { -fx-background-color: ps-surface-3; }
+
+/* The team's best moves against this opponent. */
+.best-moves {
+    -fx-background-color: rgba(255, 203, 5, 0.07);
+    -fx-background-radius: 10;
+    -fx-padding: 8 10;
+}
+
+.best-moves-grid {
+    -fx-hgap: 8;
+    -fx-vgap: 6;
+    -fx-alignment: center-left;
+}
+
+.column-header {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: ps-text-muted;
+    -fx-opacity: 0.8;
+}
+
+.best-move-name {
+    -fx-font-weight: bold;
+}
+
+.best-move-user {
+    -fx-text-fill: ps-text-muted;
+    -fx-font-size: 12px;
+    -fx-graphic-text-gap: 6px;
+}
+
+.best-move-score {
+    -fx-font-family: "Fredoka SemiBold";
+    -fx-font-size: 15px;
+    -fx-text-fill: ps-pokemon-yellow;
+}
+
+/* ---------- Borderless mode: cards fill the window ---------- */
+.compact-view {
+    -fx-background-color: ps-surface-0;
+    -fx-spacing: 2;
+}
+
+/* Shown while the mouse is over the borderless window. */
+.hover-bar {
+    -fx-background-color: rgba(13, 15, 19, 0.92);
+    -fx-background-radius: 0 0 0 12;
+    -fx-border-color: transparent transparent ps-pokedex-red ps-pokedex-red;
+    -fx-border-width: 0 0 2 2;
+    -fx-border-radius: 0 0 0 12;
+    -fx-padding: 6 8;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 10, 0, 0, 2);
+}
+
+.pokemon-card.compact {
+    -fx-background-radius: 0;
+    -fx-effect: null;
+    -fx-padding: 12;
+    -fx-spacing: 8;
+}
+
+/* ---------- Team editor ---------- */
+.team-editor {
+    -fx-padding: 20;
+}
+
+.team-grid {
+    -fx-hgap: 10;
+    -fx-vgap: 10;
+    -fx-alignment: center-left;
+}
+
+.team-grid .search-field {
+    -fx-pref-width: 160;
+}
+
+.team-sprite {
+    -fx-background-color: ps-surface-2;
+    -fx-background-radius: 20;
+}
+
+/* ---------- Capture preview ---------- */
+.preview-images {
+    -fx-spacing: 12;
+    -fx-padding: 12;
+}
+
+.tooltip {
+    -fx-background-color: ps-surface-3;
+    -fx-background-radius: 6;
+    -fx-text-fill: ps-text;
+    -fx-font-size: 12px;
+    -fx-padding: 6 8;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.4), 8, 0, 0, 2);
+}

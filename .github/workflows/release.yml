@@ -1,0 +1,44 @@
+# Builds the portable Windows app and attaches it to a GitHub release.
+# Start it by pushing an annotated version tag; its first line becomes the release title, the rest the notes:
+#   git tag -a v1.0.0 -m "Title" -m "Notes" && git push origin v1.0.0
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # create the release and upload the zip
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read the tag message
+        shell: bash
+        run: |
+          # checkout does not keep the annotated tag object; fetch it to read its message
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+          git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME" > release-title.txt
+          git tag -l --format='%(contents:body)' "$GITHUB_REF_NAME" > release-notes.md
+          echo "title=$(cat release-title.txt)" >> "$GITHUB_OUTPUT"
+        id: tag
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Test and build the portable app
+        run: ./gradlew.bat test portableZip --console=plain
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          name: ${{ steps.tag.outputs.title }}
+          body_path: release-notes.md
+          files: build/distributions/PokeSight-*-windows.zip
+          generate_release_notes: true
