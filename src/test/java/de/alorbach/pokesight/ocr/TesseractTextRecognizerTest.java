@@ -19,12 +19,23 @@ import java.util.Optional;
 import java.util.OptionalInt;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 /** Runs the real Tesseract engine with the bundled models on rendered name boxes. */
 class TesseractTextRecognizerTest {
 
     private static final Ruleset GEN4 = RulesetLoader.load("gen4");
+
+    @Test
+    void closingTwiceIsHarmlessAndReadingAfterwardsFails() throws Exception {
+        TesseractTextRecognizer recognizer = new TesseractTextRecognizer(Language.EN);
+        recognizer.close();
+        recognizer.close(); // freeing the native engine twice would crash the JVM
+
+        assertThatThrownBy(() -> recognizer.read(new BufferedImage(8, 8, BufferedImage.TYPE_BYTE_GRAY)))
+                .isInstanceOf(IllegalStateException.class);
+    }
 
     @Test
     void readsAnEnglishNameBox() throws Exception {

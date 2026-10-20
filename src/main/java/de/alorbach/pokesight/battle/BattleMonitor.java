@@ -5,10 +5,13 @@ import de.alorbach.pokesight.capture.ScreenSource;
 
 import java.awt.image.BufferedImage;
 import java.time.Duration;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -19,9 +22,10 @@ import java.util.function.Consumer;
  * battle situation changes (Observer). All scanning runs on one worker thread, which is also
  * the thread the listener is called on.
  *
- * <p>Auto-detection: a battle starts when the same Pokémon are read in two scans in a row and
- * ends after {@value #END_AFTER_MISSES} scans without any recognized name. A manual scan shows
- * whatever it finds and stays until auto-detection sees a battle or the user resets.
+ * <p>Auto-detection: a battle starts (or its opponents change) when the same Pokémon are read in at least
+ * {@value #STABLE_READINGS} of the last {@value #RECENT_READINGS} scans and ends after {@value #END_AFTER_MISSES}
+ * scans without any recognized name. Levels and unreadable boxes do not count for that: OCR reads them less reliably
+ * than names. A manual scan shows whatever it finds and stays until auto-detection sees a battle or the user resets.
  */
 public final class BattleMonitor implements AutoCloseable {
 
@@ -39,6 +43,8 @@ public final class BattleMonitor implements AutoCloseable {
     }
 
     static final int END_AFTER_MISSES = 6;
+    static final int RECENT_READINGS = 3;
+    static final int STABLE_READINGS = 2;
     private static final System.Logger LOG = System.getLogger(BattleMonitor.class.getName());
     private static final Update WAITING_UPDATE = new Update(State.WAITING, "Waiting for a battle", List.of());
 
@@ -54,7 +60,7 @@ public final class BattleMonitor implements AutoCloseable {
 
     private volatile List<BufferedImage> lastCaptures = List.of();
     private Update current = WAITING_UPDATE;
-    private List<Sighting> previousReading = List.of();
+    private final Deque<List<Sighting>> recentReadings = new ArrayDeque<>();
     private boolean manual;
     private int misses;
 
@@ -84,7 +90,7 @@ public final class BattleMonitor implements AutoCloseable {
         worker.execute(() -> {
             manual = false;
             misses = 0;
-            previousReading = List.of();
+            recentReadings.clear();
             publish(WAITING_UPDATE);
         });
     }
@@ -99,23 +105,59 @@ public final class BattleMonitor implements AutoCloseable {
         try {
             List<Sighting> sightings = read();
             boolean recognized = sightings.stream().anyMatch(sighting -> sighting.pokemon().isPresent());
-            boolean stable = sameSightings(sightings, previousReading);
-            previousReading = sightings;
+            recentReadings.addLast(sightings);
+            if (recentReadings.size() > RECENT_READINGS) {
+                recentReadings.removeFirst();
+            }
+            long agreeing = recentReadings.stream().filter(reading -> BattleScanner.samePokemon(reading, sightings)).count();
             if (recognized) {
                 misses = 0;
-                if (stable) {
+                if (agreeing >= STABLE_READINGS) {
                     manual = false;
-                    publish(new Update(State.IN_BATTLE, "In battle", sightings));
+                    publish(new Update(State.IN_BATTLE, "In battle", withKnownLevels(sightings)));
                 }
             } else if (current.state() == State.IN_BATTLE && !manual && ++misses >= END_AFTER_MISSES) {
                 publish(WAITING_UPDATE);
             } else if (current.state() == State.ERROR) {
                 publish(WAITING_UPDATE);
             }
-        } catch (RuntimeException e) {
-            // Never let an exception kill the scheduler; keep polling.
-            LOG.log(System.Logger.Level.ERROR, "Reading the screen failed", e);
-            publish(new Update(State.ERROR, "Reading the screen failed: " + e.getMessage(), current.foes()));
+        } catch (RuntimeException | Error e) {
+            // Anything thrown out of a scheduled task silently ends the schedule: report it and keep polling.
+            failed("Reading the screen failed", e);
+        }
+    }
+
+    /**
+     * A level read once stays while the same Pokémon are shown: OCR reads levels much less reliably than names, so
+     * other scans often miss it. Missing levels are taken from the shown battle or the recent scans of the same Pokémon.
+     */
+    private List<Sighting> withKnownLevels(List<Sighting> sightings) {
+        List<List<Sighting>> sources = new ArrayList<>();
+        sources.add(current.foes());
+        sources.addAll(recentReadings.reversed());
+        List<Sighting> merged = new ArrayList<>();
+        for (int i = 0; i < sightings.size(); i++) {
+            Sighting sighting = sightings.get(i);
+            OptionalInt level = sighting.level();
+            for (List<Sighting> source : sources) {
+                if (level.isPresent()) {
+                    break;
+                }
+                if (source.size() == sightings.size() && source.get(i).pokemon().equals(sighting.pokemon())) {
+                    level = source.get(i).level();
+                }
+            }
+            merged.add(new Sighting(sighting.text(), sighting.pokemon(), level));
+        }
+        return merged;
+    }
+
+    /** Shows the failure; errors the JVM cannot recover from (out of memory) are passed on after that. */
+    private void failed(String what, Throwable e) {
+        LOG.log(System.Logger.Level.ERROR, what, e);
+        publish(new Update(State.ERROR, what + ": " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()), current.foes()));
+        if (e instanceof VirtualMachineError fatal) {
+            throw fatal;
         }
     }
 
@@ -130,9 +172,8 @@ public final class BattleMonitor implements AutoCloseable {
                 misses = 0;
                 publish(new Update(State.IN_BATTLE, "Scanned manually", sightings));
             }
-        } catch (RuntimeException e) {
-            LOG.log(System.Logger.Level.ERROR, "Manual scan failed", e);
-            publish(new Update(State.ERROR, "Reading the screen failed: " + e.getMessage(), current.foes()));
+        } catch (RuntimeException | Error e) {
+            failed("Reading the screen failed", e);
         }
     }
 

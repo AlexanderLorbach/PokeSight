@@ -198,7 +198,7 @@ public final class BattleView extends BorderPane {
     private void editTeam() {
         TeamEditor.show(getScene().getWindow(), team, calculator.ruleset(), language, sprites,
                 new MoveScan(store, gameId, calculator.ruleset(), language), saved -> {
-            store.saveGame(gameId, store.game(gameId).withTeam(saved));
+            Theme.saveOrWarn(getScene().getWindow(), () -> store.saveGame(gameId, store.game(gameId).withTeam(saved)));
             useTeam(saved);
         });
     }
