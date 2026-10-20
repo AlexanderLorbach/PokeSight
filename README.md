@@ -130,11 +130,14 @@ In a double battle the two opponents stand side by side (left and right), in the
 more opponents (triple battles, hordes) continue in rows of two. The default window size is 855 × 640, which every
 view fills; PokeSight remembers the size and position you leave it at.
 
-**Reading moves:** in the team editor, press **Moves area…** once per game and drag a rectangle around the move names
-of the game's move selection (the fight menu or the summary's move list). Then open a Pokémon's move selection in the
-game and press **Read** in its row: the damaging moves found fill the empty move fields. Status moves are skipped,
-they do not take part in the ranking. The move under the cursor is drawn highlighted and often not read: move the
-cursor and press **Read** again, moves already in the row are kept.
+**Reading your team:** in the team editor, press **Moves area…** once per game and drag a rectangle around the move
+names of the game's move selection (the fight menu or the summary's move list). Optionally press **Name area…** and
+drag a rectangle around the Pokémon's name on the same screen. Then open a Pokémon's move selection or summary in the
+game and press **Read** in a row: the Pokémon is filled in from the name (another Pokémon than the row had replaces it,
+with its moves), and the damaging moves found fill the empty move fields. Status moves are skipped, they do not take
+part in the ranking. The move under the cursor is drawn highlighted and often not read: move the cursor and press
+**Read** again, moves already in the row are kept. A nickname cannot be matched to a species: pick nicknamed Pokémon
+by hand, Read still fills in their moves.
 
 **Your best moves** ranks the team's moves per opponent by move power × type effectiveness × 1.5 if the move has its
 Pokémon's type (STAB) × your Pokémon's base Attack / the opponent's base Defense (Sp. Atk / Sp. Def for special
@@ -170,7 +173,7 @@ off.
 %APPDATA%\PokeSight\
 ├─ settings.yaml          last game and language, window position, size and maximized state, updateCheck
 └─ games\
-   └─ <game id>.yaml      screen areas (singleArea, doubleArea, ownArea, movesArea) and your team for that game
+   └─ <game id>.yaml      screen areas (singleArea, doubleArea, ownArea, movesArea, nameArea) and your team for that game
 ```
 
 ```yaml
@@ -179,6 +182,7 @@ singleArea: { x: 2, "y": 210, width: 757, height: 211 }   # screen pixels; null 
 doubleArea: { x: 1, "y": 104, width: 1099, height: 418 }
 ownArea: { x: 520, "y": 330, width: 400, height: 90 }    # your own name box: which of your team is out
 movesArea: { x: 40, "y": 520, width: 600, height: 160 }   # the move selection, read by the team editor
+nameArea: { x: 40, "y": 80, width: 260, height: 50 }     # the Pokémon's name next to its moves (team editor)
 team:
   - { pokemon: 4, form: 0, moves: [52, 10] }              # national dex number, form index, move ids
 ```

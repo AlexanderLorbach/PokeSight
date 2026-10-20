@@ -2,6 +2,7 @@ package de.alorbach.pokesight.ui;
 
 import de.alorbach.pokesight.battle.BattleMonitor;
 import de.alorbach.pokesight.battle.PokemonId;
+import de.alorbach.pokesight.game.GameDefinition;
 import de.alorbach.pokesight.matchup.EnemyAnalysis;
 import de.alorbach.pokesight.matchup.MatchupCalculator;
 import de.alorbach.pokesight.matchup.Team;
@@ -54,6 +55,7 @@ public final class BattleView extends BorderPane {
     private final MatchupCalculator calculator;
     private final Language language;
     private final String gameId;
+    private final GameDefinition game;
     private final SettingsStore store;
     private final SpriteLibrary sprites;
     private final List<SearchField.Option<PokemonId>> pokemonOptions;
@@ -84,6 +86,7 @@ public final class BattleView extends BorderPane {
         this.calculator = calculator;
         this.language = settings.language();
         this.gameId = settings.game().id();
+        this.game = settings.game();
         this.store = store;
         this.sprites = new SpriteLibrary(SpriteCache.forGame(settings.game()).orElse(null), calculator.ruleset());
         this.pokemonOptions = SearchField.pokemon(calculator.ruleset(), language);
@@ -212,7 +215,7 @@ public final class BattleView extends BorderPane {
 
     private void editTeam() {
         TeamEditor.show(getScene().getWindow(), team, calculator.ruleset(), language, sprites,
-                new MoveScan(store, gameId, calculator.ruleset(), language), saved -> {
+                new TeamScan(store, game, calculator.ruleset(), language), saved -> {
             Theme.saveOrWarn(getScene().getWindow(), () -> store.saveGame(gameId, store.game(gameId).withTeam(saved)));
             useTeam(saved);
         });

@@ -36,10 +36,10 @@ final class TeamEditor {
     private TeamEditor() {
     }
 
-    static void show(Window owner, Team team, Ruleset ruleset, Language language, SpriteLibrary sprites, MoveScan moveScan,
+    static void show(Window owner, Team team, Ruleset ruleset, Language language, SpriteLibrary sprites, TeamScan teamScan,
                      Consumer<Team> onSave) {
         Stage stage = new Stage();
-        Scene scene = new Scene(content(team, ruleset, language, sprites, moveScan, onSave, stage::close), Theme.DEFAULT_WIDTH, Theme.DEFAULT_HEIGHT);
+        Scene scene = new Scene(content(team, ruleset, language, sprites, teamScan, onSave, stage::close), Theme.DEFAULT_WIDTH, Theme.DEFAULT_HEIGHT);
         Theme.apply(scene);
         stage.initOwner(owner);
         stage.initModality(Modality.WINDOW_MODAL);
@@ -50,12 +50,12 @@ final class TeamEditor {
     }
 
     /**
-     * The editor's content: title bar with Moves area / Save / Cancel, six team slots and a note on how moves are
-     * ranked.
+     * The editor's content: title bar with Name area / Moves area / Save / Cancel, six team slots and a note on how
+     * moves are ranked.
      *
-     * @param moveScan reads moves from the screen; null hides the Read buttons (tests)
+     * @param teamScan reads a Pokémon's name and moves from the screen; null hides the Read buttons (tests)
      */
-    static BorderPane content(Team team, Ruleset ruleset, Language language, SpriteLibrary sprites, MoveScan moveScan,
+    static BorderPane content(Team team, Ruleset ruleset, Language language, SpriteLibrary sprites, TeamScan teamScan,
                               Consumer<Team> onSave, Runnable onClose) {
         List<SearchField.Option<PokemonId>> pokemonOptions = SearchField.pokemon(ruleset, language);
         List<SearchField.Option<Integer>> moveOptions = SearchField.moves(ruleset, language);
@@ -68,17 +68,18 @@ final class TeamEditor {
             Row row = new Row(pokemonOptions, moveOptions, sprites, member);
             rows.add(row);
             grid.addRow(i + 1, row.sprite, row.pokemon, row.moves.get(0), row.moves.get(1), row.moves.get(2), row.moves.get(3));
-            if (moveScan != null) {
-                grid.add(readButton(row, moveScan), 6, i + 1);
+            if (teamScan != null) {
+                grid.add(readButton(row, teamScan), 6, i + 1);
             }
             grid.add(row.clear, 7, i + 1);
         }
 
         Label hint = new Label("Ranking per opponent: move power × type effectiveness × 1.5 if the move has its "
-                + "Pokémon's type (STAB). Stats, level and abilities are not taken into account. "
-                + "Only damaging moves with a fixed power can be chosen. Read: open your Pokémon's move selection in "
-                + "the game and press Read in its row; the moves are read from the moves area (selected once per game). "
-                + "Read again after moving the cursor if a move was missed: the highlighted one is often not read.");
+                + "Pokémon's type (STAB) × your Pokémon's Attack (Sp. Atk) / the opponent's Defense (Sp. Def), base "
+                + "stats. Only damaging moves with a fixed power can be chosen. Read: open your Pokémon's move "
+                + "selection or summary in the game and press Read in a row; the moves are read from the moves area and "
+                + "the Pokémon from the name area (both selected once per game; the name area is optional). Read again "
+                + "after moving the cursor if a move was missed: the highlighted one is often not read.");
         hint.getStyleClass().add("hint");
         hint.setWrapText(true);
 
@@ -99,52 +100,66 @@ final class TeamEditor {
         VBox content = new VBox(16, grid, hint);
         content.getStyleClass().add("team-editor");
         BorderPane root = new BorderPane(content);
-        if (moveScan != null) {
-            Button area = new Button(moveScan.area().isPresent() ? "Moves area ✓" : "Moves area…");
-            area.getStyleClass().addAll("ghost", "small");
-            area.setTooltip(new Tooltip("Where the game shows your Pokémon's moves (the move selection)"));
-            area.setOnAction(event -> selectMovesArea(area, moveScan).ifPresent(selected -> area.setText("Moves area ✓")));
-            root.setTop(TitleBar.of("Your team", null, area, save, cancel));
+        if (teamScan != null) {
+            Button nameArea = new Button(teamScan.nameArea().isPresent() ? "Name area ✓" : "Name area…");
+            nameArea.getStyleClass().addAll("ghost", "small");
+            nameArea.setTooltip(new Tooltip("Where the game shows the Pokémon's name next to its moves (optional): "
+                    + "Read then also fills in the Pokémon"));
+            nameArea.setOnAction(event -> selectNameArea(nameArea, teamScan).ifPresent(selected -> nameArea.setText("Name area ✓")));
+            Button movesArea = new Button(teamScan.movesArea().isPresent() ? "Moves area ✓" : "Moves area…");
+            movesArea.getStyleClass().addAll("ghost", "small");
+            movesArea.setTooltip(new Tooltip("Where the game shows your Pokémon's moves (the move selection)"));
+            movesArea.setOnAction(event -> selectMovesArea(movesArea, teamScan).ifPresent(selected -> movesArea.setText("Moves area ✓")));
+            root.setTop(TitleBar.of("Your team", null, nameArea, movesArea, save, cancel));
         } else {
             root.setTop(TitleBar.of("Your team", null, save, cancel));
         }
         return root;
     }
 
-    private static Optional<CaptureRegion> selectMovesArea(Node owner, MoveScan moveScan) {
+    private static Optional<CaptureRegion> selectMovesArea(Node owner, TeamScan teamScan) {
         Optional<CaptureRegion> area = AreaSelector.select(owner.getScene().getWindow(),
                 "Drag a rectangle around the move names of the game's move selection");
-        area.ifPresent(selected -> Theme.saveOrWarn(owner.getScene().getWindow(), () -> moveScan.setArea(selected)));
+        area.ifPresent(selected -> Theme.saveOrWarn(owner.getScene().getWindow(), () -> teamScan.setMovesArea(selected)));
+        return area;
+    }
+
+    private static Optional<CaptureRegion> selectNameArea(Node owner, TeamScan teamScan) {
+        Optional<CaptureRegion> area = AreaSelector.select(owner.getScene().getWindow(),
+                "Drag a rectangle around the Pokémon's name on the same screen as its moves");
+        area.ifPresent(selected -> Theme.saveOrWarn(owner.getScene().getWindow(), () -> teamScan.setNameArea(selected)));
         return area;
     }
 
     /**
-     * Reads the moves on screen into the row: OCR runs off the JavaFX thread, the found moves fill the empty move
-     * fields (moves already in the row are skipped), so reading again after moving the cursor adds missed moves.
+     * Reads the Pokémon on screen into the row: OCR runs off the JavaFX thread. A name that shows another Pokémon than
+     * the row has replaces it, with its moves; otherwise the found moves fill the empty move fields (moves already in
+     * the row are skipped), so reading again after moving the cursor adds missed moves.
      */
-    private static Button readButton(Row row, MoveScan moveScan) {
+    private static Button readButton(Row row, TeamScan teamScan) {
         Button read = new Button("Read");
         read.getStyleClass().addAll("ghost", "small");
-        read.setTooltip(new Tooltip("Read this Pokémon's moves from the game's move selection"));
+        read.setTooltip(new Tooltip("Read this Pokémon (name area) and its moves (moves area) from the game"));
         read.setOnAction(event -> {
-            if (moveScan.area().isEmpty() && selectMovesArea(read, moveScan).isEmpty()) {
+            if (teamScan.movesArea().isEmpty() && selectMovesArea(read, teamScan).isEmpty()) {
                 return;
             }
             read.setDisable(true);
             read.setText("Reading…");
-            Thread.ofVirtual().name("move-reader").start(() -> {
+            Thread.ofVirtual().name("team-reader").start(() -> {
                 try {
-                    List<Integer> moves = moveScan.read();
+                    TeamScan.Reading reading = teamScan.read();
                     Platform.runLater(() -> {
-                        int added = row.addMoves(moves);
-                        read.setText(added == 0 ? "None found" : "Read");
+                        boolean newPokemon = reading.pokemon().filter(found -> row.setPokemon(found)).isPresent();
+                        int added = row.addMoves(reading.moves());
+                        read.setText(added == 0 && !newPokemon ? "None found" : "Read");
                         read.setDisable(false);
                     });
                 } catch (IOException | AWTException | RuntimeException e) {
                     Platform.runLater(() -> {
                         read.setText("Read");
                         read.setDisable(false);
-                        Theme.showError(read.getScene().getWindow(), "Cannot read the moves", e.getMessage());
+                        Theme.showError(read.getScene().getWindow(), "Cannot read the Pokémon", e.getMessage());
                     });
                 }
             });
@@ -164,9 +179,11 @@ final class TeamEditor {
         final SearchField<PokemonId> pokemon;
         final List<SearchField<Integer>> moves = new ArrayList<>();
         final Button clear = new Button("Clear");
+        private final SpriteLibrary sprites;
 
         Row(List<SearchField.Option<PokemonId>> pokemonOptions, List<SearchField.Option<Integer>> moveOptions,
             SpriteLibrary sprites, Team.Member member) {
+            this.sprites = sprites;
             sprite.getStyleClass().add("team-sprite");
             sprite.setMinSize(SPRITE_SIZE, SPRITE_SIZE);
             pokemon = new SearchField<>(pokemonOptions, "Pokémon…", true, chosen -> showSprite(sprites, chosen));
@@ -197,6 +214,22 @@ final class TeamEditor {
                 view.setPreserveRatio(true);
                 return List.of(view);
             }).orElse(List.of()));
+        }
+
+        /**
+         * Puts a Pokémon read from the screen into the row. Another Pokémon than the row had replaces it and its
+         * moves, which belong to the previous one; the same Pokémon keeps the moves.
+         *
+         * @return whether the row changed
+         */
+        boolean setPokemon(PokemonId found) {
+            if (pokemon.selected().filter(found::equals).isPresent()) {
+                return false;
+            }
+            pokemon.select(found);
+            moves.forEach(move -> move.select(null));
+            showSprite(sprites, found);
+            return true;
         }
 
         /** Puts the moves that are not in the row yet into its empty move fields; returns how many were added. */
