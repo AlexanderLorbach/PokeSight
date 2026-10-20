@@ -251,6 +251,9 @@ final class PokemonCard extends VBox {
                 Label multiplier = styled(new Label(format(group.getKey())), "multiplier", multiplierStyle(group.getKey()));
                 multiplier.setMinWidth(Region.USE_PREF_SIZE);
                 FlowPane types = badges(group.getValue(), chart, language);
+                // An HBox asks for the height before the width is known; at the default wrap length of 400 px a row
+                // of six badges that fits on one line got the height of two, and the multiplier sat below its badges.
+                types.prefWrapLengthProperty().bind(types.widthProperty());
                 HBox.setHgrow(types, Priority.ALWAYS);
                 HBox row = new HBox(multiplier, types);
                 row.getStyleClass().add("matchup-row");
