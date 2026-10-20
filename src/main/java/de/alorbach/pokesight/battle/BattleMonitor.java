@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -24,19 +25,28 @@ import java.util.function.Consumer;
  * <p>Auto-detection: a battle starts (or its opponents change) when the same Pokémon are read in at least
  * {@value #STABLE_READINGS} of the last {@value #RECENT_READINGS} scans and ends after {@value #END_AFTER_MISSES}
  * scans without any recognized name. A manual scan shows whatever it finds and stays until auto-detection sees a battle or the user resets.
+ *
+ * <p>If the area of the player's own name box is selected, the Pokémon read there in two of the last three scans is
+ * the player's active Pokémon; it is forgotten when the battle ends.
  */
 public final class BattleMonitor implements AutoCloseable {
 
     public enum State { WAITING, IN_BATTLE, ERROR }
 
-    public record Update(State state, String message, List<Sighting> foes) {
+    /** @param active the player's Pokémon read in their own name box; null if unknown */
+    public record Update(State state, String message, List<Sighting> foes, PokemonId active) {
         public Update {
             foes = List.copyOf(foes);
         }
 
+        public Update(State state, String message, List<Sighting> foes) {
+            this(state, message, foes, null);
+        }
+
         /** Same state, message and Pokémon; differences in the raw OCR text do not count. */
         boolean sameAs(Update other) {
-            return state == other.state && message.equals(other.message) && sameSightings(foes, other.foes);
+            return state == other.state && message.equals(other.message) && sameSightings(foes, other.foes)
+                    && Objects.equals(active, other.active);
         }
     }
 
@@ -48,6 +58,7 @@ public final class BattleMonitor implements AutoCloseable {
 
     private final ScreenSource screen;
     private final List<CaptureRegion> regions;
+    private final CaptureRegion ownRegion;
     private final BattleScanner scanner;
     private final Consumer<Update> listener;
     private final ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor(runnable -> {
@@ -59,16 +70,25 @@ public final class BattleMonitor implements AutoCloseable {
     private volatile List<BufferedImage> lastCaptures = List.of();
     private Update current = WAITING_UPDATE;
     private final Deque<List<Sighting>> recentReadings = new ArrayDeque<>();
+    private final Deque<Optional<PokemonId>> recentOwn = new ArrayDeque<>();
+    private PokemonId active;
     private boolean manual;
     private int misses;
 
     /** @param regions the areas to read; the one with the most recognized names wins */
     public BattleMonitor(ScreenSource screen, List<CaptureRegion> regions, BattleScanner scanner, Consumer<Update> listener) {
+        this(screen, regions, null, scanner, listener);
+    }
+
+    /** @param ownRegion the area of the player's own name box; null if not selected */
+    public BattleMonitor(ScreenSource screen, List<CaptureRegion> regions, CaptureRegion ownRegion, BattleScanner scanner,
+                         Consumer<Update> listener) {
         if (regions.isEmpty()) {
             throw new IllegalArgumentException("At least one capture region is required");
         }
         this.screen = Objects.requireNonNull(screen);
         this.regions = List.copyOf(regions);
+        this.ownRegion = ownRegion;
         this.scanner = Objects.requireNonNull(scanner);
         this.listener = Objects.requireNonNull(listener);
     }
@@ -89,6 +109,7 @@ public final class BattleMonitor implements AutoCloseable {
             manual = false;
             misses = 0;
             recentReadings.clear();
+            forgetActive();
             publish(WAITING_UPDATE);
         });
     }
@@ -112,12 +133,17 @@ public final class BattleMonitor implements AutoCloseable {
                 misses = 0;
                 if (agreeing >= STABLE_READINGS) {
                     manual = false;
-                    publish(new Update(State.IN_BATTLE, "In battle", sightings));
+                    publish(new Update(State.IN_BATTLE, "In battle", sightings, active));
+                } else if (current.state() == State.IN_BATTLE) {
+                    publish(new Update(current.state(), current.message(), current.foes(), active));
                 }
             } else if (current.state() == State.IN_BATTLE && !manual && ++misses >= END_AFTER_MISSES) {
+                forgetActive();
                 publish(WAITING_UPDATE);
             } else if (current.state() == State.ERROR) {
                 publish(WAITING_UPDATE);
+            } else if (current.state() == State.IN_BATTLE) {
+                publish(new Update(current.state(), current.message(), current.foes(), active));
             }
         } catch (RuntimeException | Error e) {
             // Anything thrown out of a scheduled task silently ends the schedule: report it and keep polling.
@@ -128,7 +154,8 @@ public final class BattleMonitor implements AutoCloseable {
     /** Shows the failure; errors the JVM cannot recover from (out of memory) are passed on after that. */
     private void failed(String what, Throwable e) {
         LOG.log(System.Logger.Level.ERROR, what, e);
-        publish(new Update(State.ERROR, what + ": " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()), current.foes()));
+        publish(new Update(State.ERROR, what + ": " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()),
+                current.foes(), current.active()));
         if (e instanceof VirtualMachineError fatal) {
             throw fatal;
         }
@@ -139,18 +166,21 @@ public final class BattleMonitor implements AutoCloseable {
         try {
             List<Sighting> sightings = read();
             if (sightings.isEmpty()) {
-                publish(new Update(current.state(), "Scan found no Pokémon name - use Add to pick one", current.foes()));
+                publish(new Update(current.state(), "Scan found no Pokémon name - use Add to pick one", current.foes(), active));
             } else {
                 manual = true;
                 misses = 0;
-                publish(new Update(State.IN_BATTLE, "Scanned manually", sightings));
+                publish(new Update(State.IN_BATTLE, "Scanned manually", sightings, active));
             }
         } catch (RuntimeException | Error e) {
             failed("Reading the screen failed", e);
         }
     }
 
-    /** Scans every region and keeps the reading with the most recognized names (first region on a tie). */
+    /**
+     * Scans every region and keeps the reading with the most recognized names (first region on a tie); also reads the
+     * player's own name box if its area is selected.
+     */
     private List<Sighting> read() {
         List<BufferedImage> captures = new ArrayList<>();
         List<List<Sighting>> readings = new ArrayList<>();
@@ -159,10 +189,31 @@ public final class BattleMonitor implements AutoCloseable {
             captures.add(image);
             readings.add(scanner.scan(image));
         }
+        if (ownRegion != null) {
+            BufferedImage image = screen.capture(ownRegion);
+            captures.add(image);
+            readOwn(scanner.scan(image).stream().findFirst().map(Sighting::pokemon));
+        }
         lastCaptures = List.copyOf(captures);
         return readings.stream()
                 .max(Comparator.comparingInt(List::size))
                 .orElseThrow();
+    }
+
+    /** The same Pokémon in two of the last three own-box readings becomes the active one; single misreads do not. */
+    private void readOwn(Optional<PokemonId> reading) {
+        recentOwn.addLast(reading);
+        if (recentOwn.size() > RECENT_READINGS) {
+            recentOwn.removeFirst();
+        }
+        if (reading.isPresent() && recentOwn.stream().filter(reading::equals).count() >= STABLE_READINGS) {
+            active = reading.get();
+        }
+    }
+
+    private void forgetActive() {
+        active = null;
+        recentOwn.clear();
     }
 
     private static boolean sameSightings(List<Sighting> a, List<Sighting> b) {

@@ -18,6 +18,7 @@ import de.alorbach.pokesight.ui.SessionSettings;
 import de.alorbach.pokesight.ui.StartView;
 import de.alorbach.pokesight.ui.Theme;
 import de.alorbach.pokesight.ui.WindowState;
+import de.alorbach.pokesight.update.UpdateCheck;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -29,16 +30,23 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /** Entry point: start screen (game, language, screen areas) -> battle view. Wires all components. */
 public final class PokeSightApp extends Application {
 
     private static final Duration SCAN_INTERVAL = Duration.ofMillis(700);
+    /** Learned letter shapes are also saved while playing, so a crash or a killed process loses little. */
+    private static final Duration GLYPH_SAVE_INTERVAL = Duration.ofMinutes(1);
     private static final System.Logger LOG = System.getLogger(PokeSightApp.class.getName());
 
     private Stage stage;
     private SettingsStore store;
     private Session session;
+    private StartView startView;
+    private UpdateCheck.Release newerRelease;
 
     public static void main(String[] args) {
         launch(args);
@@ -56,6 +64,19 @@ public final class PokeSightApp extends Application {
         WindowState.restore(stage, store);
         showStartView();
         stage.show();
+        if (store.app().checksForUpdates()) {
+            UpdateCheck.currentVersion().ifPresent(current -> UpdateCheck.newerThan(current)
+                    .thenAccept(release -> release.ifPresent(found -> Platform.runLater(() -> {
+                        newerRelease = found;
+                        showUpdate();
+                    }))));
+        }
+    }
+
+    private void showUpdate() {
+        if (newerRelease != null && startView != null && stage.getScene().getRoot() == startView) {
+            startView.showUpdate(newerRelease, page -> getHostServices().showDocument(page.toString()));
+        }
     }
 
     private void showStartView() {
@@ -68,7 +89,9 @@ public final class PokeSightApp extends Application {
             Platform.exit();
             return;
         }
-        stage.getScene().setRoot(new StartView(games, store, this::startSession));
+        startView = new StartView(games, store, this::startSession);
+        stage.getScene().setRoot(startView);
+        showUpdate();
     }
 
     private void startSession(SessionSettings settings) {
@@ -80,14 +103,22 @@ public final class PokeSightApp extends Application {
             GlyphFont glyphs = GlyphFont.load(glyphFile);
             BattleScanner scanner = new BattleScanner(recognizer, new NameMatcher(ruleset, settings.language(), settings.game().region()),
                     settings.game().capitalNames(), settings.game().floatingNames(), glyphs);
-            BattleView view = new BattleView(settings, new MatchupCalculator(ruleset), store, this::showStartView);
-            BattleMonitor monitor = new BattleMonitor(new RobotScreenSource(), settings.regions(), scanner,
+            BattleView view = new BattleView(settings, new MatchupCalculator(ruleset, !settings.game().withoutAbilities()),
+                    store, this::showStartView);
+            BattleMonitor monitor = new BattleMonitor(new RobotScreenSource(), settings.regions(), settings.ownRegion(), scanner,
                     update -> Platform.runLater(() -> view.show(update)));
             view.setOnScanNow(monitor::scanNow);
             view.setOnReset(monitor::reset);
             view.setCaptureSupplier(monitor::lastCaptures);
 
-            session = new Session(monitor, recognizer, glyphs, glyphFile);
+            ScheduledExecutorService saver = Executors.newSingleThreadScheduledExecutor(runnable -> {
+                Thread thread = new Thread(runnable, "glyph-saver");
+                thread.setDaemon(true);
+                return thread;
+            });
+            session = new Session(monitor, recognizer, glyphs, glyphFile, saver);
+            saver.scheduleWithFixedDelay(session::saveGlyphs, GLYPH_SAVE_INTERVAL.toSeconds(), GLYPH_SAVE_INTERVAL.toSeconds(),
+                    TimeUnit.SECONDS);
             stage.getScene().setRoot(view);
             monitor.start(SCAN_INTERVAL);
         } catch (IOException | AWTException | RuntimeException e) {
@@ -121,13 +152,14 @@ public final class PokeSightApp extends Application {
 
     /**
      * Resources that live as long as one game is being watched. The monitor stops before the learned letter shapes are
-     * saved and the OCR engine closes.
+     * saved a last time and the OCR engine closes.
      */
-    private record Session(BattleMonitor monitor, TextRecognizer recognizer, GlyphFont glyphs, Path glyphFile)
-            implements AutoCloseable {
+    private record Session(BattleMonitor monitor, TextRecognizer recognizer, GlyphFont glyphs, Path glyphFile,
+                           ScheduledExecutorService saver) implements AutoCloseable {
         @Override
         public void close() {
             try {
+                saver.shutdownNow();
                 monitor.close();
                 saveGlyphs();
             } finally {

@@ -7,3 +7,4 @@ languages: [EN, DE]
 spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69afd48dc1273da9033ede9c/sprites/pokemon/{name}.png"
 capitalNames: false      # names in mixed case ("Gengar") since Gen 5
 floatingNames: true      # the name floats above the opponent; only labels above HP bars are read
+withoutAbilities: true   # no abilities in this game

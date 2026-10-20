@@ -42,6 +42,16 @@ class GameCatalogTest {
     }
 
     @Test
+    void knowsGamesWithoutAbilitiesAndWithTerastallization() {
+        assertThat(game("lets-go").withoutAbilities()).isTrue();
+        assertThat(game("legends-arceus").withoutAbilities()).isTrue();
+        assertThat(game("legends-za").withoutAbilities()).isTrue();
+        assertThat(game("sword-shield").withoutAbilities()).isFalse();
+        assertThat(game("scarlet-violet").terastal()).isTrue();
+        assertThat(game("sword-shield").terastal()).isFalse();
+    }
+
+    @Test
     void writesNamesInCapitalsUntilGen4() {
         assertThat(game("red-blue").capitalNames()).isTrue();
         assertThat(game("heartgold-soulsilver").capitalNames()).isTrue();

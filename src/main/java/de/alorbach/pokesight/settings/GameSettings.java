@@ -13,31 +13,37 @@ import java.util.List;
  * @param doubleArea screen area with both name boxes in double battles; null if not selected
  * @param team       the player's team, by national dex number, form index and move ids
  * @param movesArea  screen area with the move selection, read by the team editor; null if not selected
+ * @param ownArea    screen area with the player's own name box, to know the active Pokémon; null if not selected
  */
-public record GameSettings(CaptureRegion singleArea, CaptureRegion doubleArea, List<TeamMember> team, CaptureRegion movesArea) {
+public record GameSettings(CaptureRegion singleArea, CaptureRegion doubleArea, List<TeamMember> team, CaptureRegion movesArea,
+                           CaptureRegion ownArea) {
 
-    public static final GameSettings DEFAULT = new GameSettings(null, null, List.of(), null);
+    public static final GameSettings DEFAULT = new GameSettings(null, null, List.of(), null, null);
 
     public GameSettings {
         team = team == null ? List.of() : List.copyOf(team);
     }
 
     public GameSettings withSingleArea(CaptureRegion area) {
-        return new GameSettings(area, doubleArea, team, movesArea);
+        return new GameSettings(area, doubleArea, team, movesArea, ownArea);
     }
 
     public GameSettings withDoubleArea(CaptureRegion area) {
-        return new GameSettings(singleArea, area, team, movesArea);
+        return new GameSettings(singleArea, area, team, movesArea, ownArea);
     }
 
     public GameSettings withTeam(Team newTeam) {
         return new GameSettings(singleArea, doubleArea, newTeam.members().stream()
                 .map(member -> new TeamMember(member.pokemon().speciesId(), member.pokemon().form(), member.moves()))
-                .toList(), movesArea);
+                .toList(), movesArea, ownArea);
     }
 
     public GameSettings withMovesArea(CaptureRegion area) {
-        return new GameSettings(singleArea, doubleArea, team, area);
+        return new GameSettings(singleArea, doubleArea, team, area, ownArea);
+    }
+
+    public GameSettings withOwnArea(CaptureRegion area) {
+        return new GameSettings(singleArea, doubleArea, team, movesArea, area);
     }
 
     public Team toTeam() {
