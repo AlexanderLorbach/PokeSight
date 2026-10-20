@@ -45,12 +45,21 @@ public final class HpBars {
     private static final double LABEL_HEIGHT = 0.42;
     private static final double LABEL_MARGIN = 0.25;
 
+    /**
+     * One opponent's label.
+     *
+     * @param area the area above the bar with the level and name line
+     * @param bar  the HP bar; the name is centred over it
+     */
+    public record Label(Rectangle area, Rectangle bar) {
+    }
+
     private HpBars() {
     }
 
-    /** The areas above the opponents' HP bars, top to bottom; each holds one opponent's level and name. */
-    public static List<Rectangle> labelAreas(BufferedImage image) {
-        List<Rectangle> areas = new ArrayList<>();
+    /** The labels above the opponents' HP bars, top to bottom. */
+    public static List<Label> labelAreas(BufferedImage image) {
+        List<Label> labels = new ArrayList<>();
         for (Rectangle bar : bars(image)) {
             if (bar.y >= image.getHeight() * OWN_BOX_FROM) {
                 continue;
@@ -60,11 +69,11 @@ public final class HpBars {
             Rectangle area = new Rectangle(bar.x - margin, bar.y - height, bar.width + 2 * margin, height)
                     .intersection(new Rectangle(0, 0, image.getWidth(), image.getHeight()));
             if (!area.isEmpty()) {
-                areas.add(area);
+                labels.add(new Label(area, bar));
             }
         }
-        areas.sort(Comparator.comparingInt((Rectangle area) -> area.y).thenComparingInt(area -> area.x));
-        return areas;
+        labels.sort(Comparator.comparingInt((Label label) -> label.area().y).thenComparingInt(label -> label.area().x));
+        return labels;
     }
 
     /** Flat rectangles of saturated colour: rows of bar-coloured runs stacked with nearly the same extent. */
@@ -99,7 +108,7 @@ public final class HpBars {
         done.addAll(open);
         return done.stream()
                 .filter(fill -> fill.height >= MIN_HEIGHT && fill.height <= MAX_HEIGHT)
-                .map(fill -> withEmptyPart(rgb, width, fill))
+                .map(fill -> withEmptyPart(rgb, width, height, fill))
                 .filter(bar -> bar.width >= MIN_WIDTH && bar.width >= bar.height * MIN_ASPECT
                         && inTrack(rgb, width, height, bar))
                 .toList();
@@ -116,9 +125,10 @@ public final class HpBars {
 
     /**
      * The coloured part of a bar and the dark, even empty part right of it, if most rows of the fill go on into it (the
-     * lighter edge rows may not). A bright frame or background ends the empty part.
+     * lighter edge rows may not). It ends before {@link #MAX_ASPECT} (at a frame or a brighter background) and differs
+     * from the pixels above and below it: a full bar in front of a dark wall has no empty part.
      */
-    private static Rectangle withEmptyPart(int[] rgb, int width, Rectangle fill) {
+    private static Rectangle withEmptyPart(int[] rgb, int width, int height, Rectangle fill) {
         int start = fill.x + fill.width + FILL_EDGE;
         int limit = Math.min(width, fill.x + fill.height * MAX_ASPECT);
         List<Integer> ends = new ArrayList<>();
@@ -136,24 +146,56 @@ public final class HpBars {
         }
         ends.sort(null);
         int end = ends.get(ends.size() / 2);
-        return isEven(rgb, width, fill, start, end) ? new Rectangle(fill.x, fill.y, end - fill.x, fill.height) : fill;
+        boolean bar = end < limit && isEven(rgb, width, fill, start, end) && standsOut(rgb, width, height, fill, start, end);
+        return bar ? new Rectangle(fill.x, fill.y, end - fill.x, fill.height) : fill;
+    }
+
+    /**
+     * The empty part is a band about as high as the fill: from its middle row up and down, within the fill's height,
+     * comes a row of mostly another colour (frame or scene). A dark, even wall behind a full bar goes on further.
+     */
+    private static boolean standsOut(int[] rgb, int width, int height, Rectangle fill, int start, int end) {
+        int middle = fill.y + fill.height / 2;
+        int empty = meanColour(rgb, width, start, end, middle);
+        return differentRowWithin(rgb, width, height, middle - 1, -1, fill.height, start, end, empty)
+                && differentRowWithin(rgb, width, height, middle + 1, 1, fill.height, start, end, empty);
+    }
+
+    private static boolean differentRowWithin(int[] rgb, int width, int height, int first, int step, int rows, int start,
+                                              int end, int colour) {
+        for (int y = first, row = 0; row < rows && y >= 0 && y < height; y += step, row++) {
+            int different = 0;
+            for (int x = start; x < end; x++) {
+                if (differsBy(rgb[y * width + x], colour) > EMPTY_TOLERANCE) {
+                    different++;
+                }
+            }
+            if (different >= (end - start) * MIN_TRACK_SHARE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static int meanColour(int[] rgb, int width, int start, int end, int y) {
+        long r = 0;
+        long g = 0;
+        long b = 0;
+        for (int x = start; x < end; x++) {
+            int pixel = rgb[y * width + x];
+            r += (pixel >> 16) & 0xFF;
+            g += (pixel >> 8) & 0xFF;
+            b += pixel & 0xFF;
+        }
+        int n = end - start;
+        return (int) (r / n) << 16 | (int) (g / n) << 8 | (int) (b / n);
     }
 
     /** An empty bar part has one colour per row, unlike sparkles or leaves on a dark background. */
     private static boolean isEven(int[] rgb, int width, Rectangle fill, int start, int end) {
         int even = 0;
         for (int y = fill.y; y < fill.y + fill.height; y++) {
-            long r = 0;
-            long g = 0;
-            long b = 0;
-            for (int x = start; x < end; x++) {
-                int pixel = rgb[y * width + x];
-                r += (pixel >> 16) & 0xFF;
-                g += (pixel >> 8) & 0xFF;
-                b += pixel & 0xFF;
-            }
-            int n = end - start;
-            int mean = (int) (r / n) << 16 | (int) (g / n) << 8 | (int) (b / n);
+            int mean = meanColour(rgb, width, start, end, y);
             for (int x = start; x < end; x++) {
                 if (differsBy(rgb[y * width + x], mean) <= EMPTY_TOLERANCE) {
                     even++;

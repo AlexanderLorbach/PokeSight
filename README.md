@@ -36,14 +36,14 @@ The name reading is checked on 254 real battle screenshots, at least five per ga
 | Diamond / Pearl | gen4 | 38 / 39 | | Sword / Shield | gen8 | 10 / 10 |
 | Platinum | gen4 | 42 / 42 | | Brilliant Diamond / Shining Pearl | gen8 | 6 / 6 |
 | HeartGold / SoulSilver | gen4 | 33 / 33 | | Legends: Arceus | gen8 | 9 / 9 |
-| | | | | Scarlet / Violet | gen9 | 12 / 15 |
+| | | | | Scarlet / Violet | gen9 | 14 / 15 |
 | | | | | Legends: Z-A | gen9 | 5 / 5 |
 
-That is 561 of 656 views (86 %). A missed view is usually a single scan: PokeSight scans every 0.7 s and a battle
+That is 563 of 656 views (86 %). A missed view is usually a single scan: PokeSight scans every 0.7 s and a battle
 starts as soon as two of the last three scans agree, so it is still detected as long as most scans read the name. The Game Boy, GBA and DS games work best. In Black/White and X/Y the narrow, outlined fonts are
 read less reliably. In Legends: Arceus, Scarlet/Violet and Legends: Z-A the name floats above the opponent in the 3D
-scene and is found by its HP bar, also when the bar is almost empty; a fainted opponent's empty bar is not found, and
-effects over the scene can still be misread as a name. If a game works badly for you, a
+scene and is found by its HP bar, also when the bar is almost empty; only a fainted opponent's empty bar is not found.
+Text of the scene is only taken for a name if it stands right over the bar. If a game works badly for you, a
 screenshot of your emulator window during a battle helps to improve it.
 
 > PokeSight is a fan project. It is not affiliated with, endorsed or sponsored by Nintendo, Game Freak, Creatures or

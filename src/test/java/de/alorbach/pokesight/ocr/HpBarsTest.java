@@ -43,7 +43,17 @@ class HpBarsTest {
             assertThat(bar.x).isEqualTo(200);
             assertThat(bar.width).isBetween(115, 120);
         });
-        assertThat(HpBars.labelAreas(image)).singleElement().satisfies(area -> assertThat(area.getMaxY()).isEqualTo(100));
+        assertThat(HpBars.labelAreas(image)).singleElement().satisfies(label -> assertThat(label.area().getMaxY()).isEqualTo(100));
+    }
+
+    @Test
+    void aFullBarInFrontOfADarkWallKeepsItsSize() {
+        fill(EMPTY, 0, 0, 640, 360); // a dark, even wall: not the bar's empty part
+        fill(Color.LIGHT_GRAY, 196, 96, 128, 16);
+        fill(GREEN, 200, 100, 120, 8);
+        fill(EMPTY, 320, 100, 4, 8); // the frame's dark inner border at the right end
+
+        assertThat(HpBars.bars(image)).containsExactly(new Rectangle(200, 100, 120, 8));
     }
 
     @Test

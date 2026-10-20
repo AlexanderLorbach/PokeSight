@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /** Reads the opponents' name boxes from a screenshot (a selected area or the whole screen). */
@@ -21,6 +22,11 @@ public final class BattleScanner {
     private static final double MIN_CAPITALS = 0.75;
     /** Characters OCR reads for a capital I at the start of a mixed-case name ("lgglybuff"). */
     private static final String CAPITAL_I_LOOK_ALIKES = "l|1";
+    /**
+     * A floating name stands over its HP bar: its box centre lies within the bar's width (centred in Legends: Z-A, not
+     * always in Scarlet/Violet). Text beside the bar is the 3D scene.
+     */
+    private static final double MAX_NAME_OFFSET = 0.5;
     /** Gap between two words, in letter heights, from which they belong to different name boxes. */
     private static final int MIN_BOX_GAP_LETTERS = 5;
 
@@ -57,22 +63,33 @@ public final class BattleScanner {
         }
         List<Sighting> sightings = new ArrayList<>();
         List<Rectangle> read = new ArrayList<>();
-        for (Rectangle label : HpBars.labelAreas(image)) {
-            if (read.stream().anyMatch(label::intersects)) {
+        for (HpBars.Label label : HpBars.labelAreas(image)) {
+            Rectangle area = label.area();
+            if (read.stream().anyMatch(area::intersects)) {
                 continue; // one bar found twice (e.g. its rounded ends as separate rows): one opponent
             }
+            double barCentre = (label.bar().getCenterX() - area.x) / area.width;
+            double maxOffset = MAX_NAME_OFFSET * label.bar().width / area.width;
+            BiPredicate<List<Word>, BufferedImage> centred = (box, prepared) -> Math.abs(ImagePreprocessor.sourceShare(prepared,
+                    (box.getFirst().left() + box.getLast().right()) / 2) - barCentre) <= maxOffset;
             // The name is the line right above the bar; anything higher up in the area is the scene behind the label.
-            Optional<Sighting> sighting = scanBoxes(image.getSubimage(label.x, label.y, label.width, label.height)).stream()
+            Optional<Sighting> sighting = scanBoxes(image.getSubimage(area.x, area.y, area.width, area.height), centred)
+                    .stream()
                     .reduce((upper, lower) -> lower);
             if (sighting.isPresent()) {
                 sightings.add(sighting.get());
-                read.add(label);
+                read.add(area);
             }
         }
         return sightings;
     }
 
     private List<Sighting> scanBoxes(BufferedImage image) {
+        return scanBoxes(image, (box, prepared) -> true);
+    }
+
+    /** @param accept whether a box of words of a prepared image may hold a name */
+    private List<Sighting> scanBoxes(BufferedImage image, BiPredicate<List<Word>, BufferedImage> accept) {
         List<List<Sighting>> readings = new ArrayList<>();
         for (ImagePreprocessor.TextColor textColor : ImagePreprocessor.TextColor.values()) {
             for (boolean joinStrokes : new boolean[]{false, true}) {
@@ -80,7 +97,9 @@ public final class BattleScanner {
                     List<Sighting> sightings = new ArrayList<>();
                     for (List<Word> line : lines(recognizer.read(prepared))) {
                         for (List<Word> box : boxes(line)) {
-                            toSighting(box).ifPresent(sightings::add);
+                            if (accept.test(box, prepared)) {
+                                toSighting(box).ifPresent(sightings::add);
+                            }
                         }
                     }
                     readings.add(sightings);
