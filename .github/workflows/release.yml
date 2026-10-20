@@ -34,7 +34,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
 
       - name: Test and build the portable app
-        run: ./gradlew.bat test portableZip --console=plain
+        run: ./gradlew.bat test ocrTest portableZip --console=plain
 
       - uses: softprops/action-gh-release@v3
         with:

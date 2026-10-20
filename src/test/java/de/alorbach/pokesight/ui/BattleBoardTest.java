@@ -3,6 +3,7 @@ package de.alorbach.pokesight.ui;
 import de.alorbach.pokesight.battle.BattleMonitor.State;
 import de.alorbach.pokesight.battle.PokemonId;
 import de.alorbach.pokesight.battle.Sighting;
+import de.alorbach.pokesight.ruleset.PokemonType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -53,6 +54,17 @@ class BattleBoardTest {
             assertThat(entry.pokemon()).isEqualTo(GENGAR);
             assertThat(entry.corrected()).isFalse();
         });
+    }
+
+    @Test
+    void teraTypeStaysWithItsPokemon() {
+        board.update(State.IN_BATTLE, List.of(new Sighting("GOLBAT Lv31", GOLBAT)));
+        board.terastallize(board.entries().getFirst(), PokemonType.FIRE);
+
+        assertThat(board.entries()).singleElement().extracting(BattleBoard.Entry::tera).isEqualTo(PokemonType.FIRE);
+
+        board.update(State.IN_BATTLE, List.of(new Sighting("GENGAR Lv40", GENGAR))); // another Pokémon in that slot
+        assertThat(board.entries()).singleElement().extracting(BattleBoard.Entry::tera).isNull();
     }
 
     @Test

@@ -4,6 +4,7 @@ import de.alorbach.pokesight.ocr.TesseractTextRecognizer;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.ruleset.Ruleset;
 import de.alorbach.pokesight.ruleset.RulesetLoader;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * {@code build.gradle.kts}), enlarged the way emulators show them, cropped to the area a user would select.
  * Gen 4 in detail (every window size, sharp and smoothed); all games: {@link GameScreenshotOcrTest}.
  */
+@Tag("ocr") // real OCR on screenshots: run by gradlew ocrTest, not test
 class ScreenshotOcrTest {
 
     private static final Ruleset GEN4 = RulesetLoader.load("gen4");

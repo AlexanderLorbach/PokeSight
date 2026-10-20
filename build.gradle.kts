@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "de.alorbach"
-version = "1.2.1"
+version = "1.3.0"
 
 java {
     toolchain {
@@ -143,9 +143,42 @@ application {
     applicationDefaultJvmArgs = jvmFlags
 }
 
+// The app's version as a resource, for the update check on the start screen (update.UpdateCheck).
+val generateVersion = tasks.register("generateVersion") {
+    val outputDir = layout.buildDirectory.dir("generated/version")
+    val appVersion = project.version.toString()
+    inputs.property("version", appVersion)
+    outputs.dir(outputDir)
+    doLast {
+        val file = outputDir.get().file("de/alorbach/pokesight/update/version.txt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(appVersion)
+    }
+}
+sourceSets.main {
+    resources.srcDir(generateVersion)
+}
+
+// Tests run on the class path.
+val testJvmArgs = listOf("--enable-native-access=ALL-UNNAMED", "-Djavafx.enablePreview=true", "-Djavafx.suppressPreviewWarning=true")
+
+// `gradlew test` runs the fast tests (seconds); the OCR tests on real screenshots take minutes and run with
+// `gradlew ocrTest`. `gradlew check` and the release workflow run both.
 tasks.test {
-    useJUnitPlatform()
-    jvmArgs("--enable-native-access=ALL-UNNAMED", "-Djavafx.enablePreview=true", "-Djavafx.suppressPreviewWarning=true") // tests run on the class path
+    useJUnitPlatform { excludeTags("ocr") }
+    jvmArgs(testJvmArgs)
+}
+val ocrTest = tasks.register<Test>("ocrTest") {
+    group = "verification"
+    description = "Runs the OCR tests on the downloaded battle screenshots (several minutes)."
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform { includeTags("ocr") }
+    jvmArgs(testJvmArgs)
+    shouldRunAfter(tasks.test)
+}
+tasks.check {
+    dependsOn(ocrTest)
 }
 
 jlink {

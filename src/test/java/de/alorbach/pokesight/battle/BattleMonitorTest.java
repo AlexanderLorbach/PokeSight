@@ -157,6 +157,28 @@ class BattleMonitorTest {
     }
 
     @Test
+    void readsTheActivePokemonFromTheOwnNameBox() {
+        CaptureRegion own = new CaptureRegion(0, 200, 256, 64);
+        BattleMonitor monitor = new BattleMonitor(region -> new BufferedImage(region.width(), region.height(), BufferedImage.TYPE_INT_RGB),
+                List.of(SINGLE), own, new BattleScanner(recognizer, MATCHER, false), updates::add);
+        for (int i = 0; i < 2; i++) {
+            // Every area is read four times (dark/light text, with and without joined strokes): opponent, then own box.
+            for (int read = 0; read < 4; read++) {
+                recognizer.showOnceLines("ZUBAT Lv12");
+            }
+            for (int read = 0; read < 4; read++) {
+                recognizer.showOnceLines("GENGAR Lv30");
+            }
+            monitor.poll();
+        }
+
+        assertThat(updates).last().satisfies(update -> {
+            assertThat(update.foes()).extracting(Sighting::pokemon).containsExactly(PokemonId.of(41));
+            assertThat(update.active()).isEqualTo(PokemonId.of(94));
+        });
+    }
+
+    @Test
     void manualScanShowsResultImmediatelyAndKeepsIt() {
         BattleMonitor monitor = monitor(SINGLE);
         recognizer.showLines("GENGAR Lv32"); // one scan: auto-detection alone would not start a battle yet
