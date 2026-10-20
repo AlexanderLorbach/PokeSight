@@ -324,10 +324,14 @@
 }
 
 .cards {
-    -fx-hgap: 16;
-    -fx-vgap: 16;
-    -fx-padding: 16;
-    -fx-row-valignment: top;
+    -fx-hgap: 12;
+    -fx-vgap: 12;
+    -fx-padding: 12;
+}
+
+.compact-grid {
+    -fx-hgap: 2;
+    -fx-vgap: 2;
 }
 
 .scroll-pane, .scroll-pane > .viewport {
@@ -354,7 +358,6 @@
     -fx-background-radius: 16;
     -fx-padding: 16;
     -fx-spacing: 12;
-    -fx-pref-width: 440;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 12, 0, 0, 4);
 }
 
@@ -511,17 +514,22 @@
 
 /* ---------- Team editor ---------- */
 .team-editor {
-    -fx-padding: 20;
+    -fx-padding: 16;
 }
 
 .team-grid {
-    -fx-hgap: 10;
+    -fx-hgap: 8;
     -fx-vgap: 10;
     -fx-alignment: center-left;
 }
 
+/* Sized so that the editor fills the default window (855 px) with six slots of a Pokémon and four moves. */
 .team-grid .search-field {
-    -fx-pref-width: 160;
+    -fx-pref-width: 112;
+}
+
+.team-grid .search-field.team-pokemon {
+    -fx-pref-width: 150;
 }
 
 .team-sprite {
@@ -543,3 +551,24 @@
     -fx-padding: 6 8;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.4), 8, 0, 0, 2);
 }
+
+/* A move's type colour: a bar on the left of move fields, move names and move suggestions. */
+.move-type-normal { -fx-border-color: transparent transparent transparent type-normal; -fx-border-width: 0 0 0 5; }
+.move-type-fighting { -fx-border-color: transparent transparent transparent type-fighting; -fx-border-width: 0 0 0 5; }
+.move-type-flying { -fx-border-color: transparent transparent transparent type-flying; -fx-border-width: 0 0 0 5; }
+.move-type-poison { -fx-border-color: transparent transparent transparent type-poison; -fx-border-width: 0 0 0 5; }
+.move-type-ground { -fx-border-color: transparent transparent transparent type-ground; -fx-border-width: 0 0 0 5; }
+.move-type-rock { -fx-border-color: transparent transparent transparent type-rock; -fx-border-width: 0 0 0 5; }
+.move-type-bug { -fx-border-color: transparent transparent transparent type-bug; -fx-border-width: 0 0 0 5; }
+.move-type-ghost { -fx-border-color: transparent transparent transparent type-ghost; -fx-border-width: 0 0 0 5; }
+.move-type-steel { -fx-border-color: transparent transparent transparent type-steel; -fx-border-width: 0 0 0 5; }
+.move-type-fire { -fx-border-color: transparent transparent transparent type-fire; -fx-border-width: 0 0 0 5; }
+.move-type-water { -fx-border-color: transparent transparent transparent type-water; -fx-border-width: 0 0 0 5; }
+.move-type-grass { -fx-border-color: transparent transparent transparent type-grass; -fx-border-width: 0 0 0 5; }
+.move-type-electric { -fx-border-color: transparent transparent transparent type-electric; -fx-border-width: 0 0 0 5; }
+.move-type-psychic { -fx-border-color: transparent transparent transparent type-psychic; -fx-border-width: 0 0 0 5; }
+.move-type-ice { -fx-border-color: transparent transparent transparent type-ice; -fx-border-width: 0 0 0 5; }
+.move-type-dragon { -fx-border-color: transparent transparent transparent type-dragon; -fx-border-width: 0 0 0 5; }
+.move-type-dark { -fx-border-color: transparent transparent transparent type-dark; -fx-border-width: 0 0 0 5; }
+.move-type-fairy { -fx-border-color: transparent transparent transparent type-fairy; -fx-border-width: 0 0 0 5; }
+.best-move-name { -fx-padding: 0 0 0 7; }

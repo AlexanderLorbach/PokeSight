@@ -45,7 +45,7 @@ import java.util.function.Function;
  */
 final class PokemonCard extends VBox {
 
-    private static final double SPRITE_SIZE = 80; // Gen 4 sprites are 80 x 80
+    private static final double SPRITE_SIZE = 80; // sprites are 56 (Gen 1) to 96 px (Gen 5 and later); scaled to this
     private static final double MINI_SPRITE_SIZE = 28;
     private static final int BEST_MOVES_SHOWN = 3;
 
@@ -124,8 +124,8 @@ final class PokemonCard extends VBox {
     }
 
     /**
-     * A small sprite cropped to the Pokémon itself: Gen 4 sprites leave much of their 80 x 80 frame empty, which would
-     * make small Pokémon a few pixels wide at this size.
+     * A small sprite cropped to the Pokémon itself: game sprites leave much of their frame empty, which would make
+     * small Pokémon a few pixels wide at this size.
      */
     private static ImageView miniSpriteView(Image image) {
         PixelReader pixels = image.getPixelReader();
@@ -202,12 +202,17 @@ final class PokemonCard extends VBox {
                     .map(species -> species.form(option.user().form()).name(language)).orElse("?");
             Label multiplier = styled(new Label(format(option.effectiveness())), "multiplier", multiplierStyle(option.effectiveness()));
             multiplier.setMinWidth(Region.USE_PREF_SIZE);
-            Label moveName = styled(new Label(move.name(language)), "best-move-name");
+            Label moveName = styled(new Label(move.name(language)), "best-move-name", SearchField.moveTypeStyle(move.type()));
             Label type = styled(new Label(ruleset.typeChart().name(move.type(), language).toUpperCase(Locale.ROOT)),
                     "type-badge", typeStyle(move.type()));
             Label by = styled(new Label(user + (option.stab() ? "  ·  STAB" : "")), "best-move-user");
             context.sprites().apply(option.user()).ifPresent(image -> by.setGraphic(miniSpriteView(image)));
             Label score = styled(new Label(String.valueOf(Math.round(option.score()))), "best-move-score");
+            // In a half-width card (double battle) only the Pokémon column may shorten its text.
+            moveName.setMinWidth(Region.USE_PREF_SIZE);
+            type.setMinWidth(Region.USE_PREF_SIZE);
+            score.setMinWidth(Region.USE_PREF_SIZE);
+            by.setMinWidth(0);
             moves.addRow(rowIndex++, multiplier, moveName, type, by, score);
         }
         VBox section = new VBox(styled(new Label("YOUR BEST MOVES"), "section-title"), moves);
@@ -218,6 +223,7 @@ final class PokemonCard extends VBox {
     private static Label columnHeader(String text, String explanation) {
         Label header = styled(new Label(text), "column-header");
         header.setTooltip(new Tooltip(explanation));
+        header.setMinWidth(Region.USE_PREF_SIZE);
         return header;
     }
 
