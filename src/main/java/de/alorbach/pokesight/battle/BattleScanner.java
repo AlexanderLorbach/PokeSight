@@ -12,12 +12,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /** Reads the opponents' name boxes from a screenshot (a selected area or the whole screen). */
 public final class BattleScanner {
 
     /** Share of upper-case letters a word needs to count as a name in games that write names in capitals. */
     private static final double MIN_CAPITALS = 0.75;
+    /** Characters OCR reads for a capital I at the start of a mixed-case name ("lgglybuff"). */
+    private static final String CAPITAL_I_LOOK_ALIKES = "l|1";
     /** Gap between two words, in letter heights, from which they belong to different name boxes. */
     private static final int MIN_BOX_GAP_LETTERS = 5;
 
@@ -58,8 +61,9 @@ public final class BattleScanner {
             if (read.stream().anyMatch(label::intersects)) {
                 continue; // one bar found twice (e.g. its rounded ends as separate rows): one opponent
             }
+            // The name is the line right above the bar; anything higher up in the area is the scene behind the label.
             Optional<Sighting> sighting = scanBoxes(image.getSubimage(label.x, label.y, label.width, label.height)).stream()
-                    .findFirst();
+                    .reduce((upper, lower) -> lower);
             if (sighting.isPresent()) {
                 sightings.add(sighting.get());
                 read.add(label);
@@ -152,7 +156,10 @@ public final class BattleScanner {
 
     /**
      * The Pokémon in one name box, if any of its words (or adjacent words) matches a name. Levels, HP and gender signs
-     * in the box are not read: they never match a name.
+     * in the box are not read: they never match a name. Floating labels are read in a busy 3D scene, so there a name has
+     * to start with a capital letter: lower-case noise then does not match short names ("ar Lok" is not Arbok). Pixel
+     * fonts of the boxed games are read with the wrong letter case too often for that (measured: 30 instead of 37 views
+     * of Black/White).
      */
     Optional<Sighting> toSighting(List<Word> line) {
         List<String> nameTokens = new ArrayList<>();
@@ -162,7 +169,7 @@ public final class BattleScanner {
             }
         }
         String text = String.join(" ", line.stream().map(Word::text).toList());
-        return candidates(nameTokens).stream()
+        return candidates(nameTokens, floatingNames ? BattleScanner::startsWithCapital : token -> true).stream()
                 .map(matcher::match)
                 .flatMap(Optional::stream)
                 .min(Comparator.comparingInt(NameMatcher.Match::distance))
@@ -175,13 +182,25 @@ public final class BattleScanner {
         return letters > 0 && capitals >= letters * MIN_CAPITALS;
     }
 
-    /** Single words, adjacent pairs ("MR." "MIME") and the whole line, in case OCR adds or splits words. */
-    private static List<String> candidates(List<String> tokens) {
-        List<String> candidates = new ArrayList<>(tokens);
-        for (int i = 0; i + 1 < tokens.size(); i++) {
-            candidates.add(tokens.get(i) + tokens.get(i + 1));
+    static boolean startsWithCapital(String word) {
+        return !word.isEmpty() && (Character.isUpperCase(word.charAt(0)) || CAPITAL_I_LOOK_ALIKES.indexOf(word.charAt(0)) >= 0);
+    }
+
+    /**
+     * Single words, adjacent pairs ("MR." "MIME") and the whole line, in case OCR adds or splits words; each starting
+     * with a word a name can start with.
+     */
+    private static List<String> candidates(List<String> tokens, Predicate<String> nameStart) {
+        List<String> candidates = new ArrayList<>();
+        for (int i = 0; i < tokens.size(); i++) {
+            if (nameStart.test(tokens.get(i))) {
+                candidates.add(tokens.get(i));
+                if (i + 1 < tokens.size()) {
+                    candidates.add(tokens.get(i) + tokens.get(i + 1));
+                }
+            }
         }
-        if (tokens.size() > 2) {
+        if (tokens.size() > 2 && nameStart.test(tokens.getFirst())) {
             candidates.add(String.join("", tokens));
         }
         return candidates;

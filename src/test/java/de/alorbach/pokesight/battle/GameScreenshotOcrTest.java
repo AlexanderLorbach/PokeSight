@@ -127,7 +127,7 @@ public class GameScreenshotOcrTest {
 
     /**
      * Minimum number of correctly read views per game (each screenshot at 1x, 2x smoothed and 3x; Full HD ones at
-     * 1x only): one below the views read on 2026-10-20 (554 of 656 in all), as single borderline views can
+     * 1x only): one below the views read on 2026-10-20 (561 of 656 in all), as single borderline views can
      * differ between runs of the native OCR engine. Not every view is read: the tests document how well each game
      * works and fail when a change makes a game worse. Raise a value when the OCR gets better.
      */
@@ -138,8 +138,8 @@ public class GameScreenshotOcrTest {
             Map.entry("black-white", 36), Map.entry("black-2-white-2", 29),
             Map.entry("x-y", 28), Map.entry("omega-ruby-alpha-sapphire", 28),
             Map.entry("sun-moon", 25), Map.entry("ultra-sun-ultra-moon", 19), Map.entry("lets-go", 6),
-            Map.entry("sword-shield", 8), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 7),
-            Map.entry("scarlet-violet", 7), Map.entry("legends-za", 2));
+            Map.entry("sword-shield", 8), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 8),
+            Map.entry("scarlet-violet", 11), Map.entry("legends-za", 4));
 
     static Stream<String> games() {
         return cases().stream().map(Case::game).distinct();

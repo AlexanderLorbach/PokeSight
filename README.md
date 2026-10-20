@@ -28,21 +28,22 @@ The name reading is checked on 254 real battle screenshots, at least five per ga
 |---|---|---|---|---|---|---|
 | Red / Blue | gen1 | 36 / 42 | | Black / White | gen5 | 37 / 54 |
 | Yellow | gen1 | 32 / 33 | | Black 2 / White 2 | gen5 | 30 / 45 |
-| Gold / Silver | gen2 | 28 / 33 | | X / Y | gen6 | 29 / 48 |
+| Gold / Silver | gen2 | 28 / 33 | | X / Y | gen6 | 28 / 48 |
 | Crystal | gen2 | 34 / 36 | | Omega Ruby / Alpha Sapphire | gen6 | 29 / 42 |
 | Ruby / Sapphire | gen3 | 37 / 39 | | Sun / Moon | gen7 | 26 / 27 |
 | Emerald | gen3 | 36 / 39 | | Ultra Sun / Ultra Moon | gen7 | 20 / 24 |
 | FireRed / LeafGreen | gen3 | 26 / 27 | | Let's Go, Pikachu! / Eevee! | lets-go | 7 / 8 |
-| Diamond / Pearl | gen4 | 38 / 39 | | Sword / Shield | gen8 | 9 / 10 |
+| Diamond / Pearl | gen4 | 38 / 39 | | Sword / Shield | gen8 | 10 / 10 |
 | Platinum | gen4 | 42 / 42 | | Brilliant Diamond / Shining Pearl | gen8 | 6 / 6 |
-| HeartGold / SoulSilver | gen4 | 33 / 33 | | Legends: Arceus | gen8 | 8 / 9 |
-| | | | | Scarlet / Violet | gen9 | 8 / 15 |
-| | | | | Legends: Z-A | gen9 | 3 / 5 |
+| HeartGold / SoulSilver | gen4 | 33 / 33 | | Legends: Arceus | gen8 | 9 / 9 |
+| | | | | Scarlet / Violet | gen9 | 12 / 15 |
+| | | | | Legends: Z-A | gen9 | 5 / 5 |
 
-That is 554 of 656 views (84 %). A missed view is usually a single scan: PokeSight scans every 0.7 s and a battle
+That is 561 of 656 views (86 %). A missed view is usually a single scan: PokeSight scans every 0.7 s and a battle
 starts as soon as two of the last three scans agree, so it is still detected as long as most scans read the name. The Game Boy, GBA and DS games work best. In Black/White and X/Y the narrow, outlined fonts are
-read less reliably; in Scarlet/Violet and Legends: Z-A the name floats above the opponent in the 3D scene and is found
-by its HP bar, which works in only about half of the cases (Legends: Arceus: 8 of 9). If a game works badly for you, a
+read less reliably. In Legends: Arceus, Scarlet/Violet and Legends: Z-A the name floats above the opponent in the 3D
+scene and is found by its HP bar, also when the bar is almost empty; a fainted opponent's empty bar is not found, and
+effects over the scene can still be misread as a name. If a game works badly for you, a
 screenshot of your emulator window during a battle helps to improve it.
 
 > PokeSight is a fan project. It is not affiliated with, endorsed or sponsored by Nintendo, Game Freak, Creatures or

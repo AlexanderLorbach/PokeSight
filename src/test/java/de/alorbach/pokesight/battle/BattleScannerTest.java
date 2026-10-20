@@ -40,6 +40,27 @@ class BattleScannerTest {
     }
 
     @Test
+    void floatingNamesStartWithACapital() {
+        BattleScanner floating = new BattleScanner(recognizer, matcher, false, true);
+
+        assertThat(floating.toSighting(words("ar", "Lok"))).isEmpty(); // scene noise, not Arbok
+        assertThat(floating.toSighting(words("* ae", "ra"))).isEmpty(); // not Abra
+        assertThat(floating.toSighting(words("lgglybuff"))).map(Sighting::pokemon).contains(PokemonId.of(174)); // l for I
+        assertThat(floating.toSighting(words("Slow", "oe"))).map(Sighting::pokemon).contains(PokemonId.of(79)); // split
+        assertThat(scanner.toSighting(words("ar", "Lok"))).map(Sighting::pokemon).contains(PokemonId.of(24)); // boxes: any case
+    }
+
+    private static List<Word> words(String... texts) {
+        List<Word> words = new java.util.ArrayList<>();
+        int x = 0;
+        for (String text : texts) {
+            words.add(new Word(text, x, 0, x + 10 * text.length(), 10));
+            x += 10 * text.length() + 10;
+        }
+        return words;
+    }
+
+    @Test
     void readsTheName() {
         recognizer.showLines("GENGAR Lv32");
 
