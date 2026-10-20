@@ -18,7 +18,6 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * End-to-end OCR on real Gen 4 battle screenshots (downloaded at build time, sources in {@code testScreenshots} in
+ * End-to-end OCR on real battle screenshots (downloaded at build time, sources in {@code testScreenshots} in
  * {@code build.gradle.kts}), enlarged the way emulators show them, cropped to the area a user would select.
+ * Gen 4 in detail (every window size, sharp and smoothed); all games: {@link GameScreenshotOcrTest}.
  */
 class ScreenshotOcrTest {
 
@@ -40,20 +40,20 @@ class ScreenshotOcrTest {
     private static final Rectangle DOUBLE_AREA = new Rectangle(0, 0, 130, 52);
 
     private static final Map<Language, BattleScanner> SCANNERS = new EnumMap<>(Language.class);
-    private static final List<TesseractTextRecognizer> RECOGNIZERS = new ArrayList<>();
+    private static final Map<Language, TesseractTextRecognizer> RECOGNIZERS = new EnumMap<>(Language.class);
 
     @BeforeAll
     static void startOcr() throws IOException {
         for (Language language : Language.values()) {
             TesseractTextRecognizer recognizer = new TesseractTextRecognizer(language);
-            RECOGNIZERS.add(recognizer);
+            RECOGNIZERS.put(language, recognizer);
             SCANNERS.put(language, new BattleScanner(recognizer, new NameMatcher(GEN4, language), true)); // Gen 4 writes names in capitals
         }
     }
 
     @AfterAll
     static void stopOcr() {
-        RECOGNIZERS.forEach(TesseractTextRecognizer::close);
+        RECOGNIZERS.values().forEach(TesseractTextRecognizer::close);
     }
 
     /** Emulator window sizes 1x to 4x, sharp and with melonDS's default screen filter (bilinear smoothing). */

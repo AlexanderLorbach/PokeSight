@@ -64,9 +64,21 @@ class NameMatcherTest {
 
     @Test
     void computesEditDistance() {
-        assertThat(NameMatcher.levenshtein("GENGAR", "GENGAR")).isZero();
-        assertThat(NameMatcher.levenshtein("GENGAP", "GENGAR")).isEqualTo(1);
-        assertThat(NameMatcher.levenshtein("GENAR", "GENGAR")).isEqualTo(1);
-        assertThat(NameMatcher.levenshtein("", "ABC")).isEqualTo(3);
+        assertThat(NameMatcher.ocrDistance("GENGAR", "GENGAR")).isZero();
+        assertThat(NameMatcher.ocrDistance("GENGAP", "GENGAR")).isEqualTo(2);
+        assertThat(NameMatcher.ocrDistance("GENAR", "GENGAR")).isEqualTo(2);
+        assertThat(NameMatcher.ocrDistance("", "ABC")).isEqualTo(6);
+        assertThat(NameMatcher.ocrDistance("SCHISSY", "SCHIGGY")).isEqualTo(2); // G/S look alike: half a letter each
+    }
+
+    @Test
+    void matchesTheRegionalFormInGamesOfThatRegion() {
+        Ruleset gen7 = RulesetLoader.load("gen7");
+        assertThat(new NameMatcher(gen7, Language.EN, "alola").match("Meowth"))
+                .map(NameMatcher.Match::pokemon).contains(new PokemonId(52, 1));    // Alolan Meowth
+        assertThat(new NameMatcher(gen7, Language.EN, null).match("Meowth"))
+                .map(NameMatcher.Match::pokemon).contains(PokemonId.of(52));
+        assertThat(new NameMatcher(gen7, Language.DE, "alola").match("Bisasam"))
+                .map(NameMatcher.Match::pokemon).contains(PokemonId.of(1));         // no regional form
     }
 }

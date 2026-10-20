@@ -46,7 +46,7 @@ public final class PokeSightApp extends Application {
     public void start(Stage stage) {
         this.stage = stage;
         this.store = SettingsStore.openDefault();
-        Scene scene = new Scene(new Pane(), 1000, 680);
+        Scene scene = new Scene(new Pane(), Theme.DEFAULT_WIDTH, Theme.DEFAULT_HEIGHT);
         Theme.apply(scene);
         stage.setTitle("PokeSight");
         Theme.decorate(stage);
@@ -74,8 +74,8 @@ public final class PokeSightApp extends Application {
         try {
             Ruleset ruleset = RulesetLoader.load(settings.game().ruleset());
             recognizer = new TesseractTextRecognizer(settings.language());
-            BattleScanner scanner = new BattleScanner(recognizer, new NameMatcher(ruleset, settings.language()),
-                    settings.game().capitalNames());
+            BattleScanner scanner = new BattleScanner(recognizer, new NameMatcher(ruleset, settings.language(), settings.game().region()),
+                    settings.game().capitalNames(), settings.game().floatingNames());
             BattleView view = new BattleView(settings, new MatchupCalculator(ruleset), store, this::showStartView);
             BattleMonitor monitor = new BattleMonitor(new RobotScreenSource(), settings.regions(), scanner,
                     update -> Platform.runLater(() -> view.show(update)));

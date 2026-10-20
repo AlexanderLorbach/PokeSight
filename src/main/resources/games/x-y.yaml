@@ -1,0 +1,7 @@
+# Pokémon X / Y (3DS)
+name: Pokémon X / Y
+ruleset: gen6
+languages: [EN, DE]
+# Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
+spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69afd48dc1273da9033ede9c/sprites/pokemon/versions/generation-vi/x-y/{name}.png"
+capitalNames: false      # names in mixed case ("Gengar") since Gen 5
