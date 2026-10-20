@@ -53,7 +53,7 @@ class TesseractTextRecognizerTest {
     @Test
     void findsNothingOnAnEmptyScreen() throws Exception {
         try (TesseractTextRecognizer recognizer = new TesseractTextRecognizer(Language.EN)) {
-            assertThat(recognizer.read(ImagePreprocessor.prepare(nameBoxes(), ImagePreprocessor.TextColor.DARK, false))).isEmpty();
+            assertThat(recognizer.read(ImagePreprocessor.prepare(nameBoxes(), ImagePreprocessor.TextColor.DARK, false).getFirst())).isEmpty();
         }
     }
 

@@ -10,23 +10,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.function.ToIntFunction;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Turns a screenshot into what OCR reads best: only the letters, black on white, at a size Tesseract handles well.
  *
- * <p>Game fonts are pixel fonts with a drop shadow, and their colour depends on the game: Diamond/Pearl use dark
- * text on light boxes, Platinum white text on dark boxes. So the caller tries both {@link TextColor}s. Steps:
+ * <p>Game fonts are pixel fonts with a drop shadow or an outline, and their colour depends on the game: some use dark
+ * text on light boxes, others white text on dark boxes. So the caller tries both {@link TextColor}s. Steps:
  * <ol>
  *   <li>Text pixels: on the text side of a limit between the text colour and the background. This drops the box
  *       and (for light text) the shadow.</li>
- *   <li>Letter height: the most common height of the connected shapes (all capitals of a pixel font share it).</li>
+ *   <li>Letter height: the most common height of the connected shapes (all capitals of a pixel font share it),
+ *       counted per shape and per pixel; if the two differ, both are tried.</li>
  *   <li>Only letter-high shapes are kept; box borders, HP bars and dark backgrounds confuse Tesseract's layout
  *       analysis. Optionally shapes are grouped on a widened mask to rejoin letters split by smoothing.</li>
  *   <li>Scaling to letters of about {@value #TARGET_LETTER_HEIGHT} px: whole-number pixel replication keeps the
  *       pixel shapes exact, clearly too large captures are shrunk with averaging.</li>
  * </ol>
- * The values were tuned on real Platinum and Diamond/Pearl screenshots at emulator sizes 1x-4x, sharp and smoothed
- * (see {@code ScreenshotOcrTest}).
+ * The values were tuned on real battle screenshots of every game at emulator sizes 1x-4x, sharp and smoothed (see
+ * {@code GameScreenshotOcrTest} and {@code ScreenshotOcrTest}).
  */
 public final class ImagePreprocessor {
 
@@ -40,8 +44,18 @@ public final class ImagePreprocessor {
      * screenshot tests: smaller values lose the blended strokes of smoothed output; 0.60 read the most cases.
      */
     private static final double TEXT_SIDE = 0.60;
+    /** Swept 0.10-0.50 on the screenshot tests: 0.10 and 0.25 read the same, 0.50 (the median) clearly worse. */
+    private static final double BACKGROUND_PERCENTILE = 0.25;
+    /** Light text is white: its colour channels differ by at most this much (smoothed edges blend in the background). */
+    private static final int MAX_LIGHT_TEXT_CHROMA = 64;
     private static final int MIN_LETTER_HEIGHT = 4;
+    private static final int BAR_MIN_ASPECT = 3;
+    private static final double MAX_LINE_LETTERS = 2.5;
+    private static final double MAX_COLUMN_LETTERS = 1.6;
+    private static final double BAR_MIN_FILL = 0.85;
     private static final double MIN_SHRINK = 0.6;
+    /** A factor this far above a whole number is also rounded up (1.2 -> 2, but not 1.1). */
+    private static final double ROUND_UP_FROM = 0.15;
     private static final byte BLACK = 0;
     private static final byte WHITE = (byte) 0xFF;
 
@@ -63,17 +77,70 @@ public final class ImagePreprocessor {
      * @param joinStrokes group pixels on a mask widened by one pixel. Smoothed (filtered) emulator output blurs letter
      *                    corners and splits letters into separate strokes, which this joins again; but it can also join
      *                    letters to a nearby box border. Callers try both. Only the original text pixels are output.
+     * @return one image per letter height candidate ({@link #letterHeight}, {@link #letterHeightByPixels}) and scale
+     *         factor (see {@link #scaled}); usually one or two
      */
-    public static BufferedImage prepare(BufferedImage source, TextColor textColor, boolean joinStrokes) {
+    public static List<BufferedImage> prepare(BufferedImage source, TextColor textColor, boolean joinStrokes) {
         int width = source.getWidth();
         int height = source.getHeight();
         boolean[] text = textMask(source, textColor);
         List<Shape> shapes = shapes(joinStrokes ? dilate(text, width, height) : text, width, height);
-        OptionalInt letterHeight = letterHeight(shapes, height);
-        if (letterHeight.isEmpty()) {
-            return pad(blank(width, height)); // nothing that looks like text
+        List<Integer> letterHeights = Stream.of(letterHeight(shapes, height), letterHeightByPixels(shapes, height))
+                .flatMapToInt(OptionalInt::stream)
+                .distinct()
+                .boxed()
+                .toList();
+        if (letterHeights.isEmpty()) {
+            return List.of(pad(blank(width, height))); // nothing that looks like text
         }
-        int letter = letterHeight.getAsInt();
+        List<BufferedImage> prepared = new ArrayList<>();
+        for (int letter : letterHeights) {
+            // Box borders touching the letters (white frames since Gen 5) make letter and frame one shape; without
+            // the lines the letters are separate shapes again.
+            boolean[] withoutLines = removeLines(text, width, height, letter);
+            List<Shape> letterShapes = shapes(joinStrokes ? dilate(withoutLines, width, height) : withoutLines, width, height);
+            BufferedImage letters = keepLetters(withoutLines, letterShapes, letter, width, height);
+            scaled(letters, (double) TARGET_LETTER_HEIGHT / letter).forEach(image -> prepared.add(pad(image)));
+        }
+        return prepared;
+    }
+
+    /**
+     * Without horizontal runs longer than {@value #MAX_LINE_LETTERS} letter heights and vertical runs longer than
+     * {@value #MAX_COLUMN_LETTERS} letter heights: no letter or word has those, borders and bars do.
+     */
+    static boolean[] removeLines(boolean[] mask, int width, int height, int letterHeight) {
+        boolean[] result = mask.clone();
+        int maxRow = (int) Math.round(letterHeight * MAX_LINE_LETTERS);
+        int maxColumn = (int) Math.round(letterHeight * MAX_COLUMN_LETTERS);
+        for (int y = 0; y < height; y++) {
+            int start = 0;
+            for (int x = 0; x <= width; x++) {
+                if (x == width || !mask[y * width + x]) {
+                    if (x - start > maxRow) {
+                        Arrays.fill(result, y * width + start, y * width + x, false);
+                    }
+                    start = x + 1;
+                }
+            }
+        }
+        for (int x = 0; x < width; x++) {
+            int start = 0;
+            for (int y = 0; y <= height; y++) {
+                if (y == height || !mask[y * width + x]) {
+                    if (y - start > maxColumn) {
+                        for (int clear = start; clear < y; clear++) {
+                            result[clear * width + x] = false;
+                        }
+                    }
+                    start = y + 1;
+                }
+            }
+        }
+        return result;
+    }
+
+    private static BufferedImage keepLetters(boolean[] text, List<Shape> shapes, int letter, int width, int height) {
         boolean[] letters = new boolean[width * height];
         for (Shape shape : shapes) {
             if (isLetterSized(shape, letter)) {
@@ -82,7 +149,7 @@ public final class ImagePreprocessor {
                 }
             }
         }
-        return pad(scale(toImage(letters, width, height), (double) TARGET_LETTER_HEIGHT / letter));
+        return toImage(letters, width, height);
     }
 
     /** Every pixel next to a text pixel (3 x 3 neighbourhood) becomes text too. */
@@ -104,21 +171,27 @@ public final class ImagePreprocessor {
 
     /**
      * Pixels on the text side of a limit between the text colour (darkest or brightest percentile, which ignores
-     * a few stray pixels) and the background (median). The limit sits closer to the text than the drop shadow is,
-     * but wide enough to keep the blended edges of smoothed (filtered) emulator output.
+     * a few stray pixels) and the background ({@value #BACKGROUND_PERCENTILE} percentile from the other end; the median
+     * fails when the battle scene fills most of the selection, its dark pixels are then taken for the background of
+     * dark text). The limit sits closer to the text than the drop shadow is, but wide enough to keep the blended edges
+     * of smoothed (filtered) emulator output. Light text is white in every game, so brightly coloured pixels (sky,
+     * water and HP bars behind the 3DS and Switch name boxes) are not text.
      */
     static boolean[] textMask(BufferedImage source, TextColor textColor) {
         int[] luminance = luminance(source);
+        int[] chroma = chroma(source);
         int[] sorted = luminance.clone();
         Arrays.sort(sorted);
         int onePercent = sorted.length / 100;
-        int median = sorted[sorted.length / 2];
+        int background = textColor == TextColor.DARK
+                ? sorted[(int) (sorted.length * (1 - BACKGROUND_PERCENTILE))]
+                : sorted[(int) (sorted.length * BACKGROUND_PERCENTILE)];
         int limit = textColor == TextColor.DARK
-                ? sorted[onePercent] + (int) ((median - sorted[onePercent]) * TEXT_SIDE)
-                : sorted[sorted.length - 1 - onePercent] - (int) ((sorted[sorted.length - 1 - onePercent] - median) * TEXT_SIDE);
+                ? sorted[onePercent] + (int) ((background - sorted[onePercent]) * TEXT_SIDE)
+                : sorted[sorted.length - 1 - onePercent] - (int) ((sorted[sorted.length - 1 - onePercent] - background) * TEXT_SIDE);
         boolean[] text = new boolean[luminance.length];
         for (int i = 0; i < luminance.length; i++) {
-            text[i] = textColor == TextColor.DARK ? luminance[i] <= limit : luminance[i] >= limit;
+            text[i] = textColor == TextColor.DARK ? luminance[i] <= limit : luminance[i] >= limit && chroma[i] <= MAX_LIGHT_TEXT_CHROMA;
         }
         return text;
     }
@@ -173,11 +246,24 @@ public final class ImagePreprocessor {
      * the image (box borders), not a thin vertical line. On a tie the taller height wins (capitals).
      */
     static OptionalInt letterHeight(List<Shape> shapes, int imageHeight) {
+        return mostCommonHeight(shapes, imageHeight, shape -> 1);
+    }
+
+    /**
+     * Like {@link #letterHeight}, but each shape counts with its pixels. 3D backgrounds of the 3DS and Switch games
+     * leave many tiny specks of the text colour, which outnumber the letters, but letters have far more pixels.
+     */
+    static OptionalInt letterHeightByPixels(List<Shape> shapes, int imageHeight) {
+        return mostCommonHeight(shapes, imageHeight, shape -> shape.pixels().length);
+    }
+
+    private static OptionalInt mostCommonHeight(List<Shape> shapes, int imageHeight, ToIntFunction<Shape> weight) {
         Map<Integer, Integer> counts = new HashMap<>();
         for (Shape shape : shapes) {
             int height = shape.height();
-            if (height >= MIN_LETTER_HEIGHT && height <= imageHeight / 2 && shape.width() * 4 >= height && shape.pixels().length >= height) {
-                counts.merge(height, 1, Integer::sum);
+            if (height >= MIN_LETTER_HEIGHT && height <= imageHeight / 2 && shape.width() * 4 >= height
+                    && shape.pixels().length >= height && !isBar(shape)) {
+                counts.merge(height, weight.applyAsInt(shape), Integer::sum);
             }
         }
         return counts.entrySet().stream()
@@ -187,29 +273,51 @@ public final class ImagePreprocessor {
     }
 
     /**
-     * Letters, words, digits and the "Lv" sign are about one letter high; small parts (dots) and shapes of a clearly
-     * different height (thin HP bars, box borders, backgrounds) are dropped.
+     * Letters, words, digits and the "Lv" sign are between half and twice the letter height: capitals of mixed-case
+     * fonts are about 1.6 times the lowercase height. Small parts (dots), clearly larger shapes (box borders,
+     * backgrounds) and solid bars are dropped.
      */
     private static boolean isLetterSized(Shape shape, int letterHeight) {
-        return shape.height() * 2 >= letterHeight && shape.height() * 2 <= letterHeight * 3;
+        return shape.height() * 2 >= letterHeight && shape.height() <= letterHeight * 2 && !isBar(shape);
+    }
+
+    /**
+     * A solid horizontal bar: HP and EXP bars can be about one letter high in the larger fonts since Gen 5. Words never
+     * fill most of their bounding box, not even with joined strokes.
+     */
+    private static boolean isBar(Shape shape) {
+        return shape.width() >= shape.height() * BAR_MIN_ASPECT && shape.pixels().length >= shape.width() * shape.height() * BAR_MIN_FILL;
     }
 
     /**
      * Whole-number pixel replication when enlarging keeps pixel shapes exact; area averaging when shrinking.
      * Letters up to about 1.5x the target are left alone: shrinking them thins smoothed strokes until they break.
+     * Between two whole factors both are returned: the pixel fonts up to Gen 4 read best with the nearest factor,
+     * the narrow and outlined fonts since Gen 5 with the next larger one.
      */
-    private static BufferedImage scale(BufferedImage image, double scale) {
-        if (scale >= MIN_SHRINK) {
-            int factor = Math.max(1, (int) Math.round(scale));
-            if (factor == 1) {
-                return image;
-            }
-            BufferedImage result = new BufferedImage(image.getWidth() * factor, image.getHeight() * factor, BufferedImage.TYPE_BYTE_GRAY);
-            Graphics2D graphics = result.createGraphics();
-            graphics.drawImage(image, 0, 0, result.getWidth(), result.getHeight(), null); // default: nearest neighbour
-            graphics.dispose();
-            return result;
+    private static List<BufferedImage> scaled(BufferedImage image, double scale) {
+        if (scale < MIN_SHRINK) {
+            return List.of(shrink(image, scale));
         }
+        return IntStream.of((int) Math.round(scale), (int) Math.ceil(scale - ROUND_UP_FROM))
+                .map(factor -> Math.max(1, factor))
+                .distinct()
+                .mapToObj(factor -> enlarge(image, factor))
+                .toList();
+    }
+
+    private static BufferedImage enlarge(BufferedImage image, int factor) {
+        if (factor == 1) {
+            return image;
+        }
+        BufferedImage result = new BufferedImage(image.getWidth() * factor, image.getHeight() * factor, BufferedImage.TYPE_BYTE_GRAY);
+        Graphics2D graphics = result.createGraphics();
+        graphics.drawImage(image, 0, 0, result.getWidth(), result.getHeight(), null); // default: nearest neighbour
+        graphics.dispose();
+        return result;
+    }
+
+    private static BufferedImage shrink(BufferedImage image, double scale) {
         int width = Math.max(1, (int) Math.round(image.getWidth() * scale));
         int height = Math.max(1, (int) Math.round(image.getHeight() * scale));
         BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
@@ -244,6 +352,20 @@ public final class ImagePreprocessor {
         graphics.drawImage(image, PADDING, PADDING, null);
         graphics.dispose();
         return result;
+    }
+
+    /** Colourfulness per pixel: largest minus smallest colour channel (0 for grey, white and black). */
+    private static int[] chroma(BufferedImage image) {
+        int width = image.getWidth();
+        int[] rgb = image.getRGB(0, 0, width, image.getHeight(), null, 0, width);
+        int[] chroma = new int[rgb.length];
+        for (int i = 0; i < rgb.length; i++) {
+            int r = (rgb[i] >> 16) & 0xFF;
+            int g = (rgb[i] >> 8) & 0xFF;
+            int b = rgb[i] & 0xFF;
+            chroma[i] = Math.max(r, Math.max(g, b)) - Math.min(r, Math.min(g, b));
+        }
+        return chroma;
     }
 
     private static int[] luminance(BufferedImage image) {

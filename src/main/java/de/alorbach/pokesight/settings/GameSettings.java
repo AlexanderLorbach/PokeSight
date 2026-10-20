@@ -12,27 +12,32 @@ import java.util.List;
  * @param singleArea screen area with the opponent's name box in single battles; null if not selected
  * @param doubleArea screen area with both name boxes in double battles; null if not selected
  * @param team       the player's team, by national dex number, form index and move ids
+ * @param movesArea  screen area with the move selection, read by the team editor; null if not selected
  */
-public record GameSettings(CaptureRegion singleArea, CaptureRegion doubleArea, List<TeamMember> team) {
+public record GameSettings(CaptureRegion singleArea, CaptureRegion doubleArea, List<TeamMember> team, CaptureRegion movesArea) {
 
-    public static final GameSettings DEFAULT = new GameSettings(null, null, List.of());
+    public static final GameSettings DEFAULT = new GameSettings(null, null, List.of(), null);
 
     public GameSettings {
         team = team == null ? List.of() : List.copyOf(team);
     }
 
     public GameSettings withSingleArea(CaptureRegion area) {
-        return new GameSettings(area, doubleArea, team);
+        return new GameSettings(area, doubleArea, team, movesArea);
     }
 
     public GameSettings withDoubleArea(CaptureRegion area) {
-        return new GameSettings(singleArea, area, team);
+        return new GameSettings(singleArea, area, team, movesArea);
     }
 
     public GameSettings withTeam(Team newTeam) {
         return new GameSettings(singleArea, doubleArea, newTeam.members().stream()
                 .map(member -> new TeamMember(member.pokemon().speciesId(), member.pokemon().form(), member.moves()))
-                .toList());
+                .toList(), movesArea);
+    }
+
+    public GameSettings withMovesArea(CaptureRegion area) {
+        return new GameSettings(singleArea, doubleArea, team, area);
     }
 
     public Team toTeam() {

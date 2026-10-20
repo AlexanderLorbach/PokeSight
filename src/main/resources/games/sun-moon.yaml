@@ -1,0 +1,9 @@
+# Pokémon Sun / Moon (3DS)
+name: Pokémon Sun / Moon
+ruleset: gen7
+languages: [EN, DE]
+# Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
+# PokeAPI has no PNG sprites of this game (only GIF/WebP, which JavaFX cannot show), so the default sprites are used.
+spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69afd48dc1273da9033ede9c/sprites/pokemon/{name}.png"
+capitalNames: false      # names in mixed case ("Gengar") since Gen 5
+region: alola            # wild Pokémon appear in their regional form

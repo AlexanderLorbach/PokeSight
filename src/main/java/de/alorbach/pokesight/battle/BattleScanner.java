@@ -1,9 +1,11 @@
 package de.alorbach.pokesight.battle;
 
+import de.alorbach.pokesight.ocr.HpBars;
 import de.alorbach.pokesight.ocr.ImagePreprocessor;
 import de.alorbach.pokesight.ocr.TextRecognizer;
 import de.alorbach.pokesight.ocr.Word;
 
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,34 +26,72 @@ public final class BattleScanner {
     private static final int MAX_LEVEL = 100;
     /** Share of upper-case letters a word needs to count as a name in games that write names in capitals. */
     private static final double MIN_CAPITALS = 0.75;
+    /** Gap between two words, in letter heights, from which they belong to different name boxes. */
+    private static final int MIN_BOX_GAP_LETTERS = 5;
 
     private final TextRecognizer recognizer;
     private final NameMatcher matcher;
     private final boolean capitalNames;
+    private final boolean floatingNames;
 
     /** @param capitalNames the game writes names in capitals; words in mixed case are then not taken for names */
     public BattleScanner(TextRecognizer recognizer, NameMatcher matcher, boolean capitalNames) {
+        this(recognizer, matcher, capitalNames, false);
+    }
+
+    /**
+     * @param floatingNames the game shows each opponent's name above it in the 3D scene instead of in a fixed box;
+     *                      only the labels above HP bars are read then (see {@link HpBars})
+     */
+    public BattleScanner(TextRecognizer recognizer, NameMatcher matcher, boolean capitalNames, boolean floatingNames) {
         this.recognizer = Objects.requireNonNull(recognizer);
         this.matcher = Objects.requireNonNull(matcher);
         this.capitalNames = capitalNames;
+        this.floatingNames = floatingNames;
     }
 
     /**
      * One entry per name box found, top to bottom; unrecognized text is only kept if it carries a level.
-     * The text colour depends on the game and the right letter grouping on the emulator's smoothing, so every
-     * combination is read and the reading with the most recognized names wins (see {@link ImagePreprocessor}).
+     * The text colour depends on the game, the right letter grouping on the emulator's smoothing and the letter height
+     * on the font, so every combination is read and the reading with the most recognized names wins (see
+     * {@link ImagePreprocessor}).
      */
     public List<Sighting> scan(BufferedImage image) {
+        if (!floatingNames) {
+            return scanBoxes(image);
+        }
+        List<Sighting> sightings = new ArrayList<>();
+        List<Rectangle> read = new ArrayList<>();
+        for (Rectangle label : HpBars.labelAreas(image)) {
+            if (read.stream().anyMatch(label::intersects)) {
+                continue; // one bar found twice (e.g. its rounded ends as separate rows): one opponent
+            }
+            Optional<Sighting> sighting = scanBoxes(image.getSubimage(label.x, label.y, label.width, label.height)).stream()
+                    .filter(found -> found.pokemon().isPresent())
+                    .findFirst();
+            if (sighting.isPresent()) {
+                sightings.add(sighting.get());
+                read.add(label);
+            }
+        }
+        return sightings;
+    }
+
+    private List<Sighting> scanBoxes(BufferedImage image) {
         List<Sighting> best = List.of();
         for (ImagePreprocessor.TextColor textColor : ImagePreprocessor.TextColor.values()) {
             for (boolean joinStrokes : new boolean[]{false, true}) {
-                List<Sighting> sightings = new ArrayList<>();
-                for (List<Word> line : lines(recognizer.read(ImagePreprocessor.prepare(image, textColor, joinStrokes)))) {
-                    toSighting(line).ifPresent(sightings::add);
-                }
-                if (recognizedCount(sightings) > recognizedCount(best)
-                        || (recognizedCount(sightings) == recognizedCount(best) && sightings.size() > best.size())) {
-                    best = sightings;
+                for (BufferedImage prepared : ImagePreprocessor.prepare(image, textColor, joinStrokes)) {
+                    List<Sighting> sightings = new ArrayList<>();
+                    for (List<Word> line : lines(recognizer.read(prepared))) {
+                        for (List<Word> box : boxes(line)) {
+                            toSighting(box).ifPresent(sightings::add);
+                        }
+                    }
+                    if (recognizedCount(sightings) > recognizedCount(best)
+                            || (recognizedCount(sightings) == recognizedCount(best) && sightings.size() > best.size())) {
+                        best = sightings;
+                    }
                 }
             }
         }
@@ -78,6 +118,23 @@ public final class BattleScanner {
         }
         lines.forEach(line -> line.sort(Comparator.comparingInt(Word::left)));
         return lines;
+    }
+
+    /**
+     * Splits a text line into name boxes: since Gen 5 the boxes of double battles, triple battles and hordes stand
+     * side by side. Within a box the widest gap (name to level) is about four letters; between boxes it is wider.
+     */
+    static List<List<Word>> boxes(List<Word> line) {
+        int[] heights = line.stream().mapToInt(word -> word.bottom() - word.top()).sorted().toArray();
+        int letterHeight = Math.max(1, heights[heights.length / 2]);
+        List<List<Word>> boxes = new ArrayList<>();
+        for (Word word : line) {
+            if (boxes.isEmpty() || word.left() - boxes.getLast().getLast().right() > letterHeight * MIN_BOX_GAP_LETTERS) {
+                boxes.add(new ArrayList<>());
+            }
+            boxes.getLast().add(word);
+        }
+        return boxes;
     }
 
     /**

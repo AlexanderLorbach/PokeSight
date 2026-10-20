@@ -12,9 +12,13 @@ import java.util.Objects;
  *                     {@link de.alorbach.pokesight.sprite.SpriteCache}); null if there are none
  * @param capitalNames the battle screen shows Pokémon names in capitals (Gen 1-4); OCR text in mixed case is then
  *                     ignored, which keeps names in other windows (code, chats) from being taken for a battle
+ * @param region       the game's region if it has regional forms (Sun/Moon: "alola"); a recognized species is then
+ *                     shown in its regional form. Null for games without them
+ * @param floatingNames the opponent's name floats above it in the 3D scene (Legends: Arceus, Scarlet/Violet,
+ *                     Legends: Z-A) instead of standing in a fixed name box
  */
 public record GameDefinition(String id, String name, String ruleset, List<Language> languages, String spriteUrl,
-                             boolean capitalNames) {
+                             boolean capitalNames, String region, boolean floatingNames) {
 
     public GameDefinition {
         Objects.requireNonNull(name, "name");
@@ -26,7 +30,7 @@ public record GameDefinition(String id, String name, String ruleset, List<Langua
     }
 
     GameDefinition withId(String newId) {
-        return new GameDefinition(newId, name, ruleset, languages, spriteUrl, capitalNames);
+        return new GameDefinition(newId, name, ruleset, languages, spriteUrl, capitalNames, region, floatingNames);
     }
 
     @Override
