@@ -26,23 +26,23 @@ The name reading is checked on 254 real battle screenshots, at least five per ga
 
 | Game | Ruleset | Read | | Game | Ruleset | Read |
 |---|---|---|---|---|---|---|
-| Red / Blue | gen1 | 33 / 42 | | Black / White | gen5 | 30 / 54 |
-| Yellow | gen1 | 32 / 33 | | Black 2 / White 2 | gen5 | 27 / 45 |
-| Gold / Silver | gen2 | 27 / 33 | | X / Y | gen6 | 24 / 48 |
-| Crystal | gen2 | 32 / 36 | | Omega Ruby / Alpha Sapphire | gen6 | 29 / 42 |
-| Ruby / Sapphire | gen3 | 36 / 39 | | Sun / Moon | gen7 | 26 / 27 |
-| Emerald | gen3 | 36 / 39 | | Ultra Sun / Ultra Moon | gen7 | 19 / 24 |
-| FireRed / LeafGreen | gen3 | 24 / 27 | | Let's Go, Pikachu! / Eevee! | lets-go | 5 / 8 |
-| Diamond / Pearl | gen4 | 34 / 39 | | Sword / Shield | gen8 | 8 / 10 |
+| Red / Blue | gen1 | 36 / 42 | | Black / White | gen5 | 37 / 54 |
+| Yellow | gen1 | 32 / 33 | | Black 2 / White 2 | gen5 | 30 / 45 |
+| Gold / Silver | gen2 | 28 / 33 | | X / Y | gen6 | 29 / 48 |
+| Crystal | gen2 | 34 / 36 | | Omega Ruby / Alpha Sapphire | gen6 | 29 / 42 |
+| Ruby / Sapphire | gen3 | 37 / 39 | | Sun / Moon | gen7 | 26 / 27 |
+| Emerald | gen3 | 36 / 39 | | Ultra Sun / Ultra Moon | gen7 | 20 / 24 |
+| FireRed / LeafGreen | gen3 | 26 / 27 | | Let's Go, Pikachu! / Eevee! | lets-go | 7 / 8 |
+| Diamond / Pearl | gen4 | 38 / 39 | | Sword / Shield | gen8 | 9 / 10 |
 | Platinum | gen4 | 42 / 42 | | Brilliant Diamond / Shining Pearl | gen8 | 6 / 6 |
-| HeartGold / SoulSilver | gen4 | 31 / 33 | | Legends: Arceus | gen8 | 4 / 9 |
-| | | | | Scarlet / Violet | gen9 | 6 / 15 |
+| HeartGold / SoulSilver | gen4 | 33 / 33 | | Legends: Arceus | gen8 | 8 / 9 |
+| | | | | Scarlet / Violet | gen9 | 8 / 15 |
 | | | | | Legends: Z-A | gen9 | 3 / 5 |
 
-A missed view is usually a single scan: PokeSight scans every 0.7 s, so a battle is still detected as long as most
-scans read the name. The Game Boy, GBA and DS games work best. In Black/White and X/Y the narrow, outlined fonts are
-read less reliably; in Scarlet/Violet, Legends: Arceus and Legends: Z-A the name floats above the opponent in the 3D
-scene and is found by its HP bar, which works in only about half of the cases. If a game works badly for you, a
+That is 554 of 656 views (84 %). A missed view is usually a single scan: PokeSight scans every 0.7 s and a battle
+starts as soon as two of the last three scans agree, so it is still detected as long as most scans read the name. The Game Boy, GBA and DS games work best. In Black/White and X/Y the narrow, outlined fonts are
+read less reliably; in Scarlet/Violet and Legends: Z-A the name floats above the opponent in the 3D scene and is found
+by its HP bar, which works in only about half of the cases (Legends: Arceus: 8 of 9). If a game works badly for you, a
 screenshot of your emulator window during a battle helps to improve it.
 
 > PokeSight is a fan project. It is not affiliated with, endorsed or sponsored by Nintendo, Game Freak, Creatures or
@@ -98,7 +98,7 @@ The first build downloads the OCR models and the test screenshots (see [Licenses
 
 | Control | Purpose |
 |---|---|
-| automatic | A battle starts when the same names are read in two scans in a row (every 0.7 s); it ends after about 4 s without any name |
+| automatic | A battle starts when the same names are read in two of the last three scans (every 0.7 s); it ends after about 4 s without any name |
 | **Scan now** | Reads the screen immediately, even if auto-detection did not trigger |
 | **Team** | Your team: up to six Pokémon with up to four moves each; **Read** fills a Pokémon's moves from the game (see below) |
 | **Change** (on a card) | Search for the correct Pokémon if a name was misread; also for alternate forms like Sandy Wormadam |
