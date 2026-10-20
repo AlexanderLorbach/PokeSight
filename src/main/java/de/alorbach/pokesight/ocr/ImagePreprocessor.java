@@ -40,10 +40,17 @@ public final class ImagePreprocessor {
     /** About twice the DS font size; clearly larger or smaller letters were read worse. */
     static final int TARGET_LETTER_HEIGHT = 18;
     /**
-     * Where the text/background limit lies between the text colour (0) and the background (1). Swept 0.40-0.65 on the
-     * screenshot tests: smaller values lose the blended strokes of smoothed output; 0.60 read the most cases.
+     * Where the text/background limit lies between the text colour (0) and the background (1); every limit is tried.
+     * 0.60 was the best single value on the Gen 4 screenshots (smaller values lose the blended strokes of smoothed
+     * output); the tighter 0.40 and 0.25 separate letters from a dark drop shadow that 0.60 merges with them (Gen 1-4
+     * dark text on light boxes) and raised the correctly read views of all games from 519 to 557 of 656.
      */
-    private static final double TEXT_SIDE = 0.60;
+    private static final List<Double> TEXT_SIDES = List.of(0.60, 0.40, 0.25);
+    /**
+     * The tighter limits are only tried on images up to this size (a selected name-box area): on a whole screen each
+     * extra Tesseract pass takes too long for a scan every 0.7 seconds.
+     */
+    private static final int MAX_PIXELS_FOR_TIGHT_LIMITS = 500_000;
     /** Swept 0.10-0.50 on the screenshot tests: 0.10 and 0.25 read the same, 0.50 (the median) clearly worse. */
     private static final double BACKGROUND_PERCENTILE = 0.25;
     /** Light text is white: its colour channels differ by at most this much (smoothed edges blend in the background). */
@@ -77,13 +84,27 @@ public final class ImagePreprocessor {
      * @param joinStrokes group pixels on a mask widened by one pixel. Smoothed (filtered) emulator output blurs letter
      *                    corners and splits letters into separate strokes, which this joins again; but it can also join
      *                    letters to a nearby box border. Callers try both. Only the original text pixels are output.
-     * @return one image per letter height candidate ({@link #letterHeight}, {@link #letterHeightByPixels}) and scale
-     *         factor (see {@link #scaled}); usually one or two
+     * @return one image per text/background limit ({@link #TEXT_SIDES}), letter height candidate ({@link #letterHeight},
+     *         {@link #letterHeightByPixels}) and scale factor (see {@link #scaled}); limits that give the same text
+     *         pixels as the previous one are skipped
      */
     public static List<BufferedImage> prepare(BufferedImage source, TextColor textColor, boolean joinStrokes) {
+        List<BufferedImage> prepared = new ArrayList<>();
+        boolean[] previous = null;
+        boolean small = (long) source.getWidth() * source.getHeight() <= MAX_PIXELS_FOR_TIGHT_LIMITS;
+        for (double textSide : small ? TEXT_SIDES : TEXT_SIDES.subList(0, 1)) {
+            boolean[] text = textMask(source, textColor, textSide);
+            if (previous == null || !Arrays.equals(previous, text)) {
+                prepared.addAll(prepare(source, text, joinStrokes));
+            }
+            previous = text;
+        }
+        return prepared;
+    }
+
+    private static List<BufferedImage> prepare(BufferedImage source, boolean[] text, boolean joinStrokes) {
         int width = source.getWidth();
         int height = source.getHeight();
-        boolean[] text = textMask(source, textColor);
         List<Shape> shapes = shapes(joinStrokes ? dilate(text, width, height) : text, width, height);
         List<Integer> letterHeights = Stream.of(letterHeight(shapes, height), letterHeightByPixels(shapes, height))
                 .flatMapToInt(OptionalInt::stream)
@@ -178,6 +199,10 @@ public final class ImagePreprocessor {
      * water and HP bars behind the 3DS and Switch name boxes) are not text.
      */
     static boolean[] textMask(BufferedImage source, TextColor textColor) {
+        return textMask(source, textColor, TEXT_SIDES.getFirst());
+    }
+
+    static boolean[] textMask(BufferedImage source, TextColor textColor, double textSide) {
         int[] luminance = luminance(source);
         int[] chroma = chroma(source);
         int[] sorted = luminance.clone();
@@ -187,8 +212,8 @@ public final class ImagePreprocessor {
                 ? sorted[(int) (sorted.length * (1 - BACKGROUND_PERCENTILE))]
                 : sorted[(int) (sorted.length * BACKGROUND_PERCENTILE)];
         int limit = textColor == TextColor.DARK
-                ? sorted[onePercent] + (int) ((background - sorted[onePercent]) * TEXT_SIDE)
-                : sorted[sorted.length - 1 - onePercent] - (int) ((sorted[sorted.length - 1 - onePercent] - background) * TEXT_SIDE);
+                ? sorted[onePercent] + (int) ((background - sorted[onePercent]) * textSide)
+                : sorted[sorted.length - 1 - onePercent] - (int) ((sorted[sorted.length - 1 - onePercent] - background) * textSide);
         boolean[] text = new boolean[luminance.length];
         for (int i = 0; i < luminance.length; i++) {
             text[i] = textColor == TextColor.DARK ? luminance[i] <= limit : luminance[i] >= limit && chroma[i] <= MAX_LIGHT_TEXT_CHROMA;

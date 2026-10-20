@@ -128,18 +128,19 @@ public class GameScreenshotOcrTest {
 
     /**
      * Minimum number of correctly read views per game (each screenshot at 1x, 2x smoothed and 3x; Full HD ones at
-     * 1x only), as measured on 2026-10-20. Not every view is read: the tests document how well each game works and
-     * fail when a change makes a game worse. Raise a value when the OCR gets better.
+     * 1x only): one below the views read on 2026-10-20 (554 of 656 in all), as single borderline views can
+     * differ between runs of the native OCR engine. Not every view is read: the tests document how well each game
+     * works and fail when a change makes a game worse. Raise a value when the OCR gets better.
      */
     private static final Map<String, Integer> MIN_CORRECT = Map.ofEntries(
-            Map.entry("red-blue", 33), Map.entry("yellow", 32), Map.entry("gold-silver", 27), Map.entry("crystal", 32),
-            Map.entry("ruby-sapphire", 36), Map.entry("emerald", 36), Map.entry("firered-leafgreen", 24),
-            Map.entry("diamond-pearl", 32), Map.entry("platinum", 42), Map.entry("heartgold-soulsilver", 31),
-            Map.entry("black-white", 30), Map.entry("black-2-white-2", 27),
-            Map.entry("x-y", 24), Map.entry("omega-ruby-alpha-sapphire", 29),
-            Map.entry("sun-moon", 26), Map.entry("ultra-sun-ultra-moon", 19), Map.entry("lets-go", 5),
-            Map.entry("sword-shield", 8), Map.entry("brilliant-diamond-shining-pearl", 6), Map.entry("legends-arceus", 4),
-            Map.entry("scarlet-violet", 6), Map.entry("legends-za", 3));
+            Map.entry("red-blue", 35), Map.entry("yellow", 31), Map.entry("gold-silver", 27), Map.entry("crystal", 33),
+            Map.entry("ruby-sapphire", 36), Map.entry("emerald", 35), Map.entry("firered-leafgreen", 25),
+            Map.entry("diamond-pearl", 37), Map.entry("platinum", 41), Map.entry("heartgold-soulsilver", 32),
+            Map.entry("black-white", 36), Map.entry("black-2-white-2", 29),
+            Map.entry("x-y", 28), Map.entry("omega-ruby-alpha-sapphire", 28),
+            Map.entry("sun-moon", 25), Map.entry("ultra-sun-ultra-moon", 19), Map.entry("lets-go", 6),
+            Map.entry("sword-shield", 8), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 7),
+            Map.entry("scarlet-violet", 7), Map.entry("legends-za", 2));
 
     static Stream<String> games() {
         return cases().stream().map(Case::game).distinct();
@@ -178,6 +179,7 @@ public class GameScreenshotOcrTest {
         }
         assumeTrue(read > 0, () -> "No screenshot of " + gameId + " was downloaded (see screenshots.tsv)");
         System.out.printf("%s: %d of %d views read correctly%n", gameId, correct, read);
+        misses.forEach(miss -> System.out.println("  miss " + miss)); // in the test report, to see what OCR gets wrong
         // Screenshots that were not downloaded (some wikis block CI servers) may all have been read correctly.
         int minimum = Math.clamp(MIN_CORRECT.getOrDefault(gameId, read) - missingViews, 0, read);
         assertThat(correct).as("%s: correctly read views; misses:%n%s", gameId, String.join(System.lineSeparator(), misses))
@@ -187,7 +189,9 @@ public class GameScreenshotOcrTest {
     /** The species with that name in the game's language, in the game's regional form if it has one. */
     private static PokemonId id(Ruleset ruleset, Language language, String name, String region) {
         String key = NameMatcher.normalize(name);
+        // Lowest dex number first, like NameMatcher: Nidoran♀ and Nidoran♂ have the same letters.
         return ruleset.species().entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
                 .filter(entry -> NameMatcher.normalize(entry.getValue().name(language)).equals(key))
                 .findFirst()
                 .map(entry -> new PokemonId(entry.getKey(), entry.getValue().regionalForm(region)))

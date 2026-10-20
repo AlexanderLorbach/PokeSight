@@ -78,7 +78,7 @@ public final class BattleScanner {
     }
 
     private List<Sighting> scanBoxes(BufferedImage image) {
-        List<Sighting> best = List.of();
+        List<List<Sighting>> readings = new ArrayList<>();
         for (ImagePreprocessor.TextColor textColor : ImagePreprocessor.TextColor.values()) {
             for (boolean joinStrokes : new boolean[]{false, true}) {
                 for (BufferedImage prepared : ImagePreprocessor.prepare(image, textColor, joinStrokes)) {
@@ -88,14 +88,35 @@ public final class BattleScanner {
                             toSighting(box).ifPresent(sightings::add);
                         }
                     }
-                    if (recognizedCount(sightings) > recognizedCount(best)
-                            || (recognizedCount(sightings) == recognizedCount(best) && sightings.size() > best.size())) {
-                        best = sightings;
-                    }
+                    readings.add(sightings);
                 }
             }
         }
+        return best(readings);
+    }
+
+    /**
+     * The reading to trust among those of all image variants: one with recognized names, then the one most variants
+     * agree on (a misreading is usually specific to one variant), then the most recognized names and boxes. Measured
+     * on the screenshot tests: 518 instead of 512 correctly read views with "most names" alone.
+     */
+    static List<Sighting> best(List<List<Sighting>> readings) {
+        Comparator<List<Sighting>> order = Comparator.<List<Sighting>>comparingInt(reading -> recognizedCount(reading) > 0 ? 1 : 0)
+                .thenComparingLong(reading -> readings.stream().filter(other -> samePokemon(other, reading)).count())
+                .thenComparingLong(BattleScanner::recognizedCount)
+                .thenComparingInt(List::size);
+        List<Sighting> best = List.of();
+        for (List<Sighting> reading : readings) {
+            if (order.compare(reading, best) > 0) {
+                best = reading;
+            }
+        }
         return best;
+    }
+
+    /** The same recognized Pokémon in the same order; unrecognized boxes and levels do not count. */
+    static boolean samePokemon(List<Sighting> a, List<Sighting> b) {
+        return a.stream().flatMap(s -> s.pokemon().stream()).toList().equals(b.stream().flatMap(s -> s.pokemon().stream()).toList());
     }
 
     private static long recognizedCount(List<Sighting> sightings) {
