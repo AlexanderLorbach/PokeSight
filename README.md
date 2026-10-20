@@ -12,7 +12,7 @@ or memory access.
 
 | Single battle | Double battle |
 |---|---|
-| ![A battle against Tyranitar in Platinum: the team's best moves and all weaknesses, resistances and immunities](docs/screenshots/battle-single.png) | ![Double battle: Togekiss and Weavile side by side](docs/screenshots/battle-double.png) |
+| ![A battle against Tyranitar in Platinum: Garchomp is out, Infernape hits harder; safest switch-ins and all weaknesses, resistances and immunities](docs/screenshots/battle-single.png) | ![Double battle: Togekiss and Weavile side by side](docs/screenshots/battle-double.png) |
 
 - Single, double and triple battles and hordes, auto-detection plus **Scan now** if a battle was missed
 - Correct a misread Pokémon or add one by hand with a name search
