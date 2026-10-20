@@ -21,7 +21,6 @@ import java.net.URL;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,21 +66,21 @@ class ScreenshotOcrTest {
     @MethodSource("emulatorViews")
     void readsEnglishSingleBattle(int scale, boolean smooth) throws IOException {
         assertThat(scan("pt-en-single-electabuzz.png", SINGLE_AREA, scale, smooth, Language.EN))
-                .containsExactly(Optional.of(PokemonId.of(125))); // Electabuzz
+                .containsExactly(PokemonId.of(125)); // Electabuzz
     }
 
     @ParameterizedTest(name = "{0}x smooth={1}")
     @MethodSource("emulatorViews")
     void readsEnglishDoubleBattle(int scale, boolean smooth) throws IOException {
         assertThat(scan("pt-en-double-gabite-azumarill.png", DOUBLE_AREA, scale, smooth, Language.EN))
-                .containsExactly(Optional.of(PokemonId.of(444)), Optional.of(PokemonId.of(184))); // Gabite, Azumarill
+                .containsExactly(PokemonId.of(444), PokemonId.of(184)); // Gabite, Azumarill
     }
 
     @ParameterizedTest(name = "{0}x smooth={1}")
     @MethodSource("emulatorViews")
     void readsGermanDoubleBattle(int scale, boolean smooth) throws IOException {
         assertThat(scan("dp-de-double-schaloko-waumpel.png", DOUBLE_AREA, scale, smooth, Language.DE))
-                .containsExactly(Optional.of(PokemonId.of(266)), Optional.of(PokemonId.of(265))); // Schaloko, Waumpel
+                .containsExactly(PokemonId.of(266), PokemonId.of(265)); // Schaloko, Waumpel
     }
 
     @ParameterizedTest(name = "{0}")
@@ -90,7 +89,7 @@ class ScreenshotOcrTest {
         assertThat(scan(file, DOUBLE_AREA, 2, false, Language.EN)).isEmpty();
     }
 
-    private static List<Optional<PokemonId>> scan(String file, Rectangle area, int scale, boolean smooth, Language language) throws IOException {
+    private static List<PokemonId> scan(String file, Rectangle area, int scale, boolean smooth, Language language) throws IOException {
         URL resource = ScreenshotOcrTest.class.getResource("/screenshots/" + file);
         assumeTrue(resource != null, () -> file + " was not downloaded (see testScreenshots in build.gradle.kts)");
         BufferedImage screenshot = ImageIO.read(resource);

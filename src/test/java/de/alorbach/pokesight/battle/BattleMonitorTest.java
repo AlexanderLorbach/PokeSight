@@ -12,8 +12,6 @@ import org.junit.jupiter.api.Test;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.OptionalInt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,7 +47,7 @@ class BattleMonitorTest {
 
         assertThat(updates).singleElement().satisfies(update -> {
             assertThat(update.state()).isEqualTo(State.IN_BATTLE);
-            assertThat(update.foes()).extracting(Sighting::pokemon).containsExactly(Optional.of(PokemonId.of(94)));
+            assertThat(update.foes()).extracting(Sighting::pokemon).containsExactly(PokemonId.of(94));
         });
     }
 
@@ -75,20 +73,7 @@ class BattleMonitorTest {
         monitor.poll();
 
         assertThat(updates).singleElement().satisfies(update ->
-                assertThat(update.foes()).extracting(Sighting::pokemon).containsExactly(Optional.of(PokemonId.of(94))));
-    }
-
-    @Test
-    void keepsALevelThatLaterScansMiss() {
-        BattleMonitor monitor = monitor(SINGLE);
-        recognizer.showLines("GENGAR Lv32");
-        monitor.poll();
-        recognizer.showLines("GENGAR"); // level not read: still the same battle
-        monitor.poll();
-        monitor.poll();
-
-        assertThat(updates).singleElement().satisfies(update ->
-                assertThat(update.foes()).extracting(Sighting::level).containsExactly(OptionalInt.of(32)));
+                assertThat(update.foes()).extracting(Sighting::pokemon).containsExactly(PokemonId.of(94)));
     }
 
     @Test
@@ -168,13 +153,13 @@ class BattleMonitorTest {
         assertThat(captured).containsExactly(SINGLE, DOUBLE, SINGLE, DOUBLE);
         assertThat(updates).singleElement().satisfies(update ->
                 assertThat(update.foes()).extracting(Sighting::pokemon)
-                        .containsExactly(Optional.of(PokemonId.of(41)), Optional.of(PokemonId.of(42))));
+                        .containsExactly(PokemonId.of(41), PokemonId.of(42)));
     }
 
     @Test
     void manualScanShowsResultImmediatelyAndKeepsIt() {
         BattleMonitor monitor = monitor(SINGLE);
-        recognizer.showLines("QWXZRT Lv20"); // unreadable name: auto-detection would never start a battle
+        recognizer.showLines("GENGAR Lv32"); // one scan: auto-detection alone would not start a battle yet
 
         monitor.manualScan();
         recognizer.showLines();
@@ -184,7 +169,7 @@ class BattleMonitorTest {
 
         assertThat(updates).singleElement().satisfies(update -> {
             assertThat(update.state()).isEqualTo(State.IN_BATTLE);
-            assertThat(update.foes()).extracting(Sighting::text).containsExactly("QWXZRT Lv20");
+            assertThat(update.foes()).extracting(Sighting::pokemon).containsExactly(PokemonId.of(94));
         });
     }
 

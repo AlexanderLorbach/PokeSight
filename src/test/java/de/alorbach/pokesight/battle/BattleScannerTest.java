@@ -7,11 +7,8 @@ import org.junit.jupiter.api.Test;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
-import java.util.Optional;
-import java.util.OptionalInt;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
 
 class BattleScannerTest {
 
@@ -28,7 +25,7 @@ class BattleScannerTest {
 
         assertThat(capitals.scan(SCREEN)).singleElement().satisfies(sighting -> {
             assertThat(sighting.text()).isEqualTo("GENGAR Lv32");
-            assertThat(sighting.pokemon()).contains(PokemonId.of(94));
+            assertThat(sighting.pokemon()).isEqualTo(PokemonId.of(94));
         });
     }
 
@@ -43,53 +40,43 @@ class BattleScannerTest {
     }
 
     @Test
-    void readsNameAndLevel() {
+    void readsTheName() {
         recognizer.showLines("GENGAR Lv32");
 
-        assertThat(scanner.scan(SCREEN)).containsExactly(
-                new Sighting("GENGAR Lv32", Optional.of(PokemonId.of(94)), OptionalInt.of(32)));
+        assertThat(scanner.scan(SCREEN)).containsExactly(new Sighting("GENGAR Lv32", PokemonId.of(94)));
     }
 
     @Test
     void readsBothOpponentsOfADoubleBattle() {
         recognizer.showLines("ZUBAT Lv. 12", "GEODUDE L 14");
 
-        assertThat(scanner.scan(SCREEN))
-                .extracting(Sighting::pokemon, Sighting::level)
-                .containsExactly(
-                        tuple(Optional.of(PokemonId.of(41)), OptionalInt.of(12)),
-                        tuple(Optional.of(PokemonId.of(74)), OptionalInt.of(14)));
+        assertThat(scanner.scan(SCREEN)).extracting(Sighting::pokemon)
+                .containsExactly(PokemonId.of(41), PokemonId.of(74));
     }
 
     @Test
     void toleratesNoiseWordsAndSplitNames() {
         recognizer.showLines("~ MR. MIME 9 Lu45");
 
-        assertThat(scanner.scan(SCREEN)).singleElement().satisfies(sighting -> {
-            assertThat(sighting.pokemon()).contains(PokemonId.of(122));
-            assertThat(sighting.level()).hasValue(45); // the stray "9" has no level sign
-        });
+        assertThat(scanner.scan(SCREEN)).extracting(Sighting::pokemon).containsExactly(PokemonId.of(122));
     }
 
     @Test
-    void ignoresNumbersWithoutLevelSign() {
+    void readsMisreadNamesNextToNumbers() {
         recognizer.showLines("ELEGTABUZ2 29"); // real OCR output for "ELECTABUZZ Lv39"
 
-        assertThat(scanner.scan(SCREEN)).singleElement().satisfies(sighting -> {
-            assertThat(sighting.pokemon()).contains(PokemonId.of(125));
-            assertThat(sighting.level()).isEmpty();
-        });
+        assertThat(scanner.scan(SCREEN)).extracting(Sighting::pokemon).containsExactly(PokemonId.of(125));
     }
 
     @Test
-    void keepsUnreadableNameBoxSoTheUserCanCorrectIt() {
-        recognizer.showLines("QWXZRT Lv20");
+    void skipsNameBoxesWhoseNameIsNotRead() {
+        recognizer.showLines("QWXZRT Lv20", "GENGAR Lv32");
 
-        assertThat(scanner.scan(SCREEN)).containsExactly(new Sighting("QWXZRT Lv20", Optional.empty(), OptionalInt.of(20)));
+        assertThat(scanner.scan(SCREEN)).extracting(Sighting::pokemon).containsExactly(PokemonId.of(94));
     }
 
     @Test
-    void ignoresTextWithoutNameOrLevel() {
+    void ignoresTextWithoutName() {
         recognizer.showLines("What will", "FIGHT BAG RUN");
 
         assertThat(scanner.scan(SCREEN)).isEmpty();

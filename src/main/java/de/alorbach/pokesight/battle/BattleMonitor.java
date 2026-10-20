@@ -11,7 +11,6 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
-import java.util.OptionalInt;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -24,8 +23,7 @@ import java.util.function.Consumer;
  *
  * <p>Auto-detection: a battle starts (or its opponents change) when the same Pokémon are read in at least
  * {@value #STABLE_READINGS} of the last {@value #RECENT_READINGS} scans and ends after {@value #END_AFTER_MISSES}
- * scans without any recognized name. Levels and unreadable boxes do not count for that: OCR reads them less reliably
- * than names. A manual scan shows whatever it finds and stays until auto-detection sees a battle or the user resets.
+ * scans without any recognized name. A manual scan shows whatever it finds and stays until auto-detection sees a battle or the user resets.
  */
 public final class BattleMonitor implements AutoCloseable {
 
@@ -104,7 +102,7 @@ public final class BattleMonitor implements AutoCloseable {
     void poll() {
         try {
             List<Sighting> sightings = read();
-            boolean recognized = sightings.stream().anyMatch(sighting -> sighting.pokemon().isPresent());
+            boolean recognized = !sightings.isEmpty();
             recentReadings.addLast(sightings);
             if (recentReadings.size() > RECENT_READINGS) {
                 recentReadings.removeFirst();
@@ -114,7 +112,7 @@ public final class BattleMonitor implements AutoCloseable {
                 misses = 0;
                 if (agreeing >= STABLE_READINGS) {
                     manual = false;
-                    publish(new Update(State.IN_BATTLE, "In battle", withKnownLevels(sightings)));
+                    publish(new Update(State.IN_BATTLE, "In battle", sightings));
                 }
             } else if (current.state() == State.IN_BATTLE && !manual && ++misses >= END_AFTER_MISSES) {
                 publish(WAITING_UPDATE);
@@ -125,31 +123,6 @@ public final class BattleMonitor implements AutoCloseable {
             // Anything thrown out of a scheduled task silently ends the schedule: report it and keep polling.
             failed("Reading the screen failed", e);
         }
-    }
-
-    /**
-     * A level read once stays while the same Pokémon are shown: OCR reads levels much less reliably than names, so
-     * other scans often miss it. Missing levels are taken from the shown battle or the recent scans of the same Pokémon.
-     */
-    private List<Sighting> withKnownLevels(List<Sighting> sightings) {
-        List<List<Sighting>> sources = new ArrayList<>();
-        sources.add(current.foes());
-        sources.addAll(recentReadings.reversed());
-        List<Sighting> merged = new ArrayList<>();
-        for (int i = 0; i < sightings.size(); i++) {
-            Sighting sighting = sightings.get(i);
-            OptionalInt level = sighting.level();
-            for (List<Sighting> source : sources) {
-                if (level.isPresent()) {
-                    break;
-                }
-                if (source.size() == sightings.size() && source.get(i).pokemon().equals(sighting.pokemon())) {
-                    level = source.get(i).level();
-                }
-            }
-            merged.add(new Sighting(sighting.text(), sighting.pokemon(), level));
-        }
-        return merged;
     }
 
     /** Shows the failure; errors the JVM cannot recover from (out of memory) are passed on after that. */
@@ -188,8 +161,7 @@ public final class BattleMonitor implements AutoCloseable {
         }
         lastCaptures = List.copyOf(captures);
         return readings.stream()
-                .max(Comparator.comparingLong((List<Sighting> reading) -> reading.stream().filter(s -> s.pokemon().isPresent()).count())
-                        .thenComparingInt(List::size))
+                .max(Comparator.comparingInt(List::size))
                 .orElseThrow();
     }
 

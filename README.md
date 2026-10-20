@@ -214,7 +214,7 @@ licenses/                license texts of the bundled third-party software (THIR
 ## Known limitations
 
 - Windows only (screen capture of the Windows desktop).
-- Levels are rarely read; names are.
+- Only names are read, not levels or HP. A name box whose name cannot be read is skipped; use **Add Pokémon…**.
 - The battle screen only shows the species name, so alternate forms (Wormadam cloaks, Shaymin Sky, Arceus plates) are
   shown as the base form, or as the regional form in games of that region; use **Change** to pick the form.
 - Battle-only changes are not shown: Mega Evolution, Dynamax/Gigantamax, Terastallization.

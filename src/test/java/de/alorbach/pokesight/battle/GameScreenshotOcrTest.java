@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -164,8 +163,8 @@ public class GameScreenshotOcrTest {
             BufferedImage image = ImageIO.read(resource);
             BattleScanner scanner = new BattleScanner(RECOGNIZERS.get(screenshot.language()),
                     new NameMatcher(ruleset, screenshot.language(), game.region()), game.capitalNames(), game.floatingNames());
-            List<Optional<PokemonId>> expected = screenshot.expected().stream()
-                    .map(name -> Optional.of(id(ruleset, screenshot.language(), name, game.region()))).toList();
+            List<PokemonId> expected = screenshot.expected().stream()
+                    .map(name -> id(ruleset, screenshot.language(), name, game.region())).toList();
             for (int[] view : image.getWidth() <= SMALL_SCREEN_MAX_WIDTH ? SMALL_SCREEN_VIEWS : List.of(new int[]{1, 0})) {
                 List<Sighting> sightings = scanner.scan(enlarge(crop(image, AREAS.get(gameId)), view[0], view[1] == 1));
                 read++;
