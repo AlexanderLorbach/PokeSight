@@ -102,6 +102,11 @@ public final class ImagePreprocessor {
         return prepared;
     }
 
+    /** Where an x coordinate of a prepared image lies in the source image, as a share of its width (0 = left edge). */
+    public static double sourceShare(BufferedImage prepared, int x) {
+        return (double) (x - PADDING) / Math.max(1, prepared.getWidth() - 2 * PADDING);
+    }
+
     private static List<BufferedImage> prepare(BufferedImage source, boolean[] text, boolean joinStrokes) {
         int width = source.getWidth();
         int height = source.getHeight();

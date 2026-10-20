@@ -16,6 +16,16 @@ class NameMatcherTest {
     private final NameMatcher english = new NameMatcher(GEN4, Language.EN);
     private final NameMatcher german = new NameMatcher(GEN4, Language.DE);
 
+    @Test
+    void nearNamesAreSpelledAsInTheGame() {
+        assertThat(english.nearName("GENGAR", 0)).contains("Gengar");
+        assertThat(english.nearName("NIDORAN♀", 0)).contains("Nidoran♀");
+        assertThat(english.nearName("GENGAQ", 1)).isEmpty(); // R/Q are no look-alikes
+        assertThat(english.nearName("GEMGAR", 1)).contains("Gengar"); // N/M look alike
+        assertThat(english.nearName("GENGA", 2)).isEmpty(); // a letter fewer
+        assertThat(german.nearName("Ramoth", 0)).isEmpty(); // not in Gen 4
+    }
+
     @ParameterizedTest
     @CsvSource({
             "GENGAR, 94",

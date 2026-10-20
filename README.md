@@ -36,14 +36,17 @@ The name reading is checked on 254 real battle screenshots, at least five per ga
 | Diamond / Pearl | gen4 | 38 / 39 | | Sword / Shield | gen8 | 10 / 10 |
 | Platinum | gen4 | 42 / 42 | | Brilliant Diamond / Shining Pearl | gen8 | 6 / 6 |
 | HeartGold / SoulSilver | gen4 | 33 / 33 | | Legends: Arceus | gen8 | 9 / 9 |
-| | | | | Scarlet / Violet | gen9 | 12 / 15 |
+| | | | | Scarlet / Violet | gen9 | 14 / 15 |
 | | | | | Legends: Z-A | gen9 | 5 / 5 |
 
-That is 561 of 656 views (86 %). A missed view is usually a single scan: PokeSight scans every 0.7 s and a battle
+That is 563 of 656 views (86 %) on the very first scan. PokeSight also learns the letter shapes of your game while
+you play (see [How it works](#how-it-works)); learned from the other screenshots of the same game, it reads 582 of 656
+views (89 %), most of all in the Game Boy games (Red/Blue 41 / 42, Crystal 36 / 36) and Ultra Sun / Ultra Moon
+(23 / 24). A missed view is usually a single scan: PokeSight scans every 0.7 s and a battle
 starts as soon as two of the last three scans agree, so it is still detected as long as most scans read the name. The Game Boy, GBA and DS games work best. In Black/White and X/Y the narrow, outlined fonts are
 read less reliably. In Legends: Arceus, Scarlet/Violet and Legends: Z-A the name floats above the opponent in the 3D
-scene and is found by its HP bar, also when the bar is almost empty; a fainted opponent's empty bar is not found, and
-effects over the scene can still be misread as a name. If a game works badly for you, a
+scene and is found by its HP bar, also when the bar is almost empty; only a fainted opponent's empty bar is not found.
+Text of the scene is only taken for a name if it stands right over the bar. If a game works badly for you, a
 screenshot of your emulator window during a battle helps to improve it.
 
 > PokeSight is a fan project. It is not affiliated with, endorsed or sponsored by Nintendo, Game Freak, Creatures or
@@ -127,7 +130,9 @@ and power, not the exact damage.
 
 All settings are plain YAML files in `%APPDATA%\PokeSight`; nothing is written to the registry. Edit them only while
 PokeSight is closed; a file that cannot be read is ignored and the defaults are used. Delete the folder to reset.
-The sprites are a download cache in `%LOCALAPPDATA%\PokeSight\sprites`; they are downloaded again if deleted.
+The sprites are a download cache in `%LOCALAPPDATA%\PokeSight\sprites`; they are downloaded again if deleted. The
+letter shapes learned per game are in `%LOCALAPPDATA%\PokeSight\glyphs\<game id>.txt`; delete a file to relearn (for
+example after changing the emulator's screen filter a lot).
 
 ```
 %APPDATA%\PokeSight\
@@ -156,7 +161,14 @@ The text is then matched against the game's Pokémon names with a small edit dis
 up (G/S, O/D/C, U/V/W, ...) count half; name boxes standing side by side on one line (double battles since Gen 5) are
 split at wide gaps. In games that write names in capitals (Gen 1–4), text in mixed case (code, chats, websites) is
 ignored. In the games whose names float in the 3D scene, the solid HP bars are located first and only the labels
-above them are read. The tests are listed under [Development](#development).
+above them are read.
+
+Tesseract misreads some pixel fonts consistently (Black/White "Ramoth" as "kanoth"), although the prepared letters are
+clean. So PokeSight learns the font of your game on your screen: whenever a word is a name (at most one look-alike
+letter off), the shapes of its letters are stored under that name's letters, and every image is also read by
+comparing its letter shapes with the stored ones. Both readings vote. The shapes come from your own emulator window and
+stay on your computer; nothing of the games ships with PokeSight. The tests are listed under
+[Development](#development).
 
 ## Development
 
@@ -167,7 +179,7 @@ src/main/java/de/alorbach/pokesight/
 ├─ sprite/               sprite download and cache in %LOCALAPPDATA%\PokeSight\sprites
 ├─ ruleset/              generation data: types, type chart, species, forms, moves
 ├─ capture/              screenshots of screen regions
-├─ ocr/                  Tesseract adapter, image preparation, HP bar search (floating names)
+├─ ocr/                  Tesseract adapter, image preparation, learned letter shapes, HP bar search
 ├─ battle/               name matching, battle scanning, auto-detection, move reading
 ├─ matchup/              weaknesses, team and move ranking
 ├─ settings/             settings files in %APPDATA%\PokeSight
@@ -195,7 +207,9 @@ licenses/                license texts of the bundled third-party software (THIR
   `floatingNames` reads the labels above HP bars instead of fixed name boxes.
 - **OCR tests:** `src/test/resources/screenshots.tsv` lists the battle screenshots (URL, SHA-256, game, language and
   the opponents they show); the build downloads them. `GameScreenshotOcrTest` reads every one with its game's
-  settings and fails when a game reads fewer views than the minimum recorded there; `ScreenshotOcrTest` checks Gen 4
+  settings and fails when a game reads fewer views than the minimum recorded there, once with Tesseract alone and once
+  with letter shapes learned from the game's other screenshots (it needs all of them; CI skips it, since one wiki
+  blocks downloads from there); `ScreenshotOcrTest` checks Gen 4
   at every window size, `MoveReaderTest` the move reading.
 - **Regenerate a ruleset:** `java tools/GenerateRuleset.java <PokeAPI version group> src/main/resources/rulesets/<id>`.
   It writes the type chart, the species with their alternate forms and the damaging moves, with types and move power

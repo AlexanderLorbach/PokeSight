@@ -1,5 +1,6 @@
 package de.alorbach.pokesight.battle;
 
+import de.alorbach.pokesight.ocr.GlyphFont;
 import de.alorbach.pokesight.ocr.HpBars;
 import de.alorbach.pokesight.ocr.ImagePreprocessor;
 import de.alorbach.pokesight.ocr.TextRecognizer;
@@ -10,8 +11,10 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /** Reads the opponents' name boxes from a screenshot (a selected area or the whole screen). */
@@ -21,6 +24,17 @@ public final class BattleScanner {
     private static final double MIN_CAPITALS = 0.75;
     /** Characters OCR reads for a capital I at the start of a mixed-case name ("lgglybuff"). */
     private static final String CAPITAL_I_LOOK_ALIKES = "l|1";
+    /**
+     * A floating name stands over its HP bar: its box centre lies within the bar's width (centred in Legends: Z-A, not
+     * always in Scarlet/Violet). Text beside the bar is the 3D scene.
+     */
+    private static final double MAX_NAME_OFFSET = 0.5;
+    /**
+     * Words this close to a name (half letters: one look-alike letter, "RAMOTN") teach their letter shapes too, which
+     * corrects the look-alike. Measured with learned letters: 582 of 656 views, 579 with exact words only; allowing any
+     * one wrong letter read 583 but taught X/Y wrong shapes (2 views fewer).
+     */
+    private static final int LEARN_DISTANCE = 1;
     /** Gap between two words, in letter heights, from which they belong to different name boxes. */
     private static final int MIN_BOX_GAP_LETTERS = 5;
 
@@ -28,6 +42,7 @@ public final class BattleScanner {
     private final NameMatcher matcher;
     private final boolean capitalNames;
     private final boolean floatingNames;
+    private final GlyphFont glyphs;
 
     /** @param capitalNames the game writes names in capitals; words in mixed case are then not taken for names */
     public BattleScanner(TextRecognizer recognizer, NameMatcher matcher, boolean capitalNames) {
@@ -39,10 +54,20 @@ public final class BattleScanner {
      *                      only the labels above HP bars are read then (see {@link HpBars})
      */
     public BattleScanner(TextRecognizer recognizer, NameMatcher matcher, boolean capitalNames, boolean floatingNames) {
+        this(recognizer, matcher, capitalNames, floatingNames, null);
+    }
+
+    /**
+     * @param glyphs the game's letter shapes: learned from names Tesseract reads exactly, and used for a second reading
+     *               of every image (see {@link GlyphFont}); null to read with Tesseract only
+     */
+    public BattleScanner(TextRecognizer recognizer, NameMatcher matcher, boolean capitalNames, boolean floatingNames,
+                         GlyphFont glyphs) {
         this.recognizer = Objects.requireNonNull(recognizer);
         this.matcher = Objects.requireNonNull(matcher);
         this.capitalNames = capitalNames;
         this.floatingNames = floatingNames;
+        this.glyphs = glyphs;
     }
 
     /**
@@ -57,37 +82,71 @@ public final class BattleScanner {
         }
         List<Sighting> sightings = new ArrayList<>();
         List<Rectangle> read = new ArrayList<>();
-        for (Rectangle label : HpBars.labelAreas(image)) {
-            if (read.stream().anyMatch(label::intersects)) {
+        for (HpBars.Label label : HpBars.labelAreas(image)) {
+            Rectangle area = label.area();
+            if (read.stream().anyMatch(area::intersects)) {
                 continue; // one bar found twice (e.g. its rounded ends as separate rows): one opponent
             }
+            double barCentre = (label.bar().getCenterX() - area.x) / area.width;
+            double maxOffset = MAX_NAME_OFFSET * label.bar().width / area.width;
+            BiPredicate<List<Word>, BufferedImage> centred = (box, prepared) -> Math.abs(ImagePreprocessor.sourceShare(prepared,
+                    (box.getFirst().left() + box.getLast().right()) / 2) - barCentre) <= maxOffset;
             // The name is the line right above the bar; anything higher up in the area is the scene behind the label.
-            Optional<Sighting> sighting = scanBoxes(image.getSubimage(label.x, label.y, label.width, label.height)).stream()
+            Optional<Sighting> sighting = scanBoxes(image.getSubimage(area.x, area.y, area.width, area.height), centred)
+                    .stream()
                     .reduce((upper, lower) -> lower);
             if (sighting.isPresent()) {
                 sightings.add(sighting.get());
-                read.add(label);
+                read.add(area);
             }
         }
         return sightings;
     }
 
     private List<Sighting> scanBoxes(BufferedImage image) {
+        return scanBoxes(image, (box, prepared) -> true);
+    }
+
+    /** @param accept whether a box of words of a prepared image may hold a name */
+    private List<Sighting> scanBoxes(BufferedImage image, BiPredicate<List<Word>, BufferedImage> accept) {
         List<List<Sighting>> readings = new ArrayList<>();
         for (ImagePreprocessor.TextColor textColor : ImagePreprocessor.TextColor.values()) {
             for (boolean joinStrokes : new boolean[]{false, true}) {
                 for (BufferedImage prepared : ImagePreprocessor.prepare(image, textColor, joinStrokes)) {
-                    List<Sighting> sightings = new ArrayList<>();
-                    for (List<Word> line : lines(recognizer.read(prepared))) {
-                        for (List<Word> box : boxes(line)) {
-                            toSighting(box).ifPresent(sightings::add);
+                    List<Word> words = recognizer.read(prepared);
+                    readings.add(sightings(words, prepared, accept));
+                    if (glyphs != null) {
+                        // Read with what earlier images taught, then learn from this one.
+                        if (!glyphs.isEmpty()) {
+                            readings.add(sightings(glyphs.read(prepared), prepared, accept));
                         }
+                        learn(words, prepared);
                     }
-                    readings.add(sightings);
                 }
             }
         }
         return best(readings);
+    }
+
+    private List<Sighting> sightings(List<Word> words, BufferedImage prepared, BiPredicate<List<Word>, BufferedImage> accept) {
+        List<Sighting> sightings = new ArrayList<>();
+        for (List<Word> line : lines(words)) {
+            for (List<Word> box : boxes(line)) {
+                if (accept.test(box, prepared)) {
+                    toSighting(box).ifPresent(sightings::add);
+                }
+            }
+        }
+        return sightings;
+    }
+
+    /** Words that are (nearly) a name teach their letter shapes, in the game's letter case. */
+    private void learn(List<Word> words, BufferedImage prepared) {
+        for (Word word : words) {
+            matcher.nearName(word.text(), LEARN_DISTANCE)
+                    .map(name -> capitalNames ? name.toUpperCase(Locale.ROOT) : name)
+                    .ifPresent(name -> glyphs.learn(prepared, word, name));
+        }
     }
 
     /**

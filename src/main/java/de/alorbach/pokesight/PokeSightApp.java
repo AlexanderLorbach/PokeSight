@@ -7,6 +7,7 @@ import de.alorbach.pokesight.capture.RobotScreenSource;
 import de.alorbach.pokesight.game.GameCatalog;
 import de.alorbach.pokesight.game.GameDefinition;
 import de.alorbach.pokesight.matchup.MatchupCalculator;
+import de.alorbach.pokesight.ocr.GlyphFont;
 import de.alorbach.pokesight.ocr.TesseractTextRecognizer;
 import de.alorbach.pokesight.ocr.TextRecognizer;
 import de.alorbach.pokesight.ruleset.Ruleset;
@@ -25,6 +26,7 @@ import javafx.stage.Stage;
 
 import java.awt.AWTException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 
@@ -74,8 +76,10 @@ public final class PokeSightApp extends Application {
         try {
             Ruleset ruleset = RulesetLoader.load(settings.game().ruleset());
             recognizer = new TesseractTextRecognizer(settings.language());
+            Path glyphFile = GlyphFont.defaultFile(settings.game().id());
+            GlyphFont glyphs = GlyphFont.load(glyphFile);
             BattleScanner scanner = new BattleScanner(recognizer, new NameMatcher(ruleset, settings.language(), settings.game().region()),
-                    settings.game().capitalNames(), settings.game().floatingNames());
+                    settings.game().capitalNames(), settings.game().floatingNames(), glyphs);
             BattleView view = new BattleView(settings, new MatchupCalculator(ruleset), store, this::showStartView);
             BattleMonitor monitor = new BattleMonitor(new RobotScreenSource(), settings.regions(), scanner,
                     update -> Platform.runLater(() -> view.show(update)));
@@ -83,7 +87,7 @@ public final class PokeSightApp extends Application {
             view.setOnReset(monitor::reset);
             view.setCaptureSupplier(monitor::lastCaptures);
 
-            session = new Session(monitor, recognizer);
+            session = new Session(monitor, recognizer, glyphs, glyphFile);
             stage.getScene().setRoot(view);
             monitor.start(SCAN_INTERVAL);
         } catch (IOException | AWTException | RuntimeException e) {
@@ -115,14 +119,28 @@ public final class PokeSightApp extends Application {
         Theme.showError(stage, title, e.getMessage());
     }
 
-    /** Resources that live as long as one game is being watched. The monitor stops before the OCR engine closes. */
-    private record Session(BattleMonitor monitor, TextRecognizer recognizer) implements AutoCloseable {
+    /**
+     * Resources that live as long as one game is being watched. The monitor stops before the learned letter shapes are
+     * saved and the OCR engine closes.
+     */
+    private record Session(BattleMonitor monitor, TextRecognizer recognizer, GlyphFont glyphs, Path glyphFile)
+            implements AutoCloseable {
         @Override
         public void close() {
             try {
                 monitor.close();
+                saveGlyphs();
             } finally {
                 recognizer.close(); // also if stopping the monitor failed: the native engine must be freed
+            }
+        }
+
+        private void saveGlyphs() {
+            try {
+                glyphs.save(glyphFile);
+            } catch (IOException | RuntimeException e) {
+                // Only a cache: the shapes are learned again in the next battles.
+                LOG.log(System.Logger.Level.WARNING, "Could not save the learned letter shapes to " + glyphFile, e);
             }
         }
     }
