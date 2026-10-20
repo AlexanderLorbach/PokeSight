@@ -67,7 +67,58 @@ class RulesetLoaderTest {
         // Found by cross-checking with Pokémon Showdown's Gen 4 data:
         assertThat(gen4.findMove(237)).isEmpty(); // Hidden Power: type and power depend on the user
         assertThat(gen4.findMove(386)).isEmpty(); // Punishment: power grows with the target's boosts
-        assertThat(gen4.findMove(295)).map(Move::power).contains(70); // Luster Purge: 95 only since Gen 7
+        assertThat(gen4.findMove(295)).map(Move::power).contains(70); // Luster Purge: 95 only since Scarlet/Violet
         assertThat(gen4.moves().values()).allSatisfy(move -> assertThat(move.type()).isNotEqualTo(FAIRY));
+    }
+
+    @Test
+    void loadsEveryGeneration() {
+        assertThat(List.of("gen1", "gen2", "gen3", "gen5", "gen6", "gen7", "lets-go", "gen8", "gen9"))
+                .extracting(id -> RulesetLoader.load(id).species().size())
+                .containsExactly(151, 251, 386, 649, 721, 809, 809, 905, 1025);
+    }
+
+    @Test
+    void usesGen1Rules() {
+        Ruleset gen1 = RulesetLoader.load("gen1");
+        assertThat(gen1.typeChart().types()).doesNotContain(DARK, STEEL, FAIRY);
+        assertThat(gen1.typeChart().multiplier(GHOST, PSYCHIC)).isZero();        // the Gen 1 bug
+        assertThat(gen1.typeChart().multiplier(BUG, POISON)).isEqualTo(2);
+        assertThat(gen1.typeChart().multiplier(ICE, FIRE)).isEqualTo(1);
+        assertThat(gen1.findSpecies(81)).map(Species::types).contains(List.of(ELECTRIC)); // Magnemite before Steel
+        assertThat(gen1.findMove(44)).map(Move::type).contains(NORMAL);           // Bite: Dark since Gen 2
+        assertThat(gen1.findMove(7)).map(Move::category).contains(Move.Category.SPECIAL); // Fire Punch: by type until Gen 3
+    }
+
+    @Test
+    void usesFairyTypeChartSinceGen6() {
+        Ruleset gen6 = RulesetLoader.load("gen6");
+        assertThat(gen6.typeChart().multiplier(DRAGON, FAIRY)).isZero();
+        assertThat(gen6.typeChart().multiplier(GHOST, STEEL)).isEqualTo(1);
+        assertThat(gen6.findSpecies(35)).map(Species::types).contains(List.of(FAIRY)); // Clefairy
+        assertThat(gen6.findMove(594)).map(Move::category).contains(Move.Category.PHYSICAL); // Water Shuriken, special since Gen 7
+    }
+
+    @Test
+    void usesMovesOfTheVersionGroup() {
+        // Let's Go doubled Absorb (20 -> 40); Sun/Moon and Sword/Shield have 20.
+        assertThat(RulesetLoader.load("gen7").findMove(71)).map(Move::power).contains(20);
+        assertThat(RulesetLoader.load("lets-go").findMove(71)).map(Move::power).contains(40);
+        assertThat(RulesetLoader.load("gen8").findMove(803)).map(Move::power).contains(70); // Grassy Glide: 55 since SV
+        assertThat(RulesetLoader.load("gen9").findMove(803)).map(Move::power).contains(55);
+        assertThat(RulesetLoader.load("gen9").findMove(295)).map(Move::power).contains(95); // Luster Purge
+        assertThat(RulesetLoader.load("gen7").findMove(658)).isEmpty(); // Catastropika: Z-Move
+        assertThat(RulesetLoader.load("gen8").findMove(757)).isEmpty(); // Max Flare: Max Move
+    }
+
+    @Test
+    void marksRegionalForms() {
+        Species meowth = RulesetLoader.load("gen8").findSpecies(52).orElseThrow();
+        assertThat(meowth.regionalForm("alola")).isEqualTo(1);
+        assertThat(meowth.form(meowth.regionalForm("galar")).types()).containsExactly(STEEL);
+        assertThat(meowth.regionalForm("paldea")).isZero();
+        assertThat(meowth.regionalForm(null)).isZero();
+        Species tauros = RulesetLoader.load("gen9").findSpecies(128).orElseThrow();
+        assertThat(tauros.form(tauros.regionalForm("paldea")).name(Language.DE)).isEqualTo("Paldea-Tauros (Gefechtvariante)");
     }
 }
