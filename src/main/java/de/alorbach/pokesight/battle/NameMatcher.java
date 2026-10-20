@@ -27,6 +27,7 @@ public final class NameMatcher {
     private static final List<String> LOOK_ALIKES = List.of("GSC", "OCDQ", "UVWY", "ILTJ", "EF", "HWNM", "BR");
 
     private final Map<String, PokemonId> pokemonByName = new LinkedHashMap<>();
+    private final Map<String, String> nameByKey = new LinkedHashMap<>();
 
     public NameMatcher(Ruleset ruleset, Language language) {
         this(ruleset, language, null);
@@ -37,8 +38,35 @@ public final class NameMatcher {
         // Battle screens show the species name, never the form, so only base names are matched.
         ruleset.species().entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> pokemonByName.putIfAbsent(normalize(entry.getValue().name(language)),
-                        new PokemonId(entry.getKey(), entry.getValue().regionalForm(region))));
+                .forEach(entry -> {
+                    String name = entry.getValue().name(language);
+                    pokemonByName.putIfAbsent(normalize(name), new PokemonId(entry.getKey(), entry.getValue().regionalForm(region)));
+                    nameByKey.putIfAbsent(normalize(name), name);
+                });
+    }
+
+    /**
+     * The name, spelled as in the game data ("Nidoran♀"), if the text has as many letters as one name and differs from it in at
+     * most {@code maxDistance} half letters (wrong letters only) and no other name is as close.
+     */
+    public Optional<String> nearName(String text, int maxDistance) {
+        String candidate = normalize(text);
+        String best = null;
+        int bestDistance = Integer.MAX_VALUE;
+        boolean tie = false;
+        for (String key : nameByKey.keySet()) {
+            if (key.length() == candidate.length()) {
+                int distance = ocrDistance(candidate, key);
+                if (distance < bestDistance) {
+                    best = key;
+                    bestDistance = distance;
+                    tie = false;
+                } else if (distance == bestDistance) {
+                    tie = true;
+                }
+            }
+        }
+        return best != null && bestDistance <= maxDistance && !tie ? Optional.of(nameByKey.get(best)) : Optional.empty();
     }
 
     public Optional<Match> match(String text) {
