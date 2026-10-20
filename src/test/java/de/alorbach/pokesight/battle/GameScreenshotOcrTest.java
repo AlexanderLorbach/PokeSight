@@ -152,11 +152,13 @@ public class GameScreenshotOcrTest {
         Ruleset ruleset = RULESETS.computeIfAbsent(game.ruleset(), RulesetLoader::load);
         int correct = 0;
         int read = 0;
+        int missingViews = 0;
         List<String> misses = new ArrayList<>();
         for (Case screenshot : cases().stream().filter(c -> c.game().equals(gameId)).toList()) {
             URL resource = GameScreenshotOcrTest.class.getResource("/screenshots/" + screenshot.file());
             if (resource == null) {
-                continue; // not downloaded (see screenshots.tsv); counted as missing below
+                missingViews += SMALL_SCREEN_VIEWS.size(); // not downloaded (see screenshots.tsv): at most this many views
+                continue;
             }
             BufferedImage image = ImageIO.read(resource);
             BattleScanner scanner = new BattleScanner(RECOGNIZERS.get(screenshot.language()),
@@ -176,7 +178,8 @@ public class GameScreenshotOcrTest {
         }
         assumeTrue(read > 0, () -> "No screenshot of " + gameId + " was downloaded (see screenshots.tsv)");
         System.out.printf("%s: %d of %d views read correctly%n", gameId, correct, read);
-        int minimum = Math.min(MIN_CORRECT.getOrDefault(gameId, read), read);
+        // Screenshots that were not downloaded (some wikis block CI servers) may all have been read correctly.
+        int minimum = Math.clamp(MIN_CORRECT.getOrDefault(gameId, read) - missingViews, 0, read);
         assertThat(correct).as("%s: correctly read views; misses:%n%s", gameId, String.join(System.lineSeparator(), misses))
                 .isGreaterThanOrEqualTo(minimum);
     }
