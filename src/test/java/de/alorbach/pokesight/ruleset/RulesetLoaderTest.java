@@ -41,6 +41,24 @@ class RulesetLoaderTest {
     }
 
     @Test
+    void loadsBaseStatsAndAbilitiesOfThatGeneration() {
+        Species.Form gengar = gen4.findSpecies(94).orElseThrow().form(0);
+        assertThat(gengar.stat(Species.Stat.SPECIAL_ATTACK)).isEqualTo(130);
+        assertThat(gengar.abilities()).containsExactly("levitate"); // Cursed Body since Gen 7
+        assertThat(RulesetLoader.load("gen7").findSpecies(94).orElseThrow().abilities()).containsExactly("cursed-body");
+        assertThat(gen4.generation()).isEqualTo(4);
+        assertThat(gen4.abilityName("levitate", Language.DE)).isEqualTo("Schwebe");
+    }
+
+    @Test
+    void genOneHasOneSpecialStatAndNoAbilities() {
+        Species.Form alakazam = RulesetLoader.load("gen1").findSpecies(65).orElseThrow().form(0);
+        assertThat(alakazam.stat(Species.Stat.SPECIAL_ATTACK)).isEqualTo(135);
+        assertThat(alakazam.stat(Species.Stat.SPECIAL_DEFENSE)).isEqualTo(135); // 85 Sp. Def since Gen 2
+        assertThat(alakazam.abilities()).isEmpty();
+    }
+
+    @Test
     void usesTypeChartOfThatGeneration() {
         assertThat(gen4.typeChart().multiplier(GHOST, STEEL)).isEqualTo(0.5); // neutral since Gen 6
         assertThat(gen4.typeChart().multiplier(DARK, STEEL)).isEqualTo(0.5);
