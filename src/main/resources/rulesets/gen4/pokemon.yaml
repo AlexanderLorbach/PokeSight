@@ -2,6 +2,7 @@
 # Key: national dex number.
 # forms: form index as stored in the game's data; only forms whose types differ from the base form.
 # sprite: PokeAPI sprite file name of a form (the base form's sprite is its national dex number).
+# region: regional form (alola, galar, hisui, paldea); games set in that region show it by default.
 pokemon:
   1: { name: { DE: "Bisasam", EN: "Bulbasaur" }, types: [GRASS, POISON] }
   2: { name: { DE: "Bisaknosp", EN: "Ivysaur" }, types: [GRASS, POISON] }

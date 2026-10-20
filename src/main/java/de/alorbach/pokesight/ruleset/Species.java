@@ -19,11 +19,26 @@ public record Species(Map<Language, String> name, List<PokemonType> types, Map<I
 
     /** The given form; forms that are not listed are identical to the base form. */
     public Form form(int formIndex) {
-        return forms.getOrDefault(formIndex, new Form(name, types, null));
+        return forms.getOrDefault(formIndex, new Form(name, types, null, null));
     }
 
-    /** @param sprite sprite file name of an alternate form; null for the base form, whose sprite is its dex number */
-    public record Form(Map<Language, String> name, List<PokemonType> types, String sprite) {
+    /**
+     * The form games set in this region show (Alolan Rattata in Sun/Moon): the first form of that region, or the base
+     * form (0) if the species has none or the region is null.
+     */
+    public int regionalForm(String region) {
+        return forms.entrySet().stream()
+                .filter(entry -> region != null && region.equals(entry.getValue().region()))
+                .mapToInt(Map.Entry::getKey)
+                .min()
+                .orElse(0);
+    }
+
+    /**
+     * @param sprite sprite file name of an alternate form; null for the base form, whose sprite is its dex number
+     * @param region the region of a regional form ("alola", "galar", "hisui", "paldea"); null for other forms
+     */
+    public record Form(Map<Language, String> name, List<PokemonType> types, String sprite, String region) {
 
         public Form {
             name = Map.copyOf(Objects.requireNonNull(name, "name"));

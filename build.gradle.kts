@@ -91,20 +91,10 @@ sourceSets.main {
 // Real battle screenshots for the OCR tests (fan-wiki hosted, pinned by checksum), under /screenshots in the tests.
 // Some wikis block downloads from CI servers (Bulbagarden answers GitHub Actions with HTTP 403): a screenshot that cannot
 // be downloaded is skipped with a warning and its tests are skipped. A wrong checksum still fails the build.
-val testScreenshots = mapOf(
-    "pt-en-single-electabuzz.png" to ("https://archives.bulbagarden.net/media/upload/4/41/Pok%C3%A9mon_Battle_Pt.png"
-            to "838d8237ed874bf6862da535bdbe3f6e8d69271c8797590b1a56f4448753abbd"),
-    "pt-en-double-gabite-azumarill.png" to ("https://archives.bulbagarden.net/media/upload/8/87/Wild_double_battle_Pt.png"
-            to "0198e9544d33fd81050d4092b5fcdd322c50479e81f051cce7a931b3fea1a45e"),
-    "pt-en-trainer-intro.png" to ("https://archives.bulbagarden.net/media/upload/9/9a/Trainer_battle_Pt.png"
-            to "385f64556f77b5691092c0c6af7263a6d6a9ac747a55f7b0018475e7c55ed82d"),
-    "hgss-en-tag-battle-intro.png" to ("https://archives.bulbagarden.net/media/upload/a/a1/Tag_Battle_HGSS.png"
-            to "0e6f30f891b8d3f176f8d141e186c043257d25f194f4d9abf8b564713e4399fd"),
-    "pt-en-attack-animation.png" to ("https://upload.wikimedia.org/wikipedia/en/1/1b/Pokemon_Platinum_battle.png"
-            to "b09d07ce967db4577e8eda9167e21f0c83aad753764b3e5ffad3b2706b817401"),
-    "dp-de-double-schaloko-waumpel.png" to ("https://www.pokewiki.de/images/9/96/Doppelkampf_mit_Raissa_%28DP%29.png"
-            to "944d2fe660bfa5af1721952f0c730ecf9d31262bb716c2a883b2f985bf294921"),
-)
+val testScreenshots: Map<String, Pair<String, String>> = file("src/test/resources/screenshots.tsv").readLines()
+    .filter { it.isNotBlank() && !it.startsWith("#") }
+    .map { it.split('\t') }
+    .associate { it[0] to (it[1] to it[2]) }
 val downloadTestScreenshots = tasks.register("downloadTestScreenshots") {
     val outputDir = layout.buildDirectory.dir("generated/test-screenshots")
     val cacheDir = gradle.gradleUserHomeDir.resolve("caches/pokesight/test-screenshots")

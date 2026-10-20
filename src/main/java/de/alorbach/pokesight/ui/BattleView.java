@@ -9,6 +9,7 @@ import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.settings.SettingsStore;
 import de.alorbach.pokesight.sprite.SpriteCache;
 import javafx.geometry.Pos;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -19,10 +20,12 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -42,6 +45,9 @@ import java.util.function.Supplier;
  */
 public final class BattleView extends BorderPane {
 
+    /** Opponents side by side: a double battle shows its two opponents left and right. */
+    private static final int COLUMNS = 2;
+
     private final MatchupCalculator calculator;
     private final Language language;
     private final String gameId;
@@ -53,7 +59,7 @@ public final class BattleView extends BorderPane {
     private final ToggleButton alwaysOnTop = new ToggleButton("Always on top");
     private final ToggleButton borderless = new ToggleButton("Borderless");
     private final Node top;
-    private final FlowPane cards = new FlowPane();
+    private final GridPane cards = new GridPane();
     private final ScrollPane cardsScroll = new ScrollPane(cards);
     private final VBox compactCards = new VBox();
     /** Borderless mode: the cards plus a button bar that shows while the mouse is over the window. */
@@ -81,6 +87,7 @@ public final class BattleView extends BorderPane {
         setTop(top);
         cards.getStyleClass().add("cards");
         cardsScroll.setFitToWidth(true);
+        cardsScroll.setFitToHeight(true); // short cards are stretched to the bottom; taller content scrolls
         compactCards.getStyleClass().add("compact-view");
         setUpBorderlessControls();
 
@@ -189,7 +196,8 @@ public final class BattleView extends BorderPane {
     }
 
     private void editTeam() {
-        TeamEditor.show(getScene().getWindow(), team, calculator.ruleset(), language, sprites, saved -> {
+        TeamEditor.show(getScene().getWindow(), team, calculator.ruleset(), language, sprites,
+                new MoveScan(store, gameId, calculator.ruleset(), language), saved -> {
             store.saveGame(gameId, store.game(gameId).withTeam(saved));
             useTeam(saved);
         });
@@ -252,23 +260,61 @@ public final class BattleView extends BorderPane {
                         board.remove(entry);
                         render();
                     } : null);
-            if (compact) {
-                // Each opponent gets an equal share of the window: all of it, or one half each in a double battle.
-                FitPane fit = new FitPane(card);
-                VBox.setVgrow(fit, Priority.ALWAYS);
-                enemyCards.add(fit);
-            } else {
-                enemyCards.add(card);
-            }
+            // Borderless: each opponent gets an equal share of the window, all of it or one half each.
+            enemyCards.add(compact ? new FitPane(card) : card);
         }
         if (compact) {
-            compactCards.getChildren().setAll(enemyCards.isEmpty() ? List.of(emptyState) : enemyCards);
+            GridPane grid = new GridPane();
+            grid.getStyleClass().add("compact-grid");
+            arrange(grid, enemyCards, true);
+            VBox.setVgrow(grid, Priority.ALWAYS);
+            compactCards.getChildren().setAll(enemyCards.isEmpty() ? List.of(emptyState) : List.of(grid));
             cards.getChildren().clear();
             setCenter(compactRoot);
         } else {
             compactCards.getChildren().clear();
-            cards.getChildren().setAll(enemyCards);
+            arrange(cards, enemyCards, false);
             setCenter(enemyCards.isEmpty() ? emptyState : cardsScroll);
+        }
+    }
+
+    /**
+     * Side by side in equal columns: one opponent fills the width, two (double battle) stand left and right, more
+     * (triple battles, hordes) continue in rows of {@value #COLUMNS}.
+     *
+     * @param fillHeight rows share the height equally (borderless); otherwise they grow from the cards' heights
+     */
+    static void arrange(GridPane grid, List<Node> nodes, boolean fillHeight) {
+        grid.getChildren().clear();
+        grid.getColumnConstraints().clear();
+        grid.getRowConstraints().clear();
+        int columns = Math.max(1, Math.min(COLUMNS, nodes.size()));
+        for (int column = 0; column < columns; column++) {
+            ColumnConstraints constraints = new ColumnConstraints();
+            constraints.setPercentWidth(100.0 / columns);
+            constraints.setHgrow(Priority.ALWAYS);
+            constraints.setFillWidth(true);
+            grid.getColumnConstraints().add(constraints);
+        }
+        int rows = (nodes.size() + columns - 1) / columns;
+        for (int row = 0; row < rows; row++) {
+            RowConstraints constraints = new RowConstraints();
+            constraints.setValignment(VPos.TOP);
+            constraints.setVgrow(Priority.ALWAYS); // the cards fill the window, also when they are shorter
+            constraints.setFillHeight(true);
+            if (fillHeight) {
+                constraints.setPercentHeight(100.0 / rows);
+            }
+            grid.getRowConstraints().add(constraints);
+        }
+        for (int i = 0; i < nodes.size(); i++) {
+            Node node = nodes.get(i);
+            if (node instanceof Region region) {
+                region.setMaxWidth(Double.MAX_VALUE);
+                region.setMinWidth(0);
+                region.setMaxHeight(Double.MAX_VALUE);
+            }
+            grid.add(node, i % columns, i / columns);
         }
     }
 

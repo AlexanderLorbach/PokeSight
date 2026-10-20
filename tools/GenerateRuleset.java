@@ -16,8 +16,12 @@ import java.util.TreeMap;
 /**
  * Generates the generation-specific ruleset YAML files from the PokeAPI CSV dump.
  *
- * <p>Usage: {@code java tools/GenerateRuleset.java <generation> <outputDir>}
- * <br>Example: {@code java tools/GenerateRuleset.java 4 src/main/resources/rulesets/gen4}
+ * <p>Usage: {@code java tools/GenerateRuleset.java <versionGroup> <outputDir>}
+ * <br>Example: {@code java tools/GenerateRuleset.java heartgold-soulsilver src/main/resources/rulesets/gen4}
+ *
+ * <p>The version group (PokeAPI identifier) is the last game whose data counts: its generation decides types,
+ * species and the type chart; moves and forms are taken as they were in that game. Within a generation moves can
+ * change (Let's Go doubled Absorb's power), so Gen 7 uses ultra-sun-ultra-moon and Let's Go has its own ruleset.
  *
  * <p>Writes {@code type-chart.yaml}, {@code pokemon.yaml} and {@code moves.yaml}.
  */
@@ -34,37 +38,84 @@ public class GenerateRuleset {
     private static final int ARCEUS_UNKNOWN_FORM_GEN4 = 9;
     /** PokeAPI damage classes; status moves (1) never deal damage. */
     private static final Map<String, String> DAMAGE_CLASSES = Map.of("2", "PHYSICAL", "3", "SPECIAL");
+    /** Until Gen 3 the move's type decides the category: these types are physical, all others special. */
+    private static final int LAST_TYPE_BASED_CATEGORY_GENERATION = 3;
+    private static final List<String> PHYSICAL_TYPES = List.of("NORMAL", "FIGHTING", "FLYING", "POISON", "GROUND", "ROCK", "BUG", "GHOST", "STEEL");
     /**
      * Moves PokeAPI lists with a nominal power although it varies: Hidden Power (237, type and power depend on the
      * user) and Punishment (386, grows with the target's stat boosts). Found by cross-checking with Pokémon Showdown.
      */
     private static final List<String> VARIABLE_POWER_MOVES = List.of("237", "386");
-    /** Luster Purge (295) had 70 power until Gen 6 (95 since Gen 7); PokeAPI's changelog lacks this (Showdown gen6 mod). */
-    private static final String LUSTER_PURGE = "295";
-    private static final int LUSTER_PURGE_OLD_POWER_UNTIL = 6;
+    /** Newer moves with a variable power have 0 or 1 in PokeAPI (Ruination, Comeuppance, Hard Press). */
+    private static final int MAX_PLACEHOLDER_POWER = 1;
+    /**
+     * Z-Moves (Gen 7) and Max Moves (Gen 8) replace a regular move for one turn; nobody has them in their move set.
+     * Inclusive id ranges, cross-checked with Pokémon Showdown's isZ / isMax.
+     */
+    private static final List<int[]> Z_AND_MAX_MOVES = List.of(
+            new int[]{622, 658}, new int[]{695, 703}, new int[]{719, 719}, new int[]{723, 728}, new int[]{757, 774});
+    /** Regional forms; games set in that region show the species in this form (Alolan Rattata in Sun/Moon). */
+    private static final List<String> REGIONS = List.of("alola", "galar", "hisui", "paldea");
+    /** Form names PokeAPI has neither as a full name nor as a form label. Source: PokéWiki (Tauros, Felino). */
+    private static final Map<String, Map<String, String>> MISSING_FORM_NAMES = Map.of(
+            "tauros-paldea-combat-breed", Map.of("DE", "Paldea-Tauros (Gefechtvariante)"),
+            "tauros-paldea-blaze-breed", Map.of("DE", "Paldea-Tauros (Flammenvariante)"),
+            "tauros-paldea-aqua-breed", Map.of("DE", "Paldea-Tauros (Flutenvariante)"),
+            "wooper-paldea", Map.of("DE", "Paldea-Felino"));
+    /**
+     * Power changes PokeAPI's changelog lacks, found by cross-checking with Pokémon Showdown's gen mods:
+     * move id -> {old power, last generation with it}. Luster Purge had 70 until Gen 8 (95 since Scarlet/Violet, like
+     * Mist Ball, whose change PokeAPI has); Grassy Glide 70, Wicked Blow 80 and Glacial Lance 130 in Sword/Shield.
+     */
+    private static final Map<String, int[]> OLD_POWERS = Map.of(
+            "295", new int[]{70, 8}, "803", new int[]{70, 8}, "817", new int[]{80, 8}, "824", new int[]{130, 8});
+    /** Stellar (Gen 9) only exists as a Terastal type: no Pokémon has it, and it is no attack type in the chart. */
+    private static final String STELLAR = "stellar";
+    /** Water Shuriken (594) was physical in Gen 6; PokeAPI has no history of damage classes (Showdown gen6 mod). */
+    private static final String WATER_SHURIKEN = "594";
+    private static final int WATER_SHURIKEN_PHYSICAL_UNTIL = 6;
 
     private final HttpClient http = HttpClient.newHttpClient();
-    private final int generation;
+    private final String versionGroup;
+    private int generation;
+    /** PokeAPI's chronological order of the last version group whose data counts. */
+    private int lastOrder;
 
-    private GenerateRuleset(int generation) {
-        this.generation = generation;
+    private GenerateRuleset(String versionGroup) {
+        this.versionGroup = versionGroup;
     }
 
     public static void main(String[] args) throws Exception {
         if (args.length != 2) {
-            System.err.println("Usage: java tools/GenerateRuleset.java <generation> <outputDir>");
+            System.err.println("Usage: java tools/GenerateRuleset.java <versionGroup> <outputDir>");
             System.exit(1);
         }
-        int generation = Integer.parseInt(args[0]);
         Path outputDir = Path.of(args[1]);
         Files.createDirectories(outputDir);
 
-        GenerateRuleset generator = new GenerateRuleset(generation);
+        GenerateRuleset generator = new GenerateRuleset(args[0]);
+        generator.resolveVersionGroup();
         Map<String, String> typeKeys = generator.typeKeys();
         Files.writeString(outputDir.resolve("type-chart.yaml"), generator.typeChartYaml(typeKeys), StandardCharsets.UTF_8);
         Files.writeString(outputDir.resolve("pokemon.yaml"), generator.pokemonYaml(typeKeys), StandardCharsets.UTF_8);
         Files.writeString(outputDir.resolve("moves.yaml"), generator.movesYaml(typeKeys), StandardCharsets.UTF_8);
-        System.out.println("Ruleset for generation " + generation + " written to " + outputDir.toAbsolutePath());
+        System.out.println("Ruleset for " + args[0] + " (generation " + generator.generation + ") written to " + outputDir.toAbsolutePath());
+    }
+
+    private void resolveVersionGroup() throws IOException, InterruptedException {
+        Map<String, String> group = csv("version_groups").stream()
+                .filter(row -> row.get("identifier").equals(versionGroup))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown PokeAPI version group: " + versionGroup));
+        generation = Integer.parseInt(group.get("generation_id"));
+        lastOrder = Integer.parseInt(group.get("order"));
+    }
+
+    /** PokeAPI version group id -> chronological order. */
+    private Map<String, Integer> versionGroupOrder() throws IOException, InterruptedException {
+        Map<String, Integer> order = new HashMap<>();
+        csv("version_groups").forEach(row -> order.put(row.get("id"), Integer.parseInt(row.get("order"))));
+        return order;
     }
 
     /** Type id -> enum key (e.g. "10" -> "FIRE") for every type that exists in this generation. */
@@ -72,7 +123,8 @@ public class GenerateRuleset {
         Map<String, String> keys = new TreeMap<>(Comparator.comparingInt(Integer::parseInt));
         for (Map<String, String> row : csv("types")) {
             int id = Integer.parseInt(row.get("id"));
-            if (id < FIRST_NON_STANDARD_TYPE_ID && Integer.parseInt(row.get("generation_id")) <= generation) {
+            if (id < FIRST_NON_STANDARD_TYPE_ID && !row.get("identifier").equals(STELLAR)
+                    && Integer.parseInt(row.get("generation_id")) <= generation) {
                 keys.put(row.get("id"), row.get("identifier").toUpperCase());
             }
         }
@@ -130,11 +182,13 @@ public class GenerateRuleset {
         Map<String, List<Map<String, String>>> formsBySpecies = formsBySpecies();
         Map<String, Map<String, String>> speciesNames = names("pokemon_species_names", "pokemon_species_id", "name");
         Map<String, Map<String, String>> formNames = names("pokemon_form_names", "pokemon_form_id", "pokemon_name");
+        Map<String, Map<String, String>> formLabels = names("pokemon_form_names", "pokemon_form_id", "form_name");
 
         StringBuilder yaml = new StringBuilder(HEADER);
         yaml.append("# Key: national dex number.\n");
         yaml.append("# forms: form index as stored in the game's data; only forms whose types differ from the base form.\n");
         yaml.append("# sprite: PokeAPI sprite file name of a form (the base form's sprite is its national dex number).\n");
+        yaml.append("# region: regional form (alola, galar, hisui, paldea); games set in that region show it by default.\n");
         yaml.append("pokemon:\n");
         for (Map<String, String> species : csv("pokemon_species")) {
             if (Integer.parseInt(species.get("generation_id")) > generation) {
@@ -146,8 +200,12 @@ public class GenerateRuleset {
 
             List<String> formLines = new ArrayList<>();
             List<Map<String, String>> forms = formsBySpecies.getOrDefault(speciesId, List.of());
+            // Form 0 is usually the default Pokemon; Maushold's Family of Three (form 0) is not, but has the same types.
             if (!forms.isEmpty() && !forms.getFirst().get("pokemon_id").equals(pokemonId)) {
-                throw new IllegalStateException("Form 0 of species " + speciesId + " is not its default Pokemon");
+                String firstPokemonId = forms.getFirst().get("pokemon_id");
+                if (!pastTypes.getOrDefault(firstPokemonId, currentTypes.get(firstPokemonId)).equals(typeIds)) {
+                    throw new IllegalStateException("Form 0 of species " + speciesId + " is not its default Pokemon and has other types");
+                }
             }
             for (int index = 1; index < forms.size(); index++) {
                 Map<String, String> form = forms.get(index);
@@ -161,8 +219,10 @@ public class GenerateRuleset {
                 // PokeAPI sprite file names: forms with their own Pokemon entry use its id (Sandy Wormadam: 10004),
                 // forms of the same entry use "<species>-<form>" (Fire Arceus: 493-fire).
                 String sprite = formPokemonId.equals(pokemonId) ? speciesId + "-" + form.get("form_identifier") : formPokemonId;
-                formLines.add("      " + index + ": { name: " + nameMap(formNames.get(form.get("id")))
-                        + ", types: " + typeList(typeKeys, formTypeIds, speciesId) + ", sprite: " + quote(sprite) + " }\n");
+                String region = region(form.get("form_identifier"));
+                formLines.add("      " + index + ": { name: " + nameMap(formName(form, formNames, formLabels, speciesNames.get(speciesId)))
+                        + ", types: " + typeList(typeKeys, formTypeIds, speciesId) + ", sprite: " + quote(sprite)
+                        + (region == null ? "" : ", region: " + region) + " }\n");
             }
 
             String name = nameMap(speciesNames.get(speciesId));
@@ -181,26 +241,18 @@ public class GenerateRuleset {
     }
 
     /**
-     * Damaging moves of this generation with the type and power they had then. PokeAPI's changelog rows hold the
-     * values a move had before a version group changed them, so for every change after this generation's last
-     * version group the earliest such row gives the value of that time (e.g. Thunderbolt: 95, 90 since Gen 6).
+     * Damaging moves of this generation with the type and power they had in the version group. PokeAPI's changelog
+     * rows hold the values a move had before a version group changed them, so for every change after the version
+     * group the earliest such row gives the value of that time (e.g. Thunderbolt: 95, 90 since Gen 6).
      * Moves without a fixed power (Low Kick, Seismic Toss, ...) are left out: they cannot be ranked by power.
      */
     private String movesYaml(Map<String, String> typeKeys) throws IOException, InterruptedException {
-        Map<String, Integer> versionGroupOrder = new HashMap<>();
-        int lastOrderOfGeneration = Integer.MIN_VALUE;
-        for (Map<String, String> group : csv("version_groups")) {
-            int order = Integer.parseInt(group.get("order"));
-            versionGroupOrder.put(group.get("id"), order);
-            if (Integer.parseInt(group.get("generation_id")) == generation) {
-                lastOrderOfGeneration = Math.max(lastOrderOfGeneration, order);
-            }
-        }
+        Map<String, Integer> versionGroupOrder = versionGroupOrder();
         Map<String, Map<String, String>> pastValues = new HashMap<>();
         Map<String, Integer> pastOrder = new HashMap<>();
         for (Map<String, String> change : csv("move_changelog")) {
             int changedAt = versionGroupOrder.get(change.get("changed_in_version_group_id"));
-            if (changedAt <= lastOrderOfGeneration) {
+            if (changedAt <= lastOrder) {
                 continue;
             }
             for (String field : List.of("type_id", "power")) {
@@ -218,40 +270,80 @@ public class GenerateRuleset {
         yaml.append("moves:\n");
         for (Map<String, String> move : csv("moves")) {
             String category = DAMAGE_CLASSES.get(move.get("damage_class_id"));
-            boolean mainSeries = Integer.parseInt(move.get("id")) < FIRST_NON_MAIN_SERIES_MOVE_ID;
+            int moveId = Integer.parseInt(move.get("id"));
+            boolean mainSeries = moveId < FIRST_NON_MAIN_SERIES_MOVE_ID
+                    && Z_AND_MAX_MOVES.stream().noneMatch(range -> moveId >= range[0] && moveId <= range[1]);
             if (!mainSeries || Integer.parseInt(move.get("generation_id")) > generation || category == null) {
                 continue;
             }
             Map<String, String> past = pastValues.getOrDefault(move.get("id"), Map.of());
             String power = past.getOrDefault("power", move.get("power"));
             String typeId = past.getOrDefault("type_id", move.get("type_id"));
-            if (power.isEmpty() || VARIABLE_POWER_MOVES.contains(move.get("id"))) {
+            if (power.isEmpty() || Integer.parseInt(power) <= MAX_PLACEHOLDER_POWER || VARIABLE_POWER_MOVES.contains(move.get("id"))) {
                 continue;
             }
-            if (move.get("id").equals(LUSTER_PURGE) && generation <= LUSTER_PURGE_OLD_POWER_UNTIL) {
-                power = "70";
+            int[] oldPower = OLD_POWERS.get(move.get("id"));
+            if (oldPower != null && generation <= oldPower[1]) {
+                power = String.valueOf(oldPower[0]);
+            }
+            String type = typeList(typeKeys, List.of(typeId), "move " + move.get("id")).replaceAll("[\\[\\]]", "");
+            if (generation <= LAST_TYPE_BASED_CATEGORY_GENERATION) {
+                category = PHYSICAL_TYPES.contains(type) ? "PHYSICAL" : "SPECIAL";
+            } else if (move.get("id").equals(WATER_SHURIKEN) && generation <= WATER_SHURIKEN_PHYSICAL_UNTIL) {
+                category = "PHYSICAL";
             }
             yaml.append("  ").append(move.get("id")).append(": { name: ").append(nameMap(moveNames.get(move.get("id"))))
-                    .append(", type: ").append(typeList(typeKeys, List.of(typeId), "move " + move.get("id")).replaceAll("[\\[\\]]", ""))
+                    .append(", type: ").append(type)
                     .append(", power: ").append(power).append(", category: ").append(category).append(" }\n");
         }
         return yaml.toString();
     }
 
     /**
+     * A form's full name per language. PokeAPI lacks some: those are built from the species name and the form label
+     * ("Silvally (Type: Fire)"), or, without a label either, taken from {@link #MISSING_FORM_NAMES}.
+     */
+    private static Map<String, String> formName(Map<String, String> form, Map<String, Map<String, String>> formNames,
+                                                Map<String, Map<String, String>> formLabels, Map<String, String> speciesName) {
+        Map<String, String> result = new TreeMap<>();
+        for (String language : LANGUAGES.keySet()) {
+            String fullName = formNames.getOrDefault(form.get("id"), Map.of()).get(language);
+            String label = formLabels.getOrDefault(form.get("id"), Map.of()).get(language);
+            String fallback = MISSING_FORM_NAMES.getOrDefault(form.get("identifier"), Map.of()).get(language);
+            if (fullName != null) {
+                result.put(language, fullName);
+            } else if (label != null && speciesName != null && speciesName.containsKey(language)) {
+                result.put(language, speciesName.get(language) + " (" + label + ")");
+            } else if (fallback != null) {
+                result.put(language, fallback);
+            }
+        }
+        return result;
+    }
+
+    /** The region of a regional form ("alola", "galar-standard", "paldea-combat-breed"); null for other forms. */
+    private static String region(String formIdentifier) {
+        return REGIONS.stream()
+                .filter(region -> formIdentifier.equals(region) || formIdentifier.startsWith(region + "-"))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
      * Forms that are stored in a Pokemon's data, by species id, in the game's form index order.
-     * Battle-only forms (Castform's weather forms, Cherrim) and Megas never appear in stored data.
+     * Battle-only forms (Castform's weather forms, Cherrim, Gigantamax) and Megas never appear in stored data;
+     * Totem Pokémon (Sun/Moon) are oversized opponents nobody can own.
      */
     private Map<String, List<Map<String, String>>> formsBySpecies() throws IOException, InterruptedException {
         Map<String, String> speciesByPokemon = new HashMap<>();
         csv("pokemon").forEach(row -> speciesByPokemon.put(row.get("id"), row.get("species_id")));
-        Map<String, Integer> generationByVersionGroup = new HashMap<>();
-        csv("version_groups").forEach(row -> generationByVersionGroup.put(row.get("id"), Integer.parseInt(row.get("generation_id"))));
+        Map<String, Integer> versionGroupOrder = versionGroupOrder();
 
         Map<String, List<Map<String, String>>> forms = new HashMap<>();
         for (Map<String, String> form : csv("pokemon_forms")) {
-            if (generationByVersionGroup.get(form.get("introduced_in_version_group_id")) <= generation
-                    && form.get("is_battle_only").equals("0") && form.get("is_mega").equals("0")) {
+            if (versionGroupOrder.get(form.get("introduced_in_version_group_id")) <= lastOrder
+                    && form.get("is_battle_only").equals("0") && form.get("is_mega").equals("0")
+                    && !form.get("form_identifier").contains("totem")) {
                 forms.computeIfAbsent(speciesByPokemon.get(form.get("pokemon_id")), k -> new ArrayList<>()).add(form);
             }
         }

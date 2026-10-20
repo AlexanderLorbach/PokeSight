@@ -22,6 +22,10 @@ import java.util.Objects;
  */
 public final class Theme {
 
+    /** Default size of the main window and the team editor; every view is laid out to fill it. */
+    public static final double DEFAULT_WIDTH = 855;
+    public static final double DEFAULT_HEIGHT = 640;
+
     /** Background of the title bar and the scene; its brightness also decides the colour of the native window buttons. */
     static final Color TITLE_BAR = Color.web("#0d0f13");
     private static final String FONT = "/ui/fonts/Fredoka-SemiBold.ttf";

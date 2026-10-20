@@ -65,7 +65,7 @@ class ImagePreprocessorTest {
         graphics.fillRect(0, 34, box.getWidth(), 2); // HP bar outline
         graphics.dispose();
 
-        BufferedImage prepared = ImagePreprocessor.prepare(box, TextColor.DARK, false);
+        BufferedImage prepared = ImagePreprocessor.prepare(box, TextColor.DARK, false).getFirst();
 
         assertThat(prepared.getType()).isEqualTo(BufferedImage.TYPE_BYTE_GRAY);
         assertThat(prepared.getWidth()).isEqualTo(box.getWidth() * 2 + 2 * PADDING); // 8 px letters -> 2x
@@ -83,8 +83,8 @@ class ImagePreprocessorTest {
         graphics.fillRect(150, 5, 2, 5);  // ... and its vertical part, one pixel apart
         graphics.dispose();
 
-        BufferedImage separate = ImagePreprocessor.prepare(box, TextColor.DARK, false);
-        BufferedImage joined = ImagePreprocessor.prepare(box, TextColor.DARK, true);
+        BufferedImage separate = ImagePreprocessor.prepare(box, TextColor.DARK, false).getFirst();
+        BufferedImage joined = ImagePreprocessor.prepare(box, TextColor.DARK, true).getFirst();
 
         // The 2 px tall top stroke alone is too small to be a letter; joined with the vertical part it is kept.
         assertThat(separate.getRGB(PADDING + 152 * 2, PADDING + 2 * 2)).isEqualTo(Color.WHITE.getRGB());
@@ -95,7 +95,7 @@ class ImagePreprocessorTest {
     void largeCapturesAreShrunk() {
         BufferedImage box = letters(DP_BOX, DP_TEXT, DP_BOX, 60);
 
-        BufferedImage prepared = ImagePreprocessor.prepare(box, TextColor.DARK, false);
+        BufferedImage prepared = ImagePreprocessor.prepare(box, TextColor.DARK, false).getFirst();
 
         assertThat(prepared.getWidth()).isLessThan(box.getWidth());
     }
@@ -104,7 +104,7 @@ class ImagePreprocessorTest {
     void imageWithoutTextStaysBlank() {
         BufferedImage plain = new BufferedImage(50, 30, BufferedImage.TYPE_INT_RGB);
 
-        BufferedImage prepared = ImagePreprocessor.prepare(plain, TextColor.LIGHT, true);
+        BufferedImage prepared = ImagePreprocessor.prepare(plain, TextColor.LIGHT, true).getFirst();
 
         assertThat(prepared.getRGB(PADDING + 10, PADDING + 10)).isEqualTo(Color.WHITE.getRGB());
     }
