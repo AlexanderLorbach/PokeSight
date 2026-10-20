@@ -9,6 +9,10 @@ PokeSight is a second-screen companion for Pokémon games. It reads the opponent
 when a battle starts and shows each opponent's weaknesses, resistances and immunities, plus which moves of your team
 hit it hardest. It only looks at the screen, so it needs no emulator plugin or memory access.
 
+| Single battle | Double battle |
+|---|---|
+| ![A battle against Tyranitar in Platinum: the team's best moves and all weaknesses, resistances and immunities](docs/screenshots/battle-single.png) | ![Double battle: Togekiss and Weavile side by side](docs/screenshots/battle-double.png) |
+
 - Single, double and triple battles and hordes, auto-detection plus **Scan now** if a battle was missed
 - Correct a misread Pokémon or add one by hand with a name search
 - **Your best moves**: enter your team once (or let PokeSight read the moves from the game), see the strongest move
@@ -246,12 +250,14 @@ PokeSight's own code is released under the [MIT License](LICENSE): free to use, 
 third-party software under its own licenses: see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the
 [licenses](licenses) folder, both also included in the app folder.
 
-Neither the repository nor the release contains Pokémon images: the app downloads the sprites on first start, the
-build downloads the test screenshots. They are not covered by the MIT License:
+The release contains no Pokémon images: the app downloads the sprites on first start, the build downloads the test
+screenshots. The repository only contains the README screenshots in `docs/screenshots`, which show sprites. None of
+these are covered by the MIT License:
 
 | What | Source | License / owner |
 |---|---|---|
 | Sprites | [PokeAPI/sprites](https://github.com/PokeAPI/sprites), pinned commit (URLs in `games/*.yaml`) | © Nintendo / Game Freak / The Pokémon Company |
+| Sprites in the README screenshots | `docs/screenshots`, sprites from [PokeAPI/sprites](https://github.com/PokeAPI/sprites) | © Nintendo / Game Freak / The Pokémon Company |
 | Test screenshots | Bulbagarden Archives, Wikipedia, PokéWiki (URLs in `build.gradle.kts`) | © Nintendo / Game Freak / The Pokémon Company |
 | Paldean Tauros / Wooper German names | [PokéWiki](https://www.pokewiki.de) (missing in PokeAPI) | names © Nintendo / Game Freak / The Pokémon Company |
 | Pokémon data (names, types, moves) | [PokeAPI](https://pokeapi.co), cross-checked with [Pokémon Showdown](https://github.com/smogon/pokemon-showdown) | game data © Nintendo / Game Freak / The Pokémon Company |
