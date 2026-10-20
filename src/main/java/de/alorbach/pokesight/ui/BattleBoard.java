@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalInt;
 
 /**
  * What the battle view shows: the scanned opponents with the user's corrections applied,
@@ -28,10 +26,10 @@ final class BattleBoard {
      * @param readText  OCR text of the slot (empty for added Pokémon)
      * @param corrected the user replaced what the scan recognized
      */
-    record Entry(int index, boolean added, String readText, Optional<PokemonId> pokemon, OptionalInt level, boolean corrected) {
+    record Entry(int index, boolean added, String readText, PokemonId pokemon, boolean corrected) {
     }
 
-    private record Correction(Optional<PokemonId> detected, PokemonId chosen) {
+    private record Correction(PokemonId detected, PokemonId chosen) {
     }
 
     private List<Sighting> sightings = List.of();
@@ -54,11 +52,10 @@ final class BattleBoard {
             Sighting sighting = sightings.get(i);
             Correction correction = corrections.get(i);
             boolean corrected = correction != null && correction.detected().equals(sighting.pokemon());
-            entries.add(new Entry(i, false, sighting.text(),
-                    corrected ? Optional.of(correction.chosen()) : sighting.pokemon(), sighting.level(), corrected));
+            entries.add(new Entry(i, false, sighting.text(), corrected ? correction.chosen() : sighting.pokemon(), corrected));
         }
         for (int i = 0; i < added.size(); i++) {
-            entries.add(new Entry(i, true, "", Optional.of(added.get(i)), OptionalInt.empty(), false));
+            entries.add(new Entry(i, true, "", added.get(i), false));
         }
         return entries;
     }

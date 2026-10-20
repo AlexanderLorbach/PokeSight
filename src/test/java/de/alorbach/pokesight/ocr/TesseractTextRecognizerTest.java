@@ -16,15 +16,24 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** Runs the real Tesseract engine with the bundled models on rendered name boxes. */
 class TesseractTextRecognizerTest {
 
     private static final Ruleset GEN4 = RulesetLoader.load("gen4");
+
+    @Test
+    void closingTwiceIsHarmlessAndReadingAfterwardsFails() throws Exception {
+        TesseractTextRecognizer recognizer = new TesseractTextRecognizer(Language.EN);
+        recognizer.close();
+        recognizer.close(); // freeing the native engine twice would crash the JVM
+
+        assertThatThrownBy(() -> recognizer.read(new BufferedImage(8, 8, BufferedImage.TYPE_BYTE_GRAY)))
+                .isInstanceOf(IllegalStateException.class);
+    }
 
     @Test
     void readsAnEnglishNameBox() throws Exception {
@@ -33,8 +42,7 @@ class TesseractTextRecognizerTest {
 
             List<Sighting> sightings = scanner.scan(nameBoxes("GENGAR Lv32"));
 
-            assertThat(sightings).extracting(Sighting::pokemon, Sighting::level)
-                    .containsExactly(tuple(Optional.of(PokemonId.of(94)), OptionalInt.of(32)));
+            assertThat(sightings).extracting(Sighting::pokemon).containsExactly(PokemonId.of(94));
         }
     }
 
@@ -46,7 +54,7 @@ class TesseractTextRecognizerTest {
             List<Sighting> sightings = scanner.scan(nameBoxes("GARADOS Lv30", "BURMADAME Lv25"));
 
             assertThat(sightings).extracting(Sighting::pokemon)
-                    .containsExactly(Optional.of(PokemonId.of(130)), Optional.of(PokemonId.of(413)));
+                    .containsExactly(PokemonId.of(130), PokemonId.of(413));
         }
     }
 

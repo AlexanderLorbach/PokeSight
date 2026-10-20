@@ -73,7 +73,6 @@ final class PokemonCard extends VBox {
         spriteFrame.getStyleClass().add("sprite-frame");
         Label name = styled(new Label(analysis.map(EnemyAnalysis::name).orElse("Unknown Pokémon")), "pokemon-name");
         VBox titles = new VBox(4, name);
-        entry.level().ifPresent(level -> titles.getChildren().add(styled(new Label("Lv. " + level), "pokemon-meta")));
         analysis.ifPresent(enemy -> titles.getChildren().add(badges(enemy.types(), chart, language)));
         HBox.setHgrow(titles, Priority.ALWAYS);
         titles.setMinWidth(0);

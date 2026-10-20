@@ -114,7 +114,7 @@ final class TeamEditor {
     private static Optional<CaptureRegion> selectMovesArea(Node owner, MoveScan moveScan) {
         Optional<CaptureRegion> area = AreaSelector.select(owner.getScene().getWindow(),
                 "Drag a rectangle around the move names of the game's move selection");
-        area.ifPresent(moveScan::setArea);
+        area.ifPresent(selected -> Theme.saveOrWarn(owner.getScene().getWindow(), () -> moveScan.setArea(selected)));
         return area;
     }
 

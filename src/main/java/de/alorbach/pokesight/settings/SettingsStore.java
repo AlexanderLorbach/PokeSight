@@ -99,11 +99,15 @@ public final class SettingsStore {
         try {
             Files.createDirectories(file.getParent());
             Path temp = Files.createTempFile(file.getParent(), file.getFileName().toString(), ".tmp");
-            Files.writeString(temp, HEADER + MAPPER.writeValueAsString(value), StandardCharsets.UTF_8);
             try {
-                Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException e) {
-                Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+                Files.writeString(temp, HEADER + MAPPER.writeValueAsString(value), StandardCharsets.UTF_8);
+                try {
+                    Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                } catch (AtomicMoveNotSupportedException e) {
+                    Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } finally {
+                Files.deleteIfExists(temp); // left over only if writing or moving failed
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot save settings to " + file, e);

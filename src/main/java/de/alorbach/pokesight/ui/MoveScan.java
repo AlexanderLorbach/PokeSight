@@ -25,20 +25,25 @@ final class MoveScan {
     private final String gameId;
     private final Ruleset ruleset;
     private final Language language;
+    /** Kept here too: if saving fails, the area still works until PokeSight is closed. */
+    private CaptureRegion area;
 
     MoveScan(SettingsStore store, String gameId, Ruleset ruleset, Language language) {
         this.store = Objects.requireNonNull(store);
         this.gameId = Objects.requireNonNull(gameId);
         this.ruleset = Objects.requireNonNull(ruleset);
         this.language = Objects.requireNonNull(language);
+        this.area = store.game(gameId).movesArea();
     }
 
     Optional<CaptureRegion> area() {
-        return Optional.ofNullable(store.game(gameId).movesArea());
+        return Optional.ofNullable(area);
     }
 
-    void setArea(CaptureRegion area) {
-        store.saveGame(gameId, store.game(gameId).withMovesArea(area));
+    /** @throws java.io.UncheckedIOException if the area cannot be saved; it is used anyway */
+    void setArea(CaptureRegion newArea) {
+        area = newArea;
+        store.saveGame(gameId, store.game(gameId).withMovesArea(newArea));
     }
 
     /**
@@ -47,8 +52,8 @@ final class MoveScan {
      * @throws IllegalStateException if no area is selected
      */
     List<Integer> read() throws IOException, AWTException {
-        CaptureRegion area = area().orElseThrow(() -> new IllegalStateException("No move area selected"));
-        BufferedImage image = new RobotScreenSource().capture(area);
+        CaptureRegion selected = area().orElseThrow(() -> new IllegalStateException("No move area selected"));
+        BufferedImage image = new RobotScreenSource().capture(selected);
         try (TesseractTextRecognizer recognizer = new TesseractTextRecognizer(language)) {
             return new MoveReader(recognizer, ruleset, language).read(image);
         }

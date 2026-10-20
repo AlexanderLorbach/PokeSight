@@ -119,8 +119,11 @@ public final class PokeSightApp extends Application {
     private record Session(BattleMonitor monitor, TextRecognizer recognizer) implements AutoCloseable {
         @Override
         public void close() {
-            monitor.close();
-            recognizer.close();
+            try {
+                monitor.close();
+            } finally {
+                recognizer.close(); // also if stopping the monitor failed: the native engine must be freed
+            }
         }
     }
 }

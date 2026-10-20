@@ -198,7 +198,7 @@ public final class BattleView extends BorderPane {
     private void editTeam() {
         TeamEditor.show(getScene().getWindow(), team, calculator.ruleset(), language, sprites,
                 new MoveScan(store, gameId, calculator.ruleset(), language), saved -> {
-            store.saveGame(gameId, store.game(gameId).withTeam(saved));
+            Theme.saveOrWarn(getScene().getWindow(), () -> store.saveGame(gameId, store.game(gameId).withTeam(saved)));
             useTeam(saved);
         });
     }
@@ -250,8 +250,8 @@ public final class BattleView extends BorderPane {
                 sprites::image);
         List<Node> enemyCards = new ArrayList<>();
         for (BattleBoard.Entry entry : board.entries()) {
-            Optional<EnemyAnalysis> analysis = entry.pokemon().flatMap(pokemon -> calculator.analyze(pokemon, language, team));
-            PokemonCard card = new PokemonCard(entry, analysis, entry.pokemon().flatMap(sprites::image), context, compact,
+            Optional<EnemyAnalysis> analysis = calculator.analyze(entry.pokemon(), language, team);
+            PokemonCard card = new PokemonCard(entry, analysis, sprites.image(entry.pokemon()), context, compact,
                     chosen -> {
                         board.change(entry, chosen);
                         render();

@@ -12,20 +12,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Predicate;
 
 /** Reads the opponents' name boxes from a screenshot (a selected area or the whole screen). */
 public final class BattleScanner {
 
-    /** "32", "Lv32", "Lv.32", "L32"; OCR often reads the small "v" as "u" or "y". */
-    private static final Pattern LEVEL = Pattern.compile("(?i)(L[VUY]?\\.?)?(\\d{1,3})");
-    /** A separate "Lv" sign in front of the number. */
-    private static final Pattern LEVEL_SIGN = Pattern.compile("(?i)L[VUY]?\\.?");
-    private static final int MAX_LEVEL = 100;
     /** Share of upper-case letters a word needs to count as a name in games that write names in capitals. */
     private static final double MIN_CAPITALS = 0.75;
+    /** Characters OCR reads for a capital I at the start of a mixed-case name ("lgglybuff"). */
+    private static final String CAPITAL_I_LOOK_ALIKES = "l|1";
     /** Gap between two words, in letter heights, from which they belong to different name boxes. */
     private static final int MIN_BOX_GAP_LETTERS = 5;
 
@@ -51,7 +46,7 @@ public final class BattleScanner {
     }
 
     /**
-     * One entry per name box found, top to bottom; unrecognized text is only kept if it carries a level.
+     * One entry per name box whose text matches a Pokémon, top to bottom.
      * The text colour depends on the game, the right letter grouping on the emulator's smoothing and the letter height
      * on the font, so every combination is read and the reading with the most recognized names wins (see
      * {@link ImagePreprocessor}).
@@ -66,9 +61,9 @@ public final class BattleScanner {
             if (read.stream().anyMatch(label::intersects)) {
                 continue; // one bar found twice (e.g. its rounded ends as separate rows): one opponent
             }
+            // The name is the line right above the bar; anything higher up in the area is the scene behind the label.
             Optional<Sighting> sighting = scanBoxes(image.getSubimage(label.x, label.y, label.width, label.height)).stream()
-                    .filter(found -> found.pokemon().isPresent())
-                    .findFirst();
+                    .reduce((upper, lower) -> lower);
             if (sighting.isPresent()) {
                 sightings.add(sighting.get());
                 read.add(label);
@@ -78,7 +73,7 @@ public final class BattleScanner {
     }
 
     private List<Sighting> scanBoxes(BufferedImage image) {
-        List<Sighting> best = List.of();
+        List<List<Sighting>> readings = new ArrayList<>();
         for (ImagePreprocessor.TextColor textColor : ImagePreprocessor.TextColor.values()) {
             for (boolean joinStrokes : new boolean[]{false, true}) {
                 for (BufferedImage prepared : ImagePreprocessor.prepare(image, textColor, joinStrokes)) {
@@ -88,18 +83,39 @@ public final class BattleScanner {
                             toSighting(box).ifPresent(sightings::add);
                         }
                     }
-                    if (recognizedCount(sightings) > recognizedCount(best)
-                            || (recognizedCount(sightings) == recognizedCount(best) && sightings.size() > best.size())) {
-                        best = sightings;
-                    }
+                    readings.add(sightings);
                 }
+            }
+        }
+        return best(readings);
+    }
+
+    /**
+     * The reading to trust among those of all image variants: one with recognized names, then the one most variants
+     * agree on (a misreading is usually specific to one variant), then the most recognized names and boxes. Measured
+     * on the screenshot tests: 518 instead of 512 correctly read views with "most names" alone.
+     */
+    static List<Sighting> best(List<List<Sighting>> readings) {
+        Comparator<List<Sighting>> order = Comparator.<List<Sighting>>comparingInt(reading -> recognizedCount(reading) > 0 ? 1 : 0)
+                .thenComparingLong(reading -> readings.stream().filter(other -> samePokemon(other, reading)).count())
+                .thenComparingLong(BattleScanner::recognizedCount)
+                .thenComparingInt(List::size);
+        List<Sighting> best = List.of();
+        for (List<Sighting> reading : readings) {
+            if (order.compare(reading, best) > 0) {
+                best = reading;
             }
         }
         return best;
     }
 
+    /** The same Pokémon in the same order; the raw text does not count. */
+    static boolean samePokemon(List<Sighting> a, List<Sighting> b) {
+        return a.stream().map(Sighting::pokemon).toList().equals(b.stream().map(Sighting::pokemon).toList());
+    }
+
     private static long recognizedCount(List<Sighting> sightings) {
-        return sightings.stream().filter(sighting -> sighting.pokemon().isPresent()).count();
+        return sightings.size();
     }
 
     /** Groups words into text lines: a word belongs to a line if its vertical center lies within that line. */
@@ -122,7 +138,8 @@ public final class BattleScanner {
 
     /**
      * Splits a text line into name boxes: since Gen 5 the boxes of double battles, triple battles and hordes stand
-     * side by side. Within a box the widest gap (name to level) is about four letters; between boxes it is wider.
+     * side by side. Within a box the widest gap (name to gender and level sign) is about four letters; between boxes
+     * it is wider.
      */
     static List<List<Word>> boxes(List<Word> line) {
         int[] heights = line.stream().mapToInt(word -> word.bottom() - word.top()).sorted().toArray();
@@ -138,41 +155,25 @@ public final class BattleScanner {
     }
 
     /**
-     * A number only counts as the level with an "Lv" sign in front of it ("Lv32", or "Lv" "32"): on real screenshots
-     * OCR often misreads the bold level digits (e.g. "29" for "Lv39"), and a wrong level is worse than none.
+     * The Pokémon in one name box, if any of its words (or adjacent words) matches a name. Levels, HP and gender signs
+     * in the box are not read: they never match a name. Floating labels are read in a busy 3D scene, so there a name has
+     * to start with a capital letter: lower-case noise then does not match short names ("ar Lok" is not Arbok). Pixel
+     * fonts of the boxed games are read with the wrong letter case too often for that (measured: 30 instead of 37 views
+     * of Black/White).
      */
     Optional<Sighting> toSighting(List<Word> line) {
         List<String> nameTokens = new ArrayList<>();
-        OptionalInt level = OptionalInt.empty();
-        boolean afterLevelSign = false;
         for (Word word : line) {
-            Matcher levelMatcher = LEVEL.matcher(word.text());
-            if (levelMatcher.matches()) {
-                int value = Integer.parseInt(levelMatcher.group(2));
-                boolean signed = levelMatcher.group(1) != null || afterLevelSign;
-                if (signed && value >= 1 && value <= MAX_LEVEL && level.isEmpty()) {
-                    level = OptionalInt.of(value);
-                }
-                afterLevelSign = false;
-            } else {
-                afterLevelSign = LEVEL_SIGN.matcher(word.text()).matches();
-                if (!capitalNames || isMostlyCapitals(word.text())) {
-                    nameTokens.add(word.text());
-                }
+            if (!capitalNames || isMostlyCapitals(word.text())) {
+                nameTokens.add(word.text());
             }
         }
-
         String text = String.join(" ", line.stream().map(Word::text).toList());
-        Optional<NameMatcher.Match> best = candidates(nameTokens).stream()
+        return candidates(nameTokens, floatingNames ? BattleScanner::startsWithCapital : token -> true).stream()
                 .map(matcher::match)
                 .flatMap(Optional::stream)
-                .min(Comparator.comparingInt(NameMatcher.Match::distance));
-        if (best.isPresent()) {
-            return Optional.of(new Sighting(text, Optional.of(best.get().pokemon()), level));
-        }
-        // Looks like a name box ("XYZ Lv12") whose name could not be read: show it so the user can correct it.
-        boolean hasLetters = NameMatcher.normalize(String.join("", nameTokens)).length() >= 3;
-        return level.isPresent() && hasLetters ? Optional.of(new Sighting(text, Optional.empty(), level)) : Optional.empty();
+                .min(Comparator.comparingInt(NameMatcher.Match::distance))
+                .map(match -> new Sighting(text, match.pokemon()));
     }
 
     static boolean isMostlyCapitals(String word) {
@@ -181,13 +182,25 @@ public final class BattleScanner {
         return letters > 0 && capitals >= letters * MIN_CAPITALS;
     }
 
-    /** Single words, adjacent pairs ("MR." "MIME") and the whole line, in case OCR adds or splits words. */
-    private static List<String> candidates(List<String> tokens) {
-        List<String> candidates = new ArrayList<>(tokens);
-        for (int i = 0; i + 1 < tokens.size(); i++) {
-            candidates.add(tokens.get(i) + tokens.get(i + 1));
+    static boolean startsWithCapital(String word) {
+        return !word.isEmpty() && (Character.isUpperCase(word.charAt(0)) || CAPITAL_I_LOOK_ALIKES.indexOf(word.charAt(0)) >= 0);
+    }
+
+    /**
+     * Single words, adjacent pairs ("MR." "MIME") and the whole line, in case OCR adds or splits words; each starting
+     * with a word a name can start with.
+     */
+    private static List<String> candidates(List<String> tokens, Predicate<String> nameStart) {
+        List<String> candidates = new ArrayList<>();
+        for (int i = 0; i < tokens.size(); i++) {
+            if (nameStart.test(tokens.get(i))) {
+                candidates.add(tokens.get(i));
+                if (i + 1 < tokens.size()) {
+                    candidates.add(tokens.get(i) + tokens.get(i + 1));
+                }
+            }
         }
-        if (tokens.size() > 2) {
+        if (tokens.size() > 2 && nameStart.test(tokens.getFirst())) {
             candidates.add(String.join("", tokens));
         }
         return candidates;
