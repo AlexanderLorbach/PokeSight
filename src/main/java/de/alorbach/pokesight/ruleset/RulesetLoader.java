@@ -18,6 +18,7 @@ public final class RulesetLoader {
         TypeChartFile typeChart = YamlResources.read(directory + "type-chart.yaml", TypeChartFile.class);
         PokemonFile pokemon = YamlResources.read(directory + "pokemon.yaml", PokemonFile.class);
         MovesFile moves = YamlResources.read(directory + "moves.yaml", MovesFile.class);
+        AbilitiesFile abilities = YamlResources.read(directory + "abilities.yaml", AbilitiesFile.class);
 
         TypeChart chart = new TypeChart(typeChart.types(), typeChart.effectiveness());
         pokemon.pokemon().forEach((speciesId, species) -> {
@@ -34,7 +35,13 @@ public final class RulesetLoader {
                 throw new IllegalStateException("Move " + moveId + " in ruleset " + id + " has unknown type " + move.type());
             }
         });
-        return new Ruleset(id, chart, pokemon.pokemon(), moves.moves());
+        pokemon.pokemon().forEach((speciesId, species) -> species.abilities().stream()
+                .filter(ability -> !abilities.abilities().containsKey(ability))
+                .findFirst()
+                .ifPresent(ability -> {
+                    throw new IllegalStateException("Species " + speciesId + " in ruleset " + id + " has unnamed ability " + ability);
+                }));
+        return new Ruleset(id, abilities.generation(), chart, pokemon.pokemon(), moves.moves(), abilities.abilities());
     }
 
     // One record per YAML file layout.
@@ -55,6 +62,15 @@ public final class RulesetLoader {
     record MovesFile(Map<Integer, Move> moves) {
         MovesFile {
             Objects.requireNonNull(moves, "moves");
+        }
+    }
+
+    record AbilitiesFile(int generation, Map<String, Map<Language, String>> abilities) {
+        AbilitiesFile {
+            if (generation < 1) {
+                throw new IllegalArgumentException("abilities.yaml needs the generation, got " + generation);
+            }
+            abilities = abilities == null ? Map.of() : abilities;
         }
     }
 }

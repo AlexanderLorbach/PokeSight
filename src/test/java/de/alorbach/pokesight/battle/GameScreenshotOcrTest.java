@@ -7,6 +7,7 @@ import de.alorbach.pokesight.ocr.TesseractTextRecognizer;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.ruleset.Ruleset;
 import de.alorbach.pokesight.ruleset.RulesetLoader;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,6 +42,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * they show. Each screenshot is read with its game's definition (ruleset, capital names, region) and cropped to where
  * the name boxes are, as a user would select them.
  */
+@Tag("ocr") // real OCR on screenshots: run by gradlew ocrTest, not test
 public class GameScreenshotOcrTest {
 
     /**

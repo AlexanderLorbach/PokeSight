@@ -3,689 +3,699 @@
 # forms: form index as stored in the game's data; only forms whose types differ from the base form.
 # sprite: PokeAPI sprite file name of a form (the base form's sprite is its national dex number).
 # region: regional form (alola, galar, hisui, paldea); games set in that region show it by default.
+# stats: base stats of this generation: HP, Attack, Defense, Sp. Atk, Sp. Def, Speed (Gen 1: Special twice).
+# abilities: the abilities it can have in this generation (none before Gen 3, hidden ones since Gen 5).
 pokemon:
-  1: { name: { DE: "Bisasam", EN: "Bulbasaur" }, types: [GRASS, POISON] }
-  2: { name: { DE: "Bisaknosp", EN: "Ivysaur" }, types: [GRASS, POISON] }
-  3: { name: { DE: "Bisaflor", EN: "Venusaur" }, types: [GRASS, POISON] }
-  4: { name: { DE: "Glumanda", EN: "Charmander" }, types: [FIRE] }
-  5: { name: { DE: "Glutexo", EN: "Charmeleon" }, types: [FIRE] }
-  6: { name: { DE: "Glurak", EN: "Charizard" }, types: [FIRE, FLYING] }
-  7: { name: { DE: "Schiggy", EN: "Squirtle" }, types: [WATER] }
-  8: { name: { DE: "Schillok", EN: "Wartortle" }, types: [WATER] }
-  9: { name: { DE: "Turtok", EN: "Blastoise" }, types: [WATER] }
-  10: { name: { DE: "Raupy", EN: "Caterpie" }, types: [BUG] }
-  11: { name: { DE: "Safcon", EN: "Metapod" }, types: [BUG] }
-  12: { name: { DE: "Smettbo", EN: "Butterfree" }, types: [BUG, FLYING] }
-  13: { name: { DE: "Hornliu", EN: "Weedle" }, types: [BUG, POISON] }
-  14: { name: { DE: "Kokuna", EN: "Kakuna" }, types: [BUG, POISON] }
-  15: { name: { DE: "Bibor", EN: "Beedrill" }, types: [BUG, POISON] }
-  16: { name: { DE: "Taubsi", EN: "Pidgey" }, types: [NORMAL, FLYING] }
-  17: { name: { DE: "Tauboga", EN: "Pidgeotto" }, types: [NORMAL, FLYING] }
-  18: { name: { DE: "Tauboss", EN: "Pidgeot" }, types: [NORMAL, FLYING] }
-  19: { name: { DE: "Rattfratz", EN: "Rattata" }, types: [NORMAL] }
-  20: { name: { DE: "Rattikarl", EN: "Raticate" }, types: [NORMAL] }
-  21: { name: { DE: "Habitak", EN: "Spearow" }, types: [NORMAL, FLYING] }
-  22: { name: { DE: "Ibitak", EN: "Fearow" }, types: [NORMAL, FLYING] }
-  23: { name: { DE: "Rettan", EN: "Ekans" }, types: [POISON] }
-  24: { name: { DE: "Arbok", EN: "Arbok" }, types: [POISON] }
-  25: { name: { DE: "Pikachu", EN: "Pikachu" }, types: [ELECTRIC] }
-  26: { name: { DE: "Raichu", EN: "Raichu" }, types: [ELECTRIC] }
-  27: { name: { DE: "Sandan", EN: "Sandshrew" }, types: [GROUND] }
-  28: { name: { DE: "Sandamer", EN: "Sandslash" }, types: [GROUND] }
-  29: { name: { DE: "Nidoran♀", EN: "Nidoran♀" }, types: [POISON] }
-  30: { name: { DE: "Nidorina", EN: "Nidorina" }, types: [POISON] }
-  31: { name: { DE: "Nidoqueen", EN: "Nidoqueen" }, types: [POISON, GROUND] }
-  32: { name: { DE: "Nidoran♂", EN: "Nidoran♂" }, types: [POISON] }
-  33: { name: { DE: "Nidorino", EN: "Nidorino" }, types: [POISON] }
-  34: { name: { DE: "Nidoking", EN: "Nidoking" }, types: [POISON, GROUND] }
-  35: { name: { DE: "Piepi", EN: "Clefairy" }, types: [NORMAL] }
-  36: { name: { DE: "Pixi", EN: "Clefable" }, types: [NORMAL] }
-  37: { name: { DE: "Vulpix", EN: "Vulpix" }, types: [FIRE] }
-  38: { name: { DE: "Vulnona", EN: "Ninetales" }, types: [FIRE] }
-  39: { name: { DE: "Pummeluff", EN: "Jigglypuff" }, types: [NORMAL] }
-  40: { name: { DE: "Knuddeluff", EN: "Wigglytuff" }, types: [NORMAL] }
-  41: { name: { DE: "Zubat", EN: "Zubat" }, types: [POISON, FLYING] }
-  42: { name: { DE: "Golbat", EN: "Golbat" }, types: [POISON, FLYING] }
-  43: { name: { DE: "Myrapla", EN: "Oddish" }, types: [GRASS, POISON] }
-  44: { name: { DE: "Duflor", EN: "Gloom" }, types: [GRASS, POISON] }
-  45: { name: { DE: "Giflor", EN: "Vileplume" }, types: [GRASS, POISON] }
-  46: { name: { DE: "Paras", EN: "Paras" }, types: [BUG, GRASS] }
-  47: { name: { DE: "Parasek", EN: "Parasect" }, types: [BUG, GRASS] }
-  48: { name: { DE: "Bluzuk", EN: "Venonat" }, types: [BUG, POISON] }
-  49: { name: { DE: "Omot", EN: "Venomoth" }, types: [BUG, POISON] }
-  50: { name: { DE: "Digda", EN: "Diglett" }, types: [GROUND] }
-  51: { name: { DE: "Digdri", EN: "Dugtrio" }, types: [GROUND] }
-  52: { name: { DE: "Mauzi", EN: "Meowth" }, types: [NORMAL] }
-  53: { name: { DE: "Snobilikat", EN: "Persian" }, types: [NORMAL] }
-  54: { name: { DE: "Enton", EN: "Psyduck" }, types: [WATER] }
-  55: { name: { DE: "Entoron", EN: "Golduck" }, types: [WATER] }
-  56: { name: { DE: "Menki", EN: "Mankey" }, types: [FIGHTING] }
-  57: { name: { DE: "Rasaff", EN: "Primeape" }, types: [FIGHTING] }
-  58: { name: { DE: "Fukano", EN: "Growlithe" }, types: [FIRE] }
-  59: { name: { DE: "Arkani", EN: "Arcanine" }, types: [FIRE] }
-  60: { name: { DE: "Quapsel", EN: "Poliwag" }, types: [WATER] }
-  61: { name: { DE: "Quaputzi", EN: "Poliwhirl" }, types: [WATER] }
-  62: { name: { DE: "Quappo", EN: "Poliwrath" }, types: [WATER, FIGHTING] }
-  63: { name: { DE: "Abra", EN: "Abra" }, types: [PSYCHIC] }
-  64: { name: { DE: "Kadabra", EN: "Kadabra" }, types: [PSYCHIC] }
-  65: { name: { DE: "Simsala", EN: "Alakazam" }, types: [PSYCHIC] }
-  66: { name: { DE: "Machollo", EN: "Machop" }, types: [FIGHTING] }
-  67: { name: { DE: "Maschock", EN: "Machoke" }, types: [FIGHTING] }
-  68: { name: { DE: "Machomei", EN: "Machamp" }, types: [FIGHTING] }
-  69: { name: { DE: "Knofensa", EN: "Bellsprout" }, types: [GRASS, POISON] }
-  70: { name: { DE: "Ultrigaria", EN: "Weepinbell" }, types: [GRASS, POISON] }
-  71: { name: { DE: "Sarzenia", EN: "Victreebel" }, types: [GRASS, POISON] }
-  72: { name: { DE: "Tentacha", EN: "Tentacool" }, types: [WATER, POISON] }
-  73: { name: { DE: "Tentoxa", EN: "Tentacruel" }, types: [WATER, POISON] }
-  74: { name: { DE: "Kleinstein", EN: "Geodude" }, types: [ROCK, GROUND] }
-  75: { name: { DE: "Georok", EN: "Graveler" }, types: [ROCK, GROUND] }
-  76: { name: { DE: "Geowaz", EN: "Golem" }, types: [ROCK, GROUND] }
-  77: { name: { DE: "Ponita", EN: "Ponyta" }, types: [FIRE] }
-  78: { name: { DE: "Gallopa", EN: "Rapidash" }, types: [FIRE] }
-  79: { name: { DE: "Flegmon", EN: "Slowpoke" }, types: [WATER, PSYCHIC] }
-  80: { name: { DE: "Lahmus", EN: "Slowbro" }, types: [WATER, PSYCHIC] }
-  81: { name: { DE: "Magnetilo", EN: "Magnemite" }, types: [ELECTRIC, STEEL] }
-  82: { name: { DE: "Magneton", EN: "Magneton" }, types: [ELECTRIC, STEEL] }
-  83: { name: { DE: "Porenta", EN: "Farfetch’d" }, types: [NORMAL, FLYING] }
-  84: { name: { DE: "Dodu", EN: "Doduo" }, types: [NORMAL, FLYING] }
-  85: { name: { DE: "Dodri", EN: "Dodrio" }, types: [NORMAL, FLYING] }
-  86: { name: { DE: "Jurob", EN: "Seel" }, types: [WATER] }
-  87: { name: { DE: "Jugong", EN: "Dewgong" }, types: [WATER, ICE] }
-  88: { name: { DE: "Sleima", EN: "Grimer" }, types: [POISON] }
-  89: { name: { DE: "Sleimok", EN: "Muk" }, types: [POISON] }
-  90: { name: { DE: "Muschas", EN: "Shellder" }, types: [WATER] }
-  91: { name: { DE: "Austos", EN: "Cloyster" }, types: [WATER, ICE] }
-  92: { name: { DE: "Nebulak", EN: "Gastly" }, types: [GHOST, POISON] }
-  93: { name: { DE: "Alpollo", EN: "Haunter" }, types: [GHOST, POISON] }
-  94: { name: { DE: "Gengar", EN: "Gengar" }, types: [GHOST, POISON] }
-  95: { name: { DE: "Onix", EN: "Onix" }, types: [ROCK, GROUND] }
-  96: { name: { DE: "Traumato", EN: "Drowzee" }, types: [PSYCHIC] }
-  97: { name: { DE: "Hypno", EN: "Hypno" }, types: [PSYCHIC] }
-  98: { name: { DE: "Krabby", EN: "Krabby" }, types: [WATER] }
-  99: { name: { DE: "Kingler", EN: "Kingler" }, types: [WATER] }
-  100: { name: { DE: "Voltobal", EN: "Voltorb" }, types: [ELECTRIC] }
-  101: { name: { DE: "Lektrobal", EN: "Electrode" }, types: [ELECTRIC] }
-  102: { name: { DE: "Owei", EN: "Exeggcute" }, types: [GRASS, PSYCHIC] }
-  103: { name: { DE: "Kokowei", EN: "Exeggutor" }, types: [GRASS, PSYCHIC] }
-  104: { name: { DE: "Tragosso", EN: "Cubone" }, types: [GROUND] }
-  105: { name: { DE: "Knogga", EN: "Marowak" }, types: [GROUND] }
-  106: { name: { DE: "Kicklee", EN: "Hitmonlee" }, types: [FIGHTING] }
-  107: { name: { DE: "Nockchan", EN: "Hitmonchan" }, types: [FIGHTING] }
-  108: { name: { DE: "Schlurp", EN: "Lickitung" }, types: [NORMAL] }
-  109: { name: { DE: "Smogon", EN: "Koffing" }, types: [POISON] }
-  110: { name: { DE: "Smogmog", EN: "Weezing" }, types: [POISON] }
-  111: { name: { DE: "Rihorn", EN: "Rhyhorn" }, types: [GROUND, ROCK] }
-  112: { name: { DE: "Rizeros", EN: "Rhydon" }, types: [GROUND, ROCK] }
-  113: { name: { DE: "Chaneira", EN: "Chansey" }, types: [NORMAL] }
-  114: { name: { DE: "Tangela", EN: "Tangela" }, types: [GRASS] }
-  115: { name: { DE: "Kangama", EN: "Kangaskhan" }, types: [NORMAL] }
-  116: { name: { DE: "Seeper", EN: "Horsea" }, types: [WATER] }
-  117: { name: { DE: "Seemon", EN: "Seadra" }, types: [WATER] }
-  118: { name: { DE: "Goldini", EN: "Goldeen" }, types: [WATER] }
-  119: { name: { DE: "Golking", EN: "Seaking" }, types: [WATER] }
-  120: { name: { DE: "Sterndu", EN: "Staryu" }, types: [WATER] }
-  121: { name: { DE: "Starmie", EN: "Starmie" }, types: [WATER, PSYCHIC] }
-  122: { name: { DE: "Pantimos", EN: "Mr. Mime" }, types: [PSYCHIC] }
-  123: { name: { DE: "Sichlor", EN: "Scyther" }, types: [BUG, FLYING] }
-  124: { name: { DE: "Rossana", EN: "Jynx" }, types: [ICE, PSYCHIC] }
-  125: { name: { DE: "Elektek", EN: "Electabuzz" }, types: [ELECTRIC] }
-  126: { name: { DE: "Magmar", EN: "Magmar" }, types: [FIRE] }
-  127: { name: { DE: "Pinsir", EN: "Pinsir" }, types: [BUG] }
-  128: { name: { DE: "Tauros", EN: "Tauros" }, types: [NORMAL] }
-  129: { name: { DE: "Karpador", EN: "Magikarp" }, types: [WATER] }
-  130: { name: { DE: "Garados", EN: "Gyarados" }, types: [WATER, FLYING] }
-  131: { name: { DE: "Lapras", EN: "Lapras" }, types: [WATER, ICE] }
-  132: { name: { DE: "Ditto", EN: "Ditto" }, types: [NORMAL] }
-  133: { name: { DE: "Evoli", EN: "Eevee" }, types: [NORMAL] }
-  134: { name: { DE: "Aquana", EN: "Vaporeon" }, types: [WATER] }
-  135: { name: { DE: "Blitza", EN: "Jolteon" }, types: [ELECTRIC] }
-  136: { name: { DE: "Flamara", EN: "Flareon" }, types: [FIRE] }
-  137: { name: { DE: "Porygon", EN: "Porygon" }, types: [NORMAL] }
-  138: { name: { DE: "Amonitas", EN: "Omanyte" }, types: [ROCK, WATER] }
-  139: { name: { DE: "Amoroso", EN: "Omastar" }, types: [ROCK, WATER] }
-  140: { name: { DE: "Kabuto", EN: "Kabuto" }, types: [ROCK, WATER] }
-  141: { name: { DE: "Kabutops", EN: "Kabutops" }, types: [ROCK, WATER] }
-  142: { name: { DE: "Aerodactyl", EN: "Aerodactyl" }, types: [ROCK, FLYING] }
-  143: { name: { DE: "Relaxo", EN: "Snorlax" }, types: [NORMAL] }
-  144: { name: { DE: "Arktos", EN: "Articuno" }, types: [ICE, FLYING] }
-  145: { name: { DE: "Zapdos", EN: "Zapdos" }, types: [ELECTRIC, FLYING] }
-  146: { name: { DE: "Lavados", EN: "Moltres" }, types: [FIRE, FLYING] }
-  147: { name: { DE: "Dratini", EN: "Dratini" }, types: [DRAGON] }
-  148: { name: { DE: "Dragonir", EN: "Dragonair" }, types: [DRAGON] }
-  149: { name: { DE: "Dragoran", EN: "Dragonite" }, types: [DRAGON, FLYING] }
-  150: { name: { DE: "Mewtu", EN: "Mewtwo" }, types: [PSYCHIC] }
-  151: { name: { DE: "Mew", EN: "Mew" }, types: [PSYCHIC] }
-  152: { name: { DE: "Endivie", EN: "Chikorita" }, types: [GRASS] }
-  153: { name: { DE: "Lorblatt", EN: "Bayleef" }, types: [GRASS] }
-  154: { name: { DE: "Meganie", EN: "Meganium" }, types: [GRASS] }
-  155: { name: { DE: "Feurigel", EN: "Cyndaquil" }, types: [FIRE] }
-  156: { name: { DE: "Igelavar", EN: "Quilava" }, types: [FIRE] }
-  157: { name: { DE: "Tornupto", EN: "Typhlosion" }, types: [FIRE] }
-  158: { name: { DE: "Karnimani", EN: "Totodile" }, types: [WATER] }
-  159: { name: { DE: "Tyracroc", EN: "Croconaw" }, types: [WATER] }
-  160: { name: { DE: "Impergator", EN: "Feraligatr" }, types: [WATER] }
-  161: { name: { DE: "Wiesor", EN: "Sentret" }, types: [NORMAL] }
-  162: { name: { DE: "Wiesenior", EN: "Furret" }, types: [NORMAL] }
-  163: { name: { DE: "Hoothoot", EN: "Hoothoot" }, types: [NORMAL, FLYING] }
-  164: { name: { DE: "Noctuh", EN: "Noctowl" }, types: [NORMAL, FLYING] }
-  165: { name: { DE: "Ledyba", EN: "Ledyba" }, types: [BUG, FLYING] }
-  166: { name: { DE: "Ledian", EN: "Ledian" }, types: [BUG, FLYING] }
-  167: { name: { DE: "Webarak", EN: "Spinarak" }, types: [BUG, POISON] }
-  168: { name: { DE: "Ariados", EN: "Ariados" }, types: [BUG, POISON] }
-  169: { name: { DE: "Iksbat", EN: "Crobat" }, types: [POISON, FLYING] }
-  170: { name: { DE: "Lampi", EN: "Chinchou" }, types: [WATER, ELECTRIC] }
-  171: { name: { DE: "Lanturn", EN: "Lanturn" }, types: [WATER, ELECTRIC] }
-  172: { name: { DE: "Pichu", EN: "Pichu" }, types: [ELECTRIC] }
-  173: { name: { DE: "Pii", EN: "Cleffa" }, types: [NORMAL] }
-  174: { name: { DE: "Fluffeluff", EN: "Igglybuff" }, types: [NORMAL] }
-  175: { name: { DE: "Togepi", EN: "Togepi" }, types: [NORMAL] }
-  176: { name: { DE: "Togetic", EN: "Togetic" }, types: [NORMAL, FLYING] }
-  177: { name: { DE: "Natu", EN: "Natu" }, types: [PSYCHIC, FLYING] }
-  178: { name: { DE: "Xatu", EN: "Xatu" }, types: [PSYCHIC, FLYING] }
-  179: { name: { DE: "Voltilamm", EN: "Mareep" }, types: [ELECTRIC] }
-  180: { name: { DE: "Waaty", EN: "Flaaffy" }, types: [ELECTRIC] }
-  181: { name: { DE: "Ampharos", EN: "Ampharos" }, types: [ELECTRIC] }
-  182: { name: { DE: "Blubella", EN: "Bellossom" }, types: [GRASS] }
-  183: { name: { DE: "Marill", EN: "Marill" }, types: [WATER] }
-  184: { name: { DE: "Azumarill", EN: "Azumarill" }, types: [WATER] }
-  185: { name: { DE: "Mogelbaum", EN: "Sudowoodo" }, types: [ROCK] }
-  186: { name: { DE: "Quaxo", EN: "Politoed" }, types: [WATER] }
-  187: { name: { DE: "Hoppspross", EN: "Hoppip" }, types: [GRASS, FLYING] }
-  188: { name: { DE: "Hubelupf", EN: "Skiploom" }, types: [GRASS, FLYING] }
-  189: { name: { DE: "Papungha", EN: "Jumpluff" }, types: [GRASS, FLYING] }
-  190: { name: { DE: "Griffel", EN: "Aipom" }, types: [NORMAL] }
-  191: { name: { DE: "Sonnkern", EN: "Sunkern" }, types: [GRASS] }
-  192: { name: { DE: "Sonnflora", EN: "Sunflora" }, types: [GRASS] }
-  193: { name: { DE: "Yanma", EN: "Yanma" }, types: [BUG, FLYING] }
-  194: { name: { DE: "Felino", EN: "Wooper" }, types: [WATER, GROUND] }
-  195: { name: { DE: "Morlord", EN: "Quagsire" }, types: [WATER, GROUND] }
-  196: { name: { DE: "Psiana", EN: "Espeon" }, types: [PSYCHIC] }
-  197: { name: { DE: "Nachtara", EN: "Umbreon" }, types: [DARK] }
-  198: { name: { DE: "Kramurx", EN: "Murkrow" }, types: [DARK, FLYING] }
-  199: { name: { DE: "Laschoking", EN: "Slowking" }, types: [WATER, PSYCHIC] }
-  200: { name: { DE: "Traunfugil", EN: "Misdreavus" }, types: [GHOST] }
-  201: { name: { DE: "Icognito", EN: "Unown" }, types: [PSYCHIC] }
-  202: { name: { DE: "Woingenau", EN: "Wobbuffet" }, types: [PSYCHIC] }
-  203: { name: { DE: "Girafarig", EN: "Girafarig" }, types: [NORMAL, PSYCHIC] }
-  204: { name: { DE: "Tannza", EN: "Pineco" }, types: [BUG] }
-  205: { name: { DE: "Forstellka", EN: "Forretress" }, types: [BUG, STEEL] }
-  206: { name: { DE: "Dummisel", EN: "Dunsparce" }, types: [NORMAL] }
-  207: { name: { DE: "Skorgla", EN: "Gligar" }, types: [GROUND, FLYING] }
-  208: { name: { DE: "Stahlos", EN: "Steelix" }, types: [STEEL, GROUND] }
-  209: { name: { DE: "Snubbull", EN: "Snubbull" }, types: [NORMAL] }
-  210: { name: { DE: "Granbull", EN: "Granbull" }, types: [NORMAL] }
-  211: { name: { DE: "Baldorfish", EN: "Qwilfish" }, types: [WATER, POISON] }
-  212: { name: { DE: "Scherox", EN: "Scizor" }, types: [BUG, STEEL] }
-  213: { name: { DE: "Pottrott", EN: "Shuckle" }, types: [BUG, ROCK] }
-  214: { name: { DE: "Skaraborn", EN: "Heracross" }, types: [BUG, FIGHTING] }
-  215: { name: { DE: "Sniebel", EN: "Sneasel" }, types: [DARK, ICE] }
-  216: { name: { DE: "Teddiursa", EN: "Teddiursa" }, types: [NORMAL] }
-  217: { name: { DE: "Ursaring", EN: "Ursaring" }, types: [NORMAL] }
-  218: { name: { DE: "Schneckmag", EN: "Slugma" }, types: [FIRE] }
-  219: { name: { DE: "Magcargo", EN: "Magcargo" }, types: [FIRE, ROCK] }
-  220: { name: { DE: "Quiekel", EN: "Swinub" }, types: [ICE, GROUND] }
-  221: { name: { DE: "Keifel", EN: "Piloswine" }, types: [ICE, GROUND] }
-  222: { name: { DE: "Corasonn", EN: "Corsola" }, types: [WATER, ROCK] }
-  223: { name: { DE: "Remoraid", EN: "Remoraid" }, types: [WATER] }
-  224: { name: { DE: "Octillery", EN: "Octillery" }, types: [WATER] }
-  225: { name: { DE: "Botogel", EN: "Delibird" }, types: [ICE, FLYING] }
-  226: { name: { DE: "Mantax", EN: "Mantine" }, types: [WATER, FLYING] }
-  227: { name: { DE: "Panzaeron", EN: "Skarmory" }, types: [STEEL, FLYING] }
-  228: { name: { DE: "Hunduster", EN: "Houndour" }, types: [DARK, FIRE] }
-  229: { name: { DE: "Hundemon", EN: "Houndoom" }, types: [DARK, FIRE] }
-  230: { name: { DE: "Seedraking", EN: "Kingdra" }, types: [WATER, DRAGON] }
-  231: { name: { DE: "Phanpy", EN: "Phanpy" }, types: [GROUND] }
-  232: { name: { DE: "Donphan", EN: "Donphan" }, types: [GROUND] }
-  233: { name: { DE: "Porygon2", EN: "Porygon2" }, types: [NORMAL] }
-  234: { name: { DE: "Damhirplex", EN: "Stantler" }, types: [NORMAL] }
-  235: { name: { DE: "Farbeagle", EN: "Smeargle" }, types: [NORMAL] }
-  236: { name: { DE: "Rabauz", EN: "Tyrogue" }, types: [FIGHTING] }
-  237: { name: { DE: "Kapoera", EN: "Hitmontop" }, types: [FIGHTING] }
-  238: { name: { DE: "Kussilla", EN: "Smoochum" }, types: [ICE, PSYCHIC] }
-  239: { name: { DE: "Elekid", EN: "Elekid" }, types: [ELECTRIC] }
-  240: { name: { DE: "Magby", EN: "Magby" }, types: [FIRE] }
-  241: { name: { DE: "Miltank", EN: "Miltank" }, types: [NORMAL] }
-  242: { name: { DE: "Heiteira", EN: "Blissey" }, types: [NORMAL] }
-  243: { name: { DE: "Raikou", EN: "Raikou" }, types: [ELECTRIC] }
-  244: { name: { DE: "Entei", EN: "Entei" }, types: [FIRE] }
-  245: { name: { DE: "Suicune", EN: "Suicune" }, types: [WATER] }
-  246: { name: { DE: "Larvitar", EN: "Larvitar" }, types: [ROCK, GROUND] }
-  247: { name: { DE: "Pupitar", EN: "Pupitar" }, types: [ROCK, GROUND] }
-  248: { name: { DE: "Despotar", EN: "Tyranitar" }, types: [ROCK, DARK] }
-  249: { name: { DE: "Lugia", EN: "Lugia" }, types: [PSYCHIC, FLYING] }
-  250: { name: { DE: "Ho-Oh", EN: "Ho-Oh" }, types: [FIRE, FLYING] }
-  251: { name: { DE: "Celebi", EN: "Celebi" }, types: [PSYCHIC, GRASS] }
-  252: { name: { DE: "Geckarbor", EN: "Treecko" }, types: [GRASS] }
-  253: { name: { DE: "Reptain", EN: "Grovyle" }, types: [GRASS] }
-  254: { name: { DE: "Gewaldro", EN: "Sceptile" }, types: [GRASS] }
-  255: { name: { DE: "Flemmli", EN: "Torchic" }, types: [FIRE] }
-  256: { name: { DE: "Jungglut", EN: "Combusken" }, types: [FIRE, FIGHTING] }
-  257: { name: { DE: "Lohgock", EN: "Blaziken" }, types: [FIRE, FIGHTING] }
-  258: { name: { DE: "Hydropi", EN: "Mudkip" }, types: [WATER] }
-  259: { name: { DE: "Moorabbel", EN: "Marshtomp" }, types: [WATER, GROUND] }
-  260: { name: { DE: "Sumpex", EN: "Swampert" }, types: [WATER, GROUND] }
-  261: { name: { DE: "Fiffyen", EN: "Poochyena" }, types: [DARK] }
-  262: { name: { DE: "Magnayen", EN: "Mightyena" }, types: [DARK] }
-  263: { name: { DE: "Zigzachs", EN: "Zigzagoon" }, types: [NORMAL] }
-  264: { name: { DE: "Geradaks", EN: "Linoone" }, types: [NORMAL] }
-  265: { name: { DE: "Waumpel", EN: "Wurmple" }, types: [BUG] }
-  266: { name: { DE: "Schaloko", EN: "Silcoon" }, types: [BUG] }
-  267: { name: { DE: "Papinella", EN: "Beautifly" }, types: [BUG, FLYING] }
-  268: { name: { DE: "Panekon", EN: "Cascoon" }, types: [BUG] }
-  269: { name: { DE: "Pudox", EN: "Dustox" }, types: [BUG, POISON] }
-  270: { name: { DE: "Loturzel", EN: "Lotad" }, types: [WATER, GRASS] }
-  271: { name: { DE: "Lombrero", EN: "Lombre" }, types: [WATER, GRASS] }
-  272: { name: { DE: "Kappalores", EN: "Ludicolo" }, types: [WATER, GRASS] }
-  273: { name: { DE: "Samurzel", EN: "Seedot" }, types: [GRASS] }
-  274: { name: { DE: "Blanas", EN: "Nuzleaf" }, types: [GRASS, DARK] }
-  275: { name: { DE: "Tengulist", EN: "Shiftry" }, types: [GRASS, DARK] }
-  276: { name: { DE: "Schwalbini", EN: "Taillow" }, types: [NORMAL, FLYING] }
-  277: { name: { DE: "Schwalboss", EN: "Swellow" }, types: [NORMAL, FLYING] }
-  278: { name: { DE: "Wingull", EN: "Wingull" }, types: [WATER, FLYING] }
-  279: { name: { DE: "Pelipper", EN: "Pelipper" }, types: [WATER, FLYING] }
-  280: { name: { DE: "Trasla", EN: "Ralts" }, types: [PSYCHIC] }
-  281: { name: { DE: "Kirlia", EN: "Kirlia" }, types: [PSYCHIC] }
-  282: { name: { DE: "Guardevoir", EN: "Gardevoir" }, types: [PSYCHIC] }
-  283: { name: { DE: "Gehweiher", EN: "Surskit" }, types: [BUG, WATER] }
-  284: { name: { DE: "Maskeregen", EN: "Masquerain" }, types: [BUG, FLYING] }
-  285: { name: { DE: "Knilz", EN: "Shroomish" }, types: [GRASS] }
-  286: { name: { DE: "Kapilz", EN: "Breloom" }, types: [GRASS, FIGHTING] }
-  287: { name: { DE: "Bummelz", EN: "Slakoth" }, types: [NORMAL] }
-  288: { name: { DE: "Muntier", EN: "Vigoroth" }, types: [NORMAL] }
-  289: { name: { DE: "Letarking", EN: "Slaking" }, types: [NORMAL] }
-  290: { name: { DE: "Nincada", EN: "Nincada" }, types: [BUG, GROUND] }
-  291: { name: { DE: "Ninjask", EN: "Ninjask" }, types: [BUG, FLYING] }
-  292: { name: { DE: "Ninjatom", EN: "Shedinja" }, types: [BUG, GHOST] }
-  293: { name: { DE: "Flurmel", EN: "Whismur" }, types: [NORMAL] }
-  294: { name: { DE: "Krakeelo", EN: "Loudred" }, types: [NORMAL] }
-  295: { name: { DE: "Krawumms", EN: "Exploud" }, types: [NORMAL] }
-  296: { name: { DE: "Makuhita", EN: "Makuhita" }, types: [FIGHTING] }
-  297: { name: { DE: "Hariyama", EN: "Hariyama" }, types: [FIGHTING] }
-  298: { name: { DE: "Azurill", EN: "Azurill" }, types: [NORMAL] }
-  299: { name: { DE: "Nasgnet", EN: "Nosepass" }, types: [ROCK] }
-  300: { name: { DE: "Eneco", EN: "Skitty" }, types: [NORMAL] }
-  301: { name: { DE: "Enekoro", EN: "Delcatty" }, types: [NORMAL] }
-  302: { name: { DE: "Zobiris", EN: "Sableye" }, types: [DARK, GHOST] }
-  303: { name: { DE: "Flunkifer", EN: "Mawile" }, types: [STEEL] }
-  304: { name: { DE: "Stollunior", EN: "Aron" }, types: [STEEL, ROCK] }
-  305: { name: { DE: "Stollrak", EN: "Lairon" }, types: [STEEL, ROCK] }
-  306: { name: { DE: "Stolloss", EN: "Aggron" }, types: [STEEL, ROCK] }
-  307: { name: { DE: "Meditie", EN: "Meditite" }, types: [FIGHTING, PSYCHIC] }
-  308: { name: { DE: "Meditalis", EN: "Medicham" }, types: [FIGHTING, PSYCHIC] }
-  309: { name: { DE: "Frizelbliz", EN: "Electrike" }, types: [ELECTRIC] }
-  310: { name: { DE: "Voltenso", EN: "Manectric" }, types: [ELECTRIC] }
-  311: { name: { DE: "Plusle", EN: "Plusle" }, types: [ELECTRIC] }
-  312: { name: { DE: "Minun", EN: "Minun" }, types: [ELECTRIC] }
-  313: { name: { DE: "Volbeat", EN: "Volbeat" }, types: [BUG] }
-  314: { name: { DE: "Illumise", EN: "Illumise" }, types: [BUG] }
-  315: { name: { DE: "Roselia", EN: "Roselia" }, types: [GRASS, POISON] }
-  316: { name: { DE: "Schluppuck", EN: "Gulpin" }, types: [POISON] }
-  317: { name: { DE: "Schlukwech", EN: "Swalot" }, types: [POISON] }
-  318: { name: { DE: "Kanivanha", EN: "Carvanha" }, types: [WATER, DARK] }
-  319: { name: { DE: "Tohaido", EN: "Sharpedo" }, types: [WATER, DARK] }
-  320: { name: { DE: "Wailmer", EN: "Wailmer" }, types: [WATER] }
-  321: { name: { DE: "Wailord", EN: "Wailord" }, types: [WATER] }
-  322: { name: { DE: "Camaub", EN: "Numel" }, types: [FIRE, GROUND] }
-  323: { name: { DE: "Camerupt", EN: "Camerupt" }, types: [FIRE, GROUND] }
-  324: { name: { DE: "Qurtel", EN: "Torkoal" }, types: [FIRE] }
-  325: { name: { DE: "Spoink", EN: "Spoink" }, types: [PSYCHIC] }
-  326: { name: { DE: "Groink", EN: "Grumpig" }, types: [PSYCHIC] }
-  327: { name: { DE: "Pandir", EN: "Spinda" }, types: [NORMAL] }
-  328: { name: { DE: "Knacklion", EN: "Trapinch" }, types: [GROUND] }
-  329: { name: { DE: "Vibrava", EN: "Vibrava" }, types: [GROUND, DRAGON] }
-  330: { name: { DE: "Libelldra", EN: "Flygon" }, types: [GROUND, DRAGON] }
-  331: { name: { DE: "Tuska", EN: "Cacnea" }, types: [GRASS] }
-  332: { name: { DE: "Noktuska", EN: "Cacturne" }, types: [GRASS, DARK] }
-  333: { name: { DE: "Wablu", EN: "Swablu" }, types: [NORMAL, FLYING] }
-  334: { name: { DE: "Altaria", EN: "Altaria" }, types: [DRAGON, FLYING] }
-  335: { name: { DE: "Sengo", EN: "Zangoose" }, types: [NORMAL] }
-  336: { name: { DE: "Vipitis", EN: "Seviper" }, types: [POISON] }
-  337: { name: { DE: "Lunastein", EN: "Lunatone" }, types: [ROCK, PSYCHIC] }
-  338: { name: { DE: "Sonnfel", EN: "Solrock" }, types: [ROCK, PSYCHIC] }
-  339: { name: { DE: "Schmerbe", EN: "Barboach" }, types: [WATER, GROUND] }
-  340: { name: { DE: "Welsar", EN: "Whiscash" }, types: [WATER, GROUND] }
-  341: { name: { DE: "Krebscorps", EN: "Corphish" }, types: [WATER] }
-  342: { name: { DE: "Krebutack", EN: "Crawdaunt" }, types: [WATER, DARK] }
-  343: { name: { DE: "Puppance", EN: "Baltoy" }, types: [GROUND, PSYCHIC] }
-  344: { name: { DE: "Lepumentas", EN: "Claydol" }, types: [GROUND, PSYCHIC] }
-  345: { name: { DE: "Liliep", EN: "Lileep" }, types: [ROCK, GRASS] }
-  346: { name: { DE: "Wielie", EN: "Cradily" }, types: [ROCK, GRASS] }
-  347: { name: { DE: "Anorith", EN: "Anorith" }, types: [ROCK, BUG] }
-  348: { name: { DE: "Armaldo", EN: "Armaldo" }, types: [ROCK, BUG] }
-  349: { name: { DE: "Barschwa", EN: "Feebas" }, types: [WATER] }
-  350: { name: { DE: "Milotic", EN: "Milotic" }, types: [WATER] }
-  351: { name: { DE: "Formeo", EN: "Castform" }, types: [NORMAL] }
-  352: { name: { DE: "Kecleon", EN: "Kecleon" }, types: [NORMAL] }
-  353: { name: { DE: "Shuppet", EN: "Shuppet" }, types: [GHOST] }
-  354: { name: { DE: "Banette", EN: "Banette" }, types: [GHOST] }
-  355: { name: { DE: "Zwirrlicht", EN: "Duskull" }, types: [GHOST] }
-  356: { name: { DE: "Zwirrklop", EN: "Dusclops" }, types: [GHOST] }
-  357: { name: { DE: "Tropius", EN: "Tropius" }, types: [GRASS, FLYING] }
-  358: { name: { DE: "Palimpalim", EN: "Chimecho" }, types: [PSYCHIC] }
-  359: { name: { DE: "Absol", EN: "Absol" }, types: [DARK] }
-  360: { name: { DE: "Isso", EN: "Wynaut" }, types: [PSYCHIC] }
-  361: { name: { DE: "Schneppke", EN: "Snorunt" }, types: [ICE] }
-  362: { name: { DE: "Firnontor", EN: "Glalie" }, types: [ICE] }
-  363: { name: { DE: "Seemops", EN: "Spheal" }, types: [ICE, WATER] }
-  364: { name: { DE: "Seejong", EN: "Sealeo" }, types: [ICE, WATER] }
-  365: { name: { DE: "Walraisa", EN: "Walrein" }, types: [ICE, WATER] }
-  366: { name: { DE: "Perlu", EN: "Clamperl" }, types: [WATER] }
-  367: { name: { DE: "Aalabyss", EN: "Huntail" }, types: [WATER] }
-  368: { name: { DE: "Saganabyss", EN: "Gorebyss" }, types: [WATER] }
-  369: { name: { DE: "Relicanth", EN: "Relicanth" }, types: [WATER, ROCK] }
-  370: { name: { DE: "Liebiskus", EN: "Luvdisc" }, types: [WATER] }
-  371: { name: { DE: "Kindwurm", EN: "Bagon" }, types: [DRAGON] }
-  372: { name: { DE: "Draschel", EN: "Shelgon" }, types: [DRAGON] }
-  373: { name: { DE: "Brutalanda", EN: "Salamence" }, types: [DRAGON, FLYING] }
-  374: { name: { DE: "Tanhel", EN: "Beldum" }, types: [STEEL, PSYCHIC] }
-  375: { name: { DE: "Metang", EN: "Metang" }, types: [STEEL, PSYCHIC] }
-  376: { name: { DE: "Metagross", EN: "Metagross" }, types: [STEEL, PSYCHIC] }
-  377: { name: { DE: "Regirock", EN: "Regirock" }, types: [ROCK] }
-  378: { name: { DE: "Regice", EN: "Regice" }, types: [ICE] }
-  379: { name: { DE: "Registeel", EN: "Registeel" }, types: [STEEL] }
-  380: { name: { DE: "Latias", EN: "Latias" }, types: [DRAGON, PSYCHIC] }
-  381: { name: { DE: "Latios", EN: "Latios" }, types: [DRAGON, PSYCHIC] }
-  382: { name: { DE: "Kyogre", EN: "Kyogre" }, types: [WATER] }
-  383: { name: { DE: "Groudon", EN: "Groudon" }, types: [GROUND] }
-  384: { name: { DE: "Rayquaza", EN: "Rayquaza" }, types: [DRAGON, FLYING] }
-  385: { name: { DE: "Jirachi", EN: "Jirachi" }, types: [STEEL, PSYCHIC] }
-  386: { name: { DE: "Deoxys", EN: "Deoxys" }, types: [PSYCHIC] }
-  387: { name: { DE: "Chelast", EN: "Turtwig" }, types: [GRASS] }
-  388: { name: { DE: "Chelcarain", EN: "Grotle" }, types: [GRASS] }
-  389: { name: { DE: "Chelterrar", EN: "Torterra" }, types: [GRASS, GROUND] }
-  390: { name: { DE: "Panflam", EN: "Chimchar" }, types: [FIRE] }
-  391: { name: { DE: "Panpyro", EN: "Monferno" }, types: [FIRE, FIGHTING] }
-  392: { name: { DE: "Panferno", EN: "Infernape" }, types: [FIRE, FIGHTING] }
-  393: { name: { DE: "Plinfa", EN: "Piplup" }, types: [WATER] }
-  394: { name: { DE: "Pliprin", EN: "Prinplup" }, types: [WATER] }
-  395: { name: { DE: "Impoleon", EN: "Empoleon" }, types: [WATER, STEEL] }
-  396: { name: { DE: "Staralili", EN: "Starly" }, types: [NORMAL, FLYING] }
-  397: { name: { DE: "Staravia", EN: "Staravia" }, types: [NORMAL, FLYING] }
-  398: { name: { DE: "Staraptor", EN: "Staraptor" }, types: [NORMAL, FLYING] }
-  399: { name: { DE: "Bidiza", EN: "Bidoof" }, types: [NORMAL] }
-  400: { name: { DE: "Bidifas", EN: "Bibarel" }, types: [NORMAL, WATER] }
-  401: { name: { DE: "Zirpurze", EN: "Kricketot" }, types: [BUG] }
-  402: { name: { DE: "Zirpeise", EN: "Kricketune" }, types: [BUG] }
-  403: { name: { DE: "Sheinux", EN: "Shinx" }, types: [ELECTRIC] }
-  404: { name: { DE: "Luxio", EN: "Luxio" }, types: [ELECTRIC] }
-  405: { name: { DE: "Luxtra", EN: "Luxray" }, types: [ELECTRIC] }
-  406: { name: { DE: "Knospi", EN: "Budew" }, types: [GRASS, POISON] }
-  407: { name: { DE: "Roserade", EN: "Roserade" }, types: [GRASS, POISON] }
-  408: { name: { DE: "Koknodon", EN: "Cranidos" }, types: [ROCK] }
-  409: { name: { DE: "Rameidon", EN: "Rampardos" }, types: [ROCK] }
-  410: { name: { DE: "Schilterus", EN: "Shieldon" }, types: [ROCK, STEEL] }
-  411: { name: { DE: "Bollterus", EN: "Bastiodon" }, types: [ROCK, STEEL] }
-  412: { name: { DE: "Burmy", EN: "Burmy" }, types: [BUG] }
+  1: { name: { DE: "Bisasam", EN: "Bulbasaur" }, types: [GRASS, POISON], stats: [45, 49, 49, 65, 65, 45], abilities: [overgrow, chlorophyll] }
+  2: { name: { DE: "Bisaknosp", EN: "Ivysaur" }, types: [GRASS, POISON], stats: [60, 62, 63, 80, 80, 60], abilities: [overgrow, chlorophyll] }
+  3: { name: { DE: "Bisaflor", EN: "Venusaur" }, types: [GRASS, POISON], stats: [80, 82, 83, 100, 100, 80], abilities: [overgrow, chlorophyll] }
+  4: { name: { DE: "Glumanda", EN: "Charmander" }, types: [FIRE], stats: [39, 52, 43, 60, 50, 65], abilities: [blaze, solar-power] }
+  5: { name: { DE: "Glutexo", EN: "Charmeleon" }, types: [FIRE], stats: [58, 64, 58, 80, 65, 80], abilities: [blaze, solar-power] }
+  6: { name: { DE: "Glurak", EN: "Charizard" }, types: [FIRE, FLYING], stats: [78, 84, 78, 109, 85, 100], abilities: [blaze, solar-power] }
+  7: { name: { DE: "Schiggy", EN: "Squirtle" }, types: [WATER], stats: [44, 48, 65, 50, 64, 43], abilities: [torrent, rain-dish] }
+  8: { name: { DE: "Schillok", EN: "Wartortle" }, types: [WATER], stats: [59, 63, 80, 65, 80, 58], abilities: [torrent, rain-dish] }
+  9: { name: { DE: "Turtok", EN: "Blastoise" }, types: [WATER], stats: [79, 83, 100, 85, 105, 78], abilities: [torrent, rain-dish] }
+  10: { name: { DE: "Raupy", EN: "Caterpie" }, types: [BUG], stats: [45, 30, 35, 20, 20, 45], abilities: [shield-dust, run-away] }
+  11: { name: { DE: "Safcon", EN: "Metapod" }, types: [BUG], stats: [50, 20, 55, 25, 25, 30], abilities: [shed-skin] }
+  12: { name: { DE: "Smettbo", EN: "Butterfree" }, types: [BUG, FLYING], stats: [60, 45, 50, 80, 80, 70], abilities: [compound-eyes, tinted-lens] }
+  13: { name: { DE: "Hornliu", EN: "Weedle" }, types: [BUG, POISON], stats: [40, 35, 30, 20, 20, 50], abilities: [shield-dust, run-away] }
+  14: { name: { DE: "Kokuna", EN: "Kakuna" }, types: [BUG, POISON], stats: [45, 25, 50, 25, 25, 35], abilities: [shed-skin] }
+  15: { name: { DE: "Bibor", EN: "Beedrill" }, types: [BUG, POISON], stats: [65, 80, 40, 45, 80, 75], abilities: [swarm, sniper] }
+  16: { name: { DE: "Taubsi", EN: "Pidgey" }, types: [NORMAL, FLYING], stats: [40, 45, 40, 35, 35, 56], abilities: [keen-eye, tangled-feet, big-pecks] }
+  17: { name: { DE: "Tauboga", EN: "Pidgeotto" }, types: [NORMAL, FLYING], stats: [63, 60, 55, 50, 50, 71], abilities: [keen-eye, tangled-feet, big-pecks] }
+  18: { name: { DE: "Tauboss", EN: "Pidgeot" }, types: [NORMAL, FLYING], stats: [83, 80, 75, 70, 70, 91], abilities: [keen-eye, tangled-feet, big-pecks] }
+  19: { name: { DE: "Rattfratz", EN: "Rattata" }, types: [NORMAL], stats: [30, 56, 35, 25, 35, 72], abilities: [run-away, guts, hustle] }
+  20: { name: { DE: "Rattikarl", EN: "Raticate" }, types: [NORMAL], stats: [55, 81, 60, 50, 70, 97], abilities: [run-away, guts, hustle] }
+  21: { name: { DE: "Habitak", EN: "Spearow" }, types: [NORMAL, FLYING], stats: [40, 60, 30, 31, 31, 70], abilities: [keen-eye, sniper] }
+  22: { name: { DE: "Ibitak", EN: "Fearow" }, types: [NORMAL, FLYING], stats: [65, 90, 65, 61, 61, 100], abilities: [keen-eye, sniper] }
+  23: { name: { DE: "Rettan", EN: "Ekans" }, types: [POISON], stats: [35, 60, 44, 40, 54, 55], abilities: [intimidate, shed-skin, unnerve] }
+  24: { name: { DE: "Arbok", EN: "Arbok" }, types: [POISON], stats: [60, 85, 69, 65, 79, 80], abilities: [intimidate, shed-skin, unnerve] }
+  25: { name: { DE: "Pikachu", EN: "Pikachu" }, types: [ELECTRIC], stats: [35, 55, 30, 50, 40, 90], abilities: [static, lightning-rod] }
+  26: { name: { DE: "Raichu", EN: "Raichu" }, types: [ELECTRIC], stats: [60, 90, 55, 90, 80, 100], abilities: [static, lightning-rod] }
+  27: { name: { DE: "Sandan", EN: "Sandshrew" }, types: [GROUND], stats: [50, 75, 85, 20, 30, 40], abilities: [sand-veil, sand-rush] }
+  28: { name: { DE: "Sandamer", EN: "Sandslash" }, types: [GROUND], stats: [75, 100, 110, 45, 55, 65], abilities: [sand-veil, sand-rush] }
+  29: { name: { DE: "Nidoran♀", EN: "Nidoran♀" }, types: [POISON], stats: [55, 47, 52, 40, 40, 41], abilities: [poison-point, rivalry, hustle] }
+  30: { name: { DE: "Nidorina", EN: "Nidorina" }, types: [POISON], stats: [70, 62, 67, 55, 55, 56], abilities: [poison-point, rivalry, hustle] }
+  31: { name: { DE: "Nidoqueen", EN: "Nidoqueen" }, types: [POISON, GROUND], stats: [90, 82, 87, 75, 85, 76], abilities: [poison-point, rivalry, sheer-force] }
+  32: { name: { DE: "Nidoran♂", EN: "Nidoran♂" }, types: [POISON], stats: [46, 57, 40, 40, 40, 50], abilities: [poison-point, rivalry, hustle] }
+  33: { name: { DE: "Nidorino", EN: "Nidorino" }, types: [POISON], stats: [61, 72, 57, 55, 55, 65], abilities: [poison-point, rivalry, hustle] }
+  34: { name: { DE: "Nidoking", EN: "Nidoking" }, types: [POISON, GROUND], stats: [81, 92, 77, 85, 75, 85], abilities: [poison-point, rivalry, sheer-force] }
+  35: { name: { DE: "Piepi", EN: "Clefairy" }, types: [NORMAL], stats: [70, 45, 48, 60, 65, 35], abilities: [cute-charm, magic-guard, friend-guard] }
+  36: { name: { DE: "Pixi", EN: "Clefable" }, types: [NORMAL], stats: [95, 70, 73, 85, 90, 60], abilities: [cute-charm, magic-guard, unaware] }
+  37: { name: { DE: "Vulpix", EN: "Vulpix" }, types: [FIRE], stats: [38, 41, 40, 50, 65, 65], abilities: [flash-fire, drought] }
+  38: { name: { DE: "Vulnona", EN: "Ninetales" }, types: [FIRE], stats: [73, 76, 75, 81, 100, 100], abilities: [flash-fire, drought] }
+  39: { name: { DE: "Pummeluff", EN: "Jigglypuff" }, types: [NORMAL], stats: [115, 45, 20, 45, 25, 20], abilities: [cute-charm, friend-guard] }
+  40: { name: { DE: "Knuddeluff", EN: "Wigglytuff" }, types: [NORMAL], stats: [140, 70, 45, 75, 50, 45], abilities: [cute-charm, frisk] }
+  41: { name: { DE: "Zubat", EN: "Zubat" }, types: [POISON, FLYING], stats: [40, 45, 35, 30, 40, 55], abilities: [inner-focus, infiltrator] }
+  42: { name: { DE: "Golbat", EN: "Golbat" }, types: [POISON, FLYING], stats: [75, 80, 70, 65, 75, 90], abilities: [inner-focus, infiltrator] }
+  43: { name: { DE: "Myrapla", EN: "Oddish" }, types: [GRASS, POISON], stats: [45, 50, 55, 75, 65, 30], abilities: [chlorophyll, run-away] }
+  44: { name: { DE: "Duflor", EN: "Gloom" }, types: [GRASS, POISON], stats: [60, 65, 70, 85, 75, 40], abilities: [chlorophyll, stench] }
+  45: { name: { DE: "Giflor", EN: "Vileplume" }, types: [GRASS, POISON], stats: [75, 80, 85, 100, 90, 50], abilities: [chlorophyll, effect-spore] }
+  46: { name: { DE: "Paras", EN: "Paras" }, types: [BUG, GRASS], stats: [35, 70, 55, 45, 55, 25], abilities: [effect-spore, dry-skin, damp] }
+  47: { name: { DE: "Parasek", EN: "Parasect" }, types: [BUG, GRASS], stats: [60, 95, 80, 60, 80, 30], abilities: [effect-spore, dry-skin, damp] }
+  48: { name: { DE: "Bluzuk", EN: "Venonat" }, types: [BUG, POISON], stats: [60, 55, 50, 40, 55, 45], abilities: [compound-eyes, tinted-lens, run-away] }
+  49: { name: { DE: "Omot", EN: "Venomoth" }, types: [BUG, POISON], stats: [70, 65, 60, 90, 75, 90], abilities: [shield-dust, tinted-lens, wonder-skin] }
+  50: { name: { DE: "Digda", EN: "Diglett" }, types: [GROUND], stats: [10, 55, 25, 35, 45, 95], abilities: [sand-veil, arena-trap, sand-force] }
+  51: { name: { DE: "Digdri", EN: "Dugtrio" }, types: [GROUND], stats: [35, 80, 50, 50, 70, 120], abilities: [sand-veil, arena-trap, sand-force] }
+  52: { name: { DE: "Mauzi", EN: "Meowth" }, types: [NORMAL], stats: [40, 45, 35, 40, 40, 90], abilities: [pickup, technician, unnerve] }
+  53: { name: { DE: "Snobilikat", EN: "Persian" }, types: [NORMAL], stats: [65, 70, 60, 65, 65, 115], abilities: [limber, technician, unnerve] }
+  54: { name: { DE: "Enton", EN: "Psyduck" }, types: [WATER], stats: [50, 52, 48, 65, 50, 55], abilities: [damp, cloud-nine, swift-swim] }
+  55: { name: { DE: "Entoron", EN: "Golduck" }, types: [WATER], stats: [80, 82, 78, 95, 80, 85], abilities: [damp, cloud-nine, swift-swim] }
+  56: { name: { DE: "Menki", EN: "Mankey" }, types: [FIGHTING], stats: [40, 80, 35, 35, 45, 70], abilities: [vital-spirit, anger-point, defiant] }
+  57: { name: { DE: "Rasaff", EN: "Primeape" }, types: [FIGHTING], stats: [65, 105, 60, 60, 70, 95], abilities: [vital-spirit, anger-point, defiant] }
+  58: { name: { DE: "Fukano", EN: "Growlithe" }, types: [FIRE], stats: [55, 70, 45, 70, 50, 60], abilities: [intimidate, flash-fire, justified] }
+  59: { name: { DE: "Arkani", EN: "Arcanine" }, types: [FIRE], stats: [90, 110, 80, 100, 80, 95], abilities: [intimidate, flash-fire, justified] }
+  60: { name: { DE: "Quapsel", EN: "Poliwag" }, types: [WATER], stats: [40, 50, 40, 40, 40, 90], abilities: [water-absorb, damp, swift-swim] }
+  61: { name: { DE: "Quaputzi", EN: "Poliwhirl" }, types: [WATER], stats: [65, 65, 65, 50, 50, 90], abilities: [water-absorb, damp, swift-swim] }
+  62: { name: { DE: "Quappo", EN: "Poliwrath" }, types: [WATER, FIGHTING], stats: [90, 85, 95, 70, 90, 70], abilities: [water-absorb, damp, swift-swim] }
+  63: { name: { DE: "Abra", EN: "Abra" }, types: [PSYCHIC], stats: [25, 20, 15, 105, 55, 90], abilities: [synchronize, inner-focus, magic-guard] }
+  64: { name: { DE: "Kadabra", EN: "Kadabra" }, types: [PSYCHIC], stats: [40, 35, 30, 120, 70, 105], abilities: [synchronize, inner-focus, magic-guard] }
+  65: { name: { DE: "Simsala", EN: "Alakazam" }, types: [PSYCHIC], stats: [55, 50, 45, 135, 85, 120], abilities: [synchronize, inner-focus, magic-guard] }
+  66: { name: { DE: "Machollo", EN: "Machop" }, types: [FIGHTING], stats: [70, 80, 50, 35, 35, 35], abilities: [guts, no-guard, steadfast] }
+  67: { name: { DE: "Maschock", EN: "Machoke" }, types: [FIGHTING], stats: [80, 100, 70, 50, 60, 45], abilities: [guts, no-guard, steadfast] }
+  68: { name: { DE: "Machomei", EN: "Machamp" }, types: [FIGHTING], stats: [90, 130, 80, 65, 85, 55], abilities: [guts, no-guard, steadfast] }
+  69: { name: { DE: "Knofensa", EN: "Bellsprout" }, types: [GRASS, POISON], stats: [50, 75, 35, 70, 30, 40], abilities: [chlorophyll, gluttony] }
+  70: { name: { DE: "Ultrigaria", EN: "Weepinbell" }, types: [GRASS, POISON], stats: [65, 90, 50, 85, 45, 55], abilities: [chlorophyll, gluttony] }
+  71: { name: { DE: "Sarzenia", EN: "Victreebel" }, types: [GRASS, POISON], stats: [80, 105, 65, 100, 60, 70], abilities: [chlorophyll, gluttony] }
+  72: { name: { DE: "Tentacha", EN: "Tentacool" }, types: [WATER, POISON], stats: [40, 40, 35, 50, 100, 70], abilities: [clear-body, liquid-ooze, rain-dish] }
+  73: { name: { DE: "Tentoxa", EN: "Tentacruel" }, types: [WATER, POISON], stats: [80, 70, 65, 80, 120, 100], abilities: [clear-body, liquid-ooze, rain-dish] }
+  74: { name: { DE: "Kleinstein", EN: "Geodude" }, types: [ROCK, GROUND], stats: [40, 80, 100, 30, 30, 20], abilities: [rock-head, sturdy, sand-veil] }
+  75: { name: { DE: "Georok", EN: "Graveler" }, types: [ROCK, GROUND], stats: [55, 95, 115, 45, 45, 35], abilities: [rock-head, sturdy, sand-veil] }
+  76: { name: { DE: "Geowaz", EN: "Golem" }, types: [ROCK, GROUND], stats: [80, 110, 130, 55, 65, 45], abilities: [rock-head, sturdy, sand-veil] }
+  77: { name: { DE: "Ponita", EN: "Ponyta" }, types: [FIRE], stats: [50, 85, 55, 65, 65, 90], abilities: [run-away, flash-fire, flame-body] }
+  78: { name: { DE: "Gallopa", EN: "Rapidash" }, types: [FIRE], stats: [65, 100, 70, 80, 80, 105], abilities: [run-away, flash-fire, flame-body] }
+  79: { name: { DE: "Flegmon", EN: "Slowpoke" }, types: [WATER, PSYCHIC], stats: [90, 65, 65, 40, 40, 15], abilities: [oblivious, own-tempo, regenerator] }
+  80: { name: { DE: "Lahmus", EN: "Slowbro" }, types: [WATER, PSYCHIC], stats: [95, 75, 110, 100, 80, 30], abilities: [oblivious, own-tempo, regenerator] }
+  81: { name: { DE: "Magnetilo", EN: "Magnemite" }, types: [ELECTRIC, STEEL], stats: [25, 35, 70, 95, 55, 45], abilities: [magnet-pull, sturdy, analytic] }
+  82: { name: { DE: "Magneton", EN: "Magneton" }, types: [ELECTRIC, STEEL], stats: [50, 60, 95, 120, 70, 70], abilities: [magnet-pull, sturdy, analytic] }
+  83: { name: { DE: "Porenta", EN: "Farfetch’d" }, types: [NORMAL, FLYING], stats: [52, 65, 55, 58, 62, 60], abilities: [keen-eye, inner-focus, defiant] }
+  84: { name: { DE: "Dodu", EN: "Doduo" }, types: [NORMAL, FLYING], stats: [35, 85, 45, 35, 35, 75], abilities: [run-away, early-bird, tangled-feet] }
+  85: { name: { DE: "Dodri", EN: "Dodrio" }, types: [NORMAL, FLYING], stats: [60, 110, 70, 60, 60, 100], abilities: [run-away, early-bird, tangled-feet] }
+  86: { name: { DE: "Jurob", EN: "Seel" }, types: [WATER], stats: [65, 45, 55, 45, 70, 45], abilities: [thick-fat, hydration, ice-body] }
+  87: { name: { DE: "Jugong", EN: "Dewgong" }, types: [WATER, ICE], stats: [90, 70, 80, 70, 95, 70], abilities: [thick-fat, hydration, ice-body] }
+  88: { name: { DE: "Sleima", EN: "Grimer" }, types: [POISON], stats: [80, 80, 50, 40, 50, 25], abilities: [stench, sticky-hold, poison-touch] }
+  89: { name: { DE: "Sleimok", EN: "Muk" }, types: [POISON], stats: [105, 105, 75, 65, 100, 50], abilities: [stench, sticky-hold, poison-touch] }
+  90: { name: { DE: "Muschas", EN: "Shellder" }, types: [WATER], stats: [30, 65, 100, 45, 25, 40], abilities: [shell-armor, skill-link, overcoat] }
+  91: { name: { DE: "Austos", EN: "Cloyster" }, types: [WATER, ICE], stats: [50, 95, 180, 85, 45, 70], abilities: [shell-armor, skill-link, overcoat] }
+  92: { name: { DE: "Nebulak", EN: "Gastly" }, types: [GHOST, POISON], stats: [30, 35, 30, 100, 35, 80], abilities: [levitate] }
+  93: { name: { DE: "Alpollo", EN: "Haunter" }, types: [GHOST, POISON], stats: [45, 50, 45, 115, 55, 95], abilities: [levitate] }
+  94: { name: { DE: "Gengar", EN: "Gengar" }, types: [GHOST, POISON], stats: [60, 65, 60, 130, 75, 110], abilities: [levitate] }
+  95: { name: { DE: "Onix", EN: "Onix" }, types: [ROCK, GROUND], stats: [35, 45, 160, 30, 45, 70], abilities: [rock-head, sturdy, weak-armor] }
+  96: { name: { DE: "Traumato", EN: "Drowzee" }, types: [PSYCHIC], stats: [60, 48, 45, 43, 90, 42], abilities: [insomnia, forewarn, inner-focus] }
+  97: { name: { DE: "Hypno", EN: "Hypno" }, types: [PSYCHIC], stats: [85, 73, 70, 73, 115, 67], abilities: [insomnia, forewarn, inner-focus] }
+  98: { name: { DE: "Krabby", EN: "Krabby" }, types: [WATER], stats: [30, 105, 90, 25, 25, 50], abilities: [hyper-cutter, shell-armor, sheer-force] }
+  99: { name: { DE: "Kingler", EN: "Kingler" }, types: [WATER], stats: [55, 130, 115, 50, 50, 75], abilities: [hyper-cutter, shell-armor, sheer-force] }
+  100: { name: { DE: "Voltobal", EN: "Voltorb" }, types: [ELECTRIC], stats: [40, 30, 50, 55, 55, 100], abilities: [soundproof, static, aftermath] }
+  101: { name: { DE: "Lektrobal", EN: "Electrode" }, types: [ELECTRIC], stats: [60, 50, 70, 80, 80, 140], abilities: [soundproof, static, aftermath] }
+  102: { name: { DE: "Owei", EN: "Exeggcute" }, types: [GRASS, PSYCHIC], stats: [60, 40, 80, 60, 45, 40], abilities: [chlorophyll, harvest] }
+  103: { name: { DE: "Kokowei", EN: "Exeggutor" }, types: [GRASS, PSYCHIC], stats: [95, 95, 85, 125, 65, 55], abilities: [chlorophyll, harvest] }
+  104: { name: { DE: "Tragosso", EN: "Cubone" }, types: [GROUND], stats: [50, 50, 95, 40, 50, 35], abilities: [rock-head, lightning-rod, battle-armor] }
+  105: { name: { DE: "Knogga", EN: "Marowak" }, types: [GROUND], stats: [60, 80, 110, 50, 80, 45], abilities: [rock-head, lightning-rod, battle-armor] }
+  106: { name: { DE: "Kicklee", EN: "Hitmonlee" }, types: [FIGHTING], stats: [50, 120, 53, 35, 110, 87], abilities: [limber, reckless, unburden] }
+  107: { name: { DE: "Nockchan", EN: "Hitmonchan" }, types: [FIGHTING], stats: [50, 105, 79, 35, 110, 76], abilities: [keen-eye, iron-fist, inner-focus] }
+  108: { name: { DE: "Schlurp", EN: "Lickitung" }, types: [NORMAL], stats: [90, 55, 75, 60, 75, 30], abilities: [own-tempo, oblivious, cloud-nine] }
+  109: { name: { DE: "Smogon", EN: "Koffing" }, types: [POISON], stats: [40, 65, 95, 60, 45, 35], abilities: [levitate, stench] }
+  110: { name: { DE: "Smogmog", EN: "Weezing" }, types: [POISON], stats: [65, 90, 120, 85, 70, 60], abilities: [levitate, stench] }
+  111: { name: { DE: "Rihorn", EN: "Rhyhorn" }, types: [GROUND, ROCK], stats: [80, 85, 95, 30, 30, 25], abilities: [lightning-rod, rock-head, reckless] }
+  112: { name: { DE: "Rizeros", EN: "Rhydon" }, types: [GROUND, ROCK], stats: [105, 130, 120, 45, 45, 40], abilities: [lightning-rod, rock-head, reckless] }
+  113: { name: { DE: "Chaneira", EN: "Chansey" }, types: [NORMAL], stats: [250, 5, 5, 35, 105, 50], abilities: [natural-cure, serene-grace, healer] }
+  114: { name: { DE: "Tangela", EN: "Tangela" }, types: [GRASS], stats: [65, 55, 115, 100, 40, 60], abilities: [chlorophyll, leaf-guard, regenerator] }
+  115: { name: { DE: "Kangama", EN: "Kangaskhan" }, types: [NORMAL], stats: [105, 95, 80, 40, 80, 90], abilities: [early-bird, scrappy, inner-focus] }
+  116: { name: { DE: "Seeper", EN: "Horsea" }, types: [WATER], stats: [30, 40, 70, 70, 25, 60], abilities: [swift-swim, sniper, damp] }
+  117: { name: { DE: "Seemon", EN: "Seadra" }, types: [WATER], stats: [55, 65, 95, 95, 45, 85], abilities: [poison-point, sniper, damp] }
+  118: { name: { DE: "Goldini", EN: "Goldeen" }, types: [WATER], stats: [45, 67, 60, 35, 50, 63], abilities: [swift-swim, water-veil, lightning-rod] }
+  119: { name: { DE: "Golking", EN: "Seaking" }, types: [WATER], stats: [80, 92, 65, 65, 80, 68], abilities: [swift-swim, water-veil, lightning-rod] }
+  120: { name: { DE: "Sterndu", EN: "Staryu" }, types: [WATER], stats: [30, 45, 55, 70, 55, 85], abilities: [illuminate, natural-cure, analytic] }
+  121: { name: { DE: "Starmie", EN: "Starmie" }, types: [WATER, PSYCHIC], stats: [60, 75, 85, 100, 85, 115], abilities: [illuminate, natural-cure, analytic] }
+  122: { name: { DE: "Pantimos", EN: "Mr. Mime" }, types: [PSYCHIC], stats: [40, 45, 65, 100, 120, 90], abilities: [soundproof, filter, technician] }
+  123: { name: { DE: "Sichlor", EN: "Scyther" }, types: [BUG, FLYING], stats: [70, 110, 80, 55, 80, 105], abilities: [swarm, technician, steadfast] }
+  124: { name: { DE: "Rossana", EN: "Jynx" }, types: [ICE, PSYCHIC], stats: [65, 50, 35, 115, 95, 95], abilities: [oblivious, forewarn, dry-skin] }
+  125: { name: { DE: "Elektek", EN: "Electabuzz" }, types: [ELECTRIC], stats: [65, 83, 57, 95, 85, 105], abilities: [static, vital-spirit] }
+  126: { name: { DE: "Magmar", EN: "Magmar" }, types: [FIRE], stats: [65, 95, 57, 100, 85, 93], abilities: [flame-body, vital-spirit] }
+  127: { name: { DE: "Pinsir", EN: "Pinsir" }, types: [BUG], stats: [65, 125, 100, 55, 70, 85], abilities: [hyper-cutter, mold-breaker, moxie] }
+  128: { name: { DE: "Tauros", EN: "Tauros" }, types: [NORMAL], stats: [75, 100, 95, 40, 70, 110], abilities: [intimidate, anger-point, sheer-force] }
+  129: { name: { DE: "Karpador", EN: "Magikarp" }, types: [WATER], stats: [20, 10, 55, 15, 20, 80], abilities: [swift-swim, rattled] }
+  130: { name: { DE: "Garados", EN: "Gyarados" }, types: [WATER, FLYING], stats: [95, 125, 79, 60, 100, 81], abilities: [intimidate, moxie] }
+  131: { name: { DE: "Lapras", EN: "Lapras" }, types: [WATER, ICE], stats: [130, 85, 80, 85, 95, 60], abilities: [water-absorb, shell-armor, hydration] }
+  132: { name: { DE: "Ditto", EN: "Ditto" }, types: [NORMAL], stats: [48, 48, 48, 48, 48, 48], abilities: [limber, imposter] }
+  133: { name: { DE: "Evoli", EN: "Eevee" }, types: [NORMAL], stats: [55, 55, 50, 45, 65, 55], abilities: [run-away, adaptability, anticipation] }
+  134: { name: { DE: "Aquana", EN: "Vaporeon" }, types: [WATER], stats: [130, 65, 60, 110, 95, 65], abilities: [water-absorb, hydration] }
+  135: { name: { DE: "Blitza", EN: "Jolteon" }, types: [ELECTRIC], stats: [65, 65, 60, 110, 95, 130], abilities: [volt-absorb, quick-feet] }
+  136: { name: { DE: "Flamara", EN: "Flareon" }, types: [FIRE], stats: [65, 130, 60, 95, 110, 65], abilities: [flash-fire, guts] }
+  137: { name: { DE: "Porygon", EN: "Porygon" }, types: [NORMAL], stats: [65, 60, 70, 85, 75, 40], abilities: [trace, download, analytic] }
+  138: { name: { DE: "Amonitas", EN: "Omanyte" }, types: [ROCK, WATER], stats: [35, 40, 100, 90, 55, 35], abilities: [swift-swim, shell-armor, weak-armor] }
+  139: { name: { DE: "Amoroso", EN: "Omastar" }, types: [ROCK, WATER], stats: [70, 60, 125, 115, 70, 55], abilities: [swift-swim, shell-armor, weak-armor] }
+  140: { name: { DE: "Kabuto", EN: "Kabuto" }, types: [ROCK, WATER], stats: [30, 80, 90, 55, 45, 55], abilities: [swift-swim, battle-armor, weak-armor] }
+  141: { name: { DE: "Kabutops", EN: "Kabutops" }, types: [ROCK, WATER], stats: [60, 115, 105, 65, 70, 80], abilities: [swift-swim, battle-armor, weak-armor] }
+  142: { name: { DE: "Aerodactyl", EN: "Aerodactyl" }, types: [ROCK, FLYING], stats: [80, 105, 65, 60, 75, 130], abilities: [rock-head, pressure, unnerve] }
+  143: { name: { DE: "Relaxo", EN: "Snorlax" }, types: [NORMAL], stats: [160, 110, 65, 65, 110, 30], abilities: [immunity, thick-fat, gluttony] }
+  144: { name: { DE: "Arktos", EN: "Articuno" }, types: [ICE, FLYING], stats: [90, 85, 100, 95, 125, 85], abilities: [pressure, snow-cloak] }
+  145: { name: { DE: "Zapdos", EN: "Zapdos" }, types: [ELECTRIC, FLYING], stats: [90, 90, 85, 125, 90, 100], abilities: [pressure, lightning-rod] }
+  146: { name: { DE: "Lavados", EN: "Moltres" }, types: [FIRE, FLYING], stats: [90, 100, 90, 125, 85, 90], abilities: [pressure, flame-body] }
+  147: { name: { DE: "Dratini", EN: "Dratini" }, types: [DRAGON], stats: [41, 64, 45, 50, 50, 50], abilities: [shed-skin, marvel-scale] }
+  148: { name: { DE: "Dragonir", EN: "Dragonair" }, types: [DRAGON], stats: [61, 84, 65, 70, 70, 70], abilities: [shed-skin, marvel-scale] }
+  149: { name: { DE: "Dragoran", EN: "Dragonite" }, types: [DRAGON, FLYING], stats: [91, 134, 95, 100, 100, 80], abilities: [inner-focus, multiscale] }
+  150: { name: { DE: "Mewtu", EN: "Mewtwo" }, types: [PSYCHIC], stats: [106, 110, 90, 154, 90, 130], abilities: [pressure, unnerve] }
+  151: { name: { DE: "Mew", EN: "Mew" }, types: [PSYCHIC], stats: [100, 100, 100, 100, 100, 100], abilities: [synchronize] }
+  152: { name: { DE: "Endivie", EN: "Chikorita" }, types: [GRASS], stats: [45, 49, 65, 49, 65, 45], abilities: [overgrow, leaf-guard] }
+  153: { name: { DE: "Lorblatt", EN: "Bayleef" }, types: [GRASS], stats: [60, 62, 80, 63, 80, 60], abilities: [overgrow, leaf-guard] }
+  154: { name: { DE: "Meganie", EN: "Meganium" }, types: [GRASS], stats: [80, 82, 100, 83, 100, 80], abilities: [overgrow, leaf-guard] }
+  155: { name: { DE: "Feurigel", EN: "Cyndaquil" }, types: [FIRE], stats: [39, 52, 43, 60, 50, 65], abilities: [blaze, flash-fire] }
+  156: { name: { DE: "Igelavar", EN: "Quilava" }, types: [FIRE], stats: [58, 64, 58, 80, 65, 80], abilities: [blaze, flash-fire] }
+  157: { name: { DE: "Tornupto", EN: "Typhlosion" }, types: [FIRE], stats: [78, 84, 78, 109, 85, 100], abilities: [blaze, flash-fire] }
+  158: { name: { DE: "Karnimani", EN: "Totodile" }, types: [WATER], stats: [50, 65, 64, 44, 48, 43], abilities: [torrent, sheer-force] }
+  159: { name: { DE: "Tyracroc", EN: "Croconaw" }, types: [WATER], stats: [65, 80, 80, 59, 63, 58], abilities: [torrent, sheer-force] }
+  160: { name: { DE: "Impergator", EN: "Feraligatr" }, types: [WATER], stats: [85, 105, 100, 79, 83, 78], abilities: [torrent, sheer-force] }
+  161: { name: { DE: "Wiesor", EN: "Sentret" }, types: [NORMAL], stats: [35, 46, 34, 35, 45, 20], abilities: [run-away, keen-eye, frisk] }
+  162: { name: { DE: "Wiesenior", EN: "Furret" }, types: [NORMAL], stats: [85, 76, 64, 45, 55, 90], abilities: [run-away, keen-eye, frisk] }
+  163: { name: { DE: "Hoothoot", EN: "Hoothoot" }, types: [NORMAL, FLYING], stats: [60, 30, 30, 36, 56, 50], abilities: [insomnia, keen-eye, tinted-lens] }
+  164: { name: { DE: "Noctuh", EN: "Noctowl" }, types: [NORMAL, FLYING], stats: [100, 50, 50, 76, 96, 70], abilities: [insomnia, keen-eye, tinted-lens] }
+  165: { name: { DE: "Ledyba", EN: "Ledyba" }, types: [BUG, FLYING], stats: [40, 20, 30, 40, 80, 55], abilities: [swarm, early-bird, rattled] }
+  166: { name: { DE: "Ledian", EN: "Ledian" }, types: [BUG, FLYING], stats: [55, 35, 50, 55, 110, 85], abilities: [swarm, early-bird, iron-fist] }
+  167: { name: { DE: "Webarak", EN: "Spinarak" }, types: [BUG, POISON], stats: [40, 60, 40, 40, 40, 30], abilities: [swarm, insomnia, sniper] }
+  168: { name: { DE: "Ariados", EN: "Ariados" }, types: [BUG, POISON], stats: [70, 90, 70, 60, 60, 40], abilities: [swarm, insomnia, sniper] }
+  169: { name: { DE: "Iksbat", EN: "Crobat" }, types: [POISON, FLYING], stats: [85, 90, 80, 70, 80, 130], abilities: [inner-focus, infiltrator] }
+  170: { name: { DE: "Lampi", EN: "Chinchou" }, types: [WATER, ELECTRIC], stats: [75, 38, 38, 56, 56, 67], abilities: [volt-absorb, illuminate, water-absorb] }
+  171: { name: { DE: "Lanturn", EN: "Lanturn" }, types: [WATER, ELECTRIC], stats: [125, 58, 58, 76, 76, 67], abilities: [volt-absorb, illuminate, water-absorb] }
+  172: { name: { DE: "Pichu", EN: "Pichu" }, types: [ELECTRIC], stats: [20, 40, 15, 35, 35, 60], abilities: [static, lightning-rod] }
+  173: { name: { DE: "Pii", EN: "Cleffa" }, types: [NORMAL], stats: [50, 25, 28, 45, 55, 15], abilities: [cute-charm, magic-guard, friend-guard] }
+  174: { name: { DE: "Fluffeluff", EN: "Igglybuff" }, types: [NORMAL], stats: [90, 30, 15, 40, 20, 15], abilities: [cute-charm, friend-guard] }
+  175: { name: { DE: "Togepi", EN: "Togepi" }, types: [NORMAL], stats: [35, 20, 65, 40, 65, 20], abilities: [hustle, serene-grace, super-luck] }
+  176: { name: { DE: "Togetic", EN: "Togetic" }, types: [NORMAL, FLYING], stats: [55, 40, 85, 80, 105, 40], abilities: [hustle, serene-grace, super-luck] }
+  177: { name: { DE: "Natu", EN: "Natu" }, types: [PSYCHIC, FLYING], stats: [40, 50, 45, 70, 45, 70], abilities: [synchronize, early-bird, magic-bounce] }
+  178: { name: { DE: "Xatu", EN: "Xatu" }, types: [PSYCHIC, FLYING], stats: [65, 75, 70, 95, 70, 95], abilities: [synchronize, early-bird, magic-bounce] }
+  179: { name: { DE: "Voltilamm", EN: "Mareep" }, types: [ELECTRIC], stats: [55, 40, 40, 65, 45, 35], abilities: [static, plus] }
+  180: { name: { DE: "Waaty", EN: "Flaaffy" }, types: [ELECTRIC], stats: [70, 55, 55, 80, 60, 45], abilities: [static, plus] }
+  181: { name: { DE: "Ampharos", EN: "Ampharos" }, types: [ELECTRIC], stats: [90, 75, 75, 115, 90, 55], abilities: [static, plus] }
+  182: { name: { DE: "Blubella", EN: "Bellossom" }, types: [GRASS], stats: [75, 80, 85, 90, 100, 50], abilities: [chlorophyll, healer] }
+  183: { name: { DE: "Marill", EN: "Marill" }, types: [WATER], stats: [70, 20, 50, 20, 50, 40], abilities: [thick-fat, huge-power, sap-sipper] }
+  184: { name: { DE: "Azumarill", EN: "Azumarill" }, types: [WATER], stats: [100, 50, 80, 50, 80, 50], abilities: [thick-fat, huge-power, sap-sipper] }
+  185: { name: { DE: "Mogelbaum", EN: "Sudowoodo" }, types: [ROCK], stats: [70, 100, 115, 30, 65, 30], abilities: [sturdy, rock-head, rattled] }
+  186: { name: { DE: "Quaxo", EN: "Politoed" }, types: [WATER], stats: [90, 75, 75, 90, 100, 70], abilities: [water-absorb, damp, drizzle] }
+  187: { name: { DE: "Hoppspross", EN: "Hoppip" }, types: [GRASS, FLYING], stats: [35, 35, 40, 35, 55, 50], abilities: [chlorophyll, leaf-guard, infiltrator] }
+  188: { name: { DE: "Hubelupf", EN: "Skiploom" }, types: [GRASS, FLYING], stats: [55, 45, 50, 45, 65, 80], abilities: [chlorophyll, leaf-guard, infiltrator] }
+  189: { name: { DE: "Papungha", EN: "Jumpluff" }, types: [GRASS, FLYING], stats: [75, 55, 70, 55, 85, 110], abilities: [chlorophyll, leaf-guard, infiltrator] }
+  190: { name: { DE: "Griffel", EN: "Aipom" }, types: [NORMAL], stats: [55, 70, 55, 40, 55, 85], abilities: [run-away, pickup, skill-link] }
+  191: { name: { DE: "Sonnkern", EN: "Sunkern" }, types: [GRASS], stats: [30, 30, 30, 30, 30, 30], abilities: [chlorophyll, solar-power, early-bird] }
+  192: { name: { DE: "Sonnflora", EN: "Sunflora" }, types: [GRASS], stats: [75, 75, 55, 105, 85, 30], abilities: [chlorophyll, solar-power, early-bird] }
+  193: { name: { DE: "Yanma", EN: "Yanma" }, types: [BUG, FLYING], stats: [65, 65, 45, 75, 45, 95], abilities: [speed-boost, compound-eyes, frisk] }
+  194: { name: { DE: "Felino", EN: "Wooper" }, types: [WATER, GROUND], stats: [55, 45, 45, 25, 25, 15], abilities: [damp, water-absorb, unaware] }
+  195: { name: { DE: "Morlord", EN: "Quagsire" }, types: [WATER, GROUND], stats: [95, 85, 85, 65, 65, 35], abilities: [damp, water-absorb, unaware] }
+  196: { name: { DE: "Psiana", EN: "Espeon" }, types: [PSYCHIC], stats: [65, 65, 60, 130, 95, 110], abilities: [synchronize, magic-bounce] }
+  197: { name: { DE: "Nachtara", EN: "Umbreon" }, types: [DARK], stats: [95, 65, 110, 60, 130, 65], abilities: [synchronize, inner-focus] }
+  198: { name: { DE: "Kramurx", EN: "Murkrow" }, types: [DARK, FLYING], stats: [60, 85, 42, 85, 42, 91], abilities: [insomnia, super-luck, prankster] }
+  199: { name: { DE: "Laschoking", EN: "Slowking" }, types: [WATER, PSYCHIC], stats: [95, 75, 80, 100, 110, 30], abilities: [oblivious, own-tempo, regenerator] }
+  200: { name: { DE: "Traunfugil", EN: "Misdreavus" }, types: [GHOST], stats: [60, 60, 60, 85, 85, 85], abilities: [levitate] }
+  201: { name: { DE: "Icognito", EN: "Unown" }, types: [PSYCHIC], stats: [48, 72, 48, 72, 48, 48], abilities: [levitate] }
+  202: { name: { DE: "Woingenau", EN: "Wobbuffet" }, types: [PSYCHIC], stats: [190, 33, 58, 33, 58, 33], abilities: [shadow-tag, telepathy] }
+  203: { name: { DE: "Girafarig", EN: "Girafarig" }, types: [NORMAL, PSYCHIC], stats: [70, 80, 65, 90, 65, 85], abilities: [inner-focus, early-bird, sap-sipper] }
+  204: { name: { DE: "Tannza", EN: "Pineco" }, types: [BUG], stats: [50, 65, 90, 35, 35, 15], abilities: [sturdy, overcoat] }
+  205: { name: { DE: "Forstellka", EN: "Forretress" }, types: [BUG, STEEL], stats: [75, 90, 140, 60, 60, 40], abilities: [sturdy, overcoat] }
+  206: { name: { DE: "Dummisel", EN: "Dunsparce" }, types: [NORMAL], stats: [100, 70, 70, 65, 65, 45], abilities: [serene-grace, run-away, rattled] }
+  207: { name: { DE: "Skorgla", EN: "Gligar" }, types: [GROUND, FLYING], stats: [65, 75, 105, 35, 65, 85], abilities: [hyper-cutter, sand-veil, immunity] }
+  208: { name: { DE: "Stahlos", EN: "Steelix" }, types: [STEEL, GROUND], stats: [75, 85, 200, 55, 65, 30], abilities: [rock-head, sturdy, sheer-force] }
+  209: { name: { DE: "Snubbull", EN: "Snubbull" }, types: [NORMAL], stats: [60, 80, 50, 40, 40, 30], abilities: [intimidate, run-away, rattled] }
+  210: { name: { DE: "Granbull", EN: "Granbull" }, types: [NORMAL], stats: [90, 120, 75, 60, 60, 45], abilities: [intimidate, quick-feet, rattled] }
+  211: { name: { DE: "Baldorfish", EN: "Qwilfish" }, types: [WATER, POISON], stats: [65, 95, 75, 55, 55, 85], abilities: [poison-point, swift-swim, intimidate] }
+  212: { name: { DE: "Scherox", EN: "Scizor" }, types: [BUG, STEEL], stats: [70, 130, 100, 55, 80, 65], abilities: [swarm, technician, light-metal] }
+  213: { name: { DE: "Pottrott", EN: "Shuckle" }, types: [BUG, ROCK], stats: [20, 10, 230, 10, 230, 5], abilities: [sturdy, gluttony, contrary] }
+  214: { name: { DE: "Skaraborn", EN: "Heracross" }, types: [BUG, FIGHTING], stats: [80, 125, 75, 40, 95, 85], abilities: [swarm, guts, moxie] }
+  215: { name: { DE: "Sniebel", EN: "Sneasel" }, types: [DARK, ICE], stats: [55, 95, 55, 35, 75, 115], abilities: [inner-focus, keen-eye, pickpocket] }
+  216: { name: { DE: "Teddiursa", EN: "Teddiursa" }, types: [NORMAL], stats: [60, 80, 50, 50, 50, 40], abilities: [pickup, quick-feet, honey-gather] }
+  217: { name: { DE: "Ursaring", EN: "Ursaring" }, types: [NORMAL], stats: [90, 130, 75, 75, 75, 55], abilities: [guts, quick-feet, unnerve] }
+  218: { name: { DE: "Schneckmag", EN: "Slugma" }, types: [FIRE], stats: [40, 40, 40, 70, 40, 20], abilities: [magma-armor, flame-body, weak-armor] }
+  219: { name: { DE: "Magcargo", EN: "Magcargo" }, types: [FIRE, ROCK], stats: [50, 50, 120, 80, 80, 30], abilities: [magma-armor, flame-body, weak-armor] }
+  220: { name: { DE: "Quiekel", EN: "Swinub" }, types: [ICE, GROUND], stats: [50, 50, 40, 30, 30, 50], abilities: [oblivious, snow-cloak, thick-fat] }
+  221: { name: { DE: "Keifel", EN: "Piloswine" }, types: [ICE, GROUND], stats: [100, 100, 80, 60, 60, 50], abilities: [oblivious, snow-cloak, thick-fat] }
+  222: { name: { DE: "Corasonn", EN: "Corsola" }, types: [WATER, ROCK], stats: [55, 55, 85, 65, 85, 35], abilities: [hustle, natural-cure, regenerator] }
+  223: { name: { DE: "Remoraid", EN: "Remoraid" }, types: [WATER], stats: [35, 65, 35, 65, 35, 65], abilities: [hustle, sniper, moody] }
+  224: { name: { DE: "Octillery", EN: "Octillery" }, types: [WATER], stats: [75, 105, 75, 105, 75, 45], abilities: [suction-cups, sniper, moody] }
+  225: { name: { DE: "Botogel", EN: "Delibird" }, types: [ICE, FLYING], stats: [45, 55, 45, 65, 45, 75], abilities: [vital-spirit, hustle, insomnia] }
+  226: { name: { DE: "Mantax", EN: "Mantine" }, types: [WATER, FLYING], stats: [65, 40, 70, 80, 140, 70], abilities: [swift-swim, water-absorb, water-veil] }
+  227: { name: { DE: "Panzaeron", EN: "Skarmory" }, types: [STEEL, FLYING], stats: [65, 80, 140, 40, 70, 70], abilities: [keen-eye, sturdy, weak-armor] }
+  228: { name: { DE: "Hunduster", EN: "Houndour" }, types: [DARK, FIRE], stats: [45, 60, 30, 80, 50, 65], abilities: [early-bird, flash-fire, unnerve] }
+  229: { name: { DE: "Hundemon", EN: "Houndoom" }, types: [DARK, FIRE], stats: [75, 90, 50, 110, 80, 95], abilities: [early-bird, flash-fire, unnerve] }
+  230: { name: { DE: "Seedraking", EN: "Kingdra" }, types: [WATER, DRAGON], stats: [75, 95, 95, 95, 95, 85], abilities: [swift-swim, sniper, damp] }
+  231: { name: { DE: "Phanpy", EN: "Phanpy" }, types: [GROUND], stats: [90, 60, 60, 40, 40, 40], abilities: [pickup, sand-veil] }
+  232: { name: { DE: "Donphan", EN: "Donphan" }, types: [GROUND], stats: [90, 120, 120, 60, 60, 50], abilities: [sturdy, sand-veil] }
+  233: { name: { DE: "Porygon2", EN: "Porygon2" }, types: [NORMAL], stats: [85, 80, 90, 105, 95, 60], abilities: [trace, download, analytic] }
+  234: { name: { DE: "Damhirplex", EN: "Stantler" }, types: [NORMAL], stats: [73, 95, 62, 85, 65, 85], abilities: [intimidate, frisk, sap-sipper] }
+  235: { name: { DE: "Farbeagle", EN: "Smeargle" }, types: [NORMAL], stats: [55, 20, 35, 20, 45, 75], abilities: [own-tempo, technician, moody] }
+  236: { name: { DE: "Rabauz", EN: "Tyrogue" }, types: [FIGHTING], stats: [35, 35, 35, 35, 35, 35], abilities: [guts, steadfast, vital-spirit] }
+  237: { name: { DE: "Kapoera", EN: "Hitmontop" }, types: [FIGHTING], stats: [50, 95, 95, 35, 110, 70], abilities: [intimidate, technician, steadfast] }
+  238: { name: { DE: "Kussilla", EN: "Smoochum" }, types: [ICE, PSYCHIC], stats: [45, 30, 15, 85, 65, 65], abilities: [oblivious, forewarn, hydration] }
+  239: { name: { DE: "Elekid", EN: "Elekid" }, types: [ELECTRIC], stats: [45, 63, 37, 65, 55, 95], abilities: [static, vital-spirit] }
+  240: { name: { DE: "Magby", EN: "Magby" }, types: [FIRE], stats: [45, 75, 37, 70, 55, 83], abilities: [flame-body, vital-spirit] }
+  241: { name: { DE: "Miltank", EN: "Miltank" }, types: [NORMAL], stats: [95, 80, 105, 40, 70, 100], abilities: [thick-fat, scrappy, sap-sipper] }
+  242: { name: { DE: "Heiteira", EN: "Blissey" }, types: [NORMAL], stats: [255, 10, 10, 75, 135, 55], abilities: [natural-cure, serene-grace, healer] }
+  243: { name: { DE: "Raikou", EN: "Raikou" }, types: [ELECTRIC], stats: [90, 85, 75, 115, 100, 115], abilities: [pressure, volt-absorb] }
+  244: { name: { DE: "Entei", EN: "Entei" }, types: [FIRE], stats: [115, 115, 85, 90, 75, 100], abilities: [pressure, flash-fire] }
+  245: { name: { DE: "Suicune", EN: "Suicune" }, types: [WATER], stats: [100, 75, 115, 90, 115, 85], abilities: [pressure, water-absorb] }
+  246: { name: { DE: "Larvitar", EN: "Larvitar" }, types: [ROCK, GROUND], stats: [50, 64, 50, 45, 50, 41], abilities: [guts, sand-veil] }
+  247: { name: { DE: "Pupitar", EN: "Pupitar" }, types: [ROCK, GROUND], stats: [70, 84, 70, 65, 70, 51], abilities: [shed-skin] }
+  248: { name: { DE: "Despotar", EN: "Tyranitar" }, types: [ROCK, DARK], stats: [100, 134, 110, 95, 100, 61], abilities: [sand-stream, unnerve] }
+  249: { name: { DE: "Lugia", EN: "Lugia" }, types: [PSYCHIC, FLYING], stats: [106, 90, 130, 90, 154, 110], abilities: [pressure, multiscale] }
+  250: { name: { DE: "Ho-Oh", EN: "Ho-Oh" }, types: [FIRE, FLYING], stats: [106, 130, 90, 110, 154, 90], abilities: [pressure, regenerator] }
+  251: { name: { DE: "Celebi", EN: "Celebi" }, types: [PSYCHIC, GRASS], stats: [100, 100, 100, 100, 100, 100], abilities: [natural-cure] }
+  252: { name: { DE: "Geckarbor", EN: "Treecko" }, types: [GRASS], stats: [40, 45, 35, 65, 55, 70], abilities: [overgrow, unburden] }
+  253: { name: { DE: "Reptain", EN: "Grovyle" }, types: [GRASS], stats: [50, 65, 45, 85, 65, 95], abilities: [overgrow, unburden] }
+  254: { name: { DE: "Gewaldro", EN: "Sceptile" }, types: [GRASS], stats: [70, 85, 65, 105, 85, 120], abilities: [overgrow, unburden] }
+  255: { name: { DE: "Flemmli", EN: "Torchic" }, types: [FIRE], stats: [45, 60, 40, 70, 50, 45], abilities: [blaze, speed-boost] }
+  256: { name: { DE: "Jungglut", EN: "Combusken" }, types: [FIRE, FIGHTING], stats: [60, 85, 60, 85, 60, 55], abilities: [blaze, speed-boost] }
+  257: { name: { DE: "Lohgock", EN: "Blaziken" }, types: [FIRE, FIGHTING], stats: [80, 120, 70, 110, 70, 80], abilities: [blaze, speed-boost] }
+  258: { name: { DE: "Hydropi", EN: "Mudkip" }, types: [WATER], stats: [50, 70, 50, 50, 50, 40], abilities: [torrent, damp] }
+  259: { name: { DE: "Moorabbel", EN: "Marshtomp" }, types: [WATER, GROUND], stats: [70, 85, 70, 60, 70, 50], abilities: [torrent, damp] }
+  260: { name: { DE: "Sumpex", EN: "Swampert" }, types: [WATER, GROUND], stats: [100, 110, 90, 85, 90, 60], abilities: [torrent, damp] }
+  261: { name: { DE: "Fiffyen", EN: "Poochyena" }, types: [DARK], stats: [35, 55, 35, 30, 30, 35], abilities: [run-away, quick-feet, rattled] }
+  262: { name: { DE: "Magnayen", EN: "Mightyena" }, types: [DARK], stats: [70, 90, 70, 60, 60, 70], abilities: [intimidate, quick-feet, moxie] }
+  263: { name: { DE: "Zigzachs", EN: "Zigzagoon" }, types: [NORMAL], stats: [38, 30, 41, 30, 41, 60], abilities: [pickup, gluttony, quick-feet] }
+  264: { name: { DE: "Geradaks", EN: "Linoone" }, types: [NORMAL], stats: [78, 70, 61, 50, 61, 100], abilities: [pickup, gluttony, quick-feet] }
+  265: { name: { DE: "Waumpel", EN: "Wurmple" }, types: [BUG], stats: [45, 45, 35, 20, 30, 20], abilities: [shield-dust, run-away] }
+  266: { name: { DE: "Schaloko", EN: "Silcoon" }, types: [BUG], stats: [50, 35, 55, 25, 25, 15], abilities: [shed-skin] }
+  267: { name: { DE: "Papinella", EN: "Beautifly" }, types: [BUG, FLYING], stats: [60, 70, 50, 90, 50, 65], abilities: [swarm, rivalry] }
+  268: { name: { DE: "Panekon", EN: "Cascoon" }, types: [BUG], stats: [50, 35, 55, 25, 25, 15], abilities: [shed-skin] }
+  269: { name: { DE: "Pudox", EN: "Dustox" }, types: [BUG, POISON], stats: [60, 50, 70, 50, 90, 65], abilities: [shield-dust, compound-eyes] }
+  270: { name: { DE: "Loturzel", EN: "Lotad" }, types: [WATER, GRASS], stats: [40, 30, 30, 40, 50, 30], abilities: [swift-swim, rain-dish, own-tempo] }
+  271: { name: { DE: "Lombrero", EN: "Lombre" }, types: [WATER, GRASS], stats: [60, 50, 50, 60, 70, 50], abilities: [swift-swim, rain-dish, own-tempo] }
+  272: { name: { DE: "Kappalores", EN: "Ludicolo" }, types: [WATER, GRASS], stats: [80, 70, 70, 90, 100, 70], abilities: [swift-swim, rain-dish, own-tempo] }
+  273: { name: { DE: "Samurzel", EN: "Seedot" }, types: [GRASS], stats: [40, 40, 50, 30, 30, 30], abilities: [chlorophyll, early-bird, pickpocket] }
+  274: { name: { DE: "Blanas", EN: "Nuzleaf" }, types: [GRASS, DARK], stats: [70, 70, 40, 60, 40, 60], abilities: [chlorophyll, early-bird, pickpocket] }
+  275: { name: { DE: "Tengulist", EN: "Shiftry" }, types: [GRASS, DARK], stats: [90, 100, 60, 90, 60, 80], abilities: [chlorophyll, early-bird, pickpocket] }
+  276: { name: { DE: "Schwalbini", EN: "Taillow" }, types: [NORMAL, FLYING], stats: [40, 55, 30, 30, 30, 85], abilities: [guts, scrappy] }
+  277: { name: { DE: "Schwalboss", EN: "Swellow" }, types: [NORMAL, FLYING], stats: [60, 85, 60, 50, 50, 125], abilities: [guts, scrappy] }
+  278: { name: { DE: "Wingull", EN: "Wingull" }, types: [WATER, FLYING], stats: [40, 30, 30, 55, 30, 85], abilities: [keen-eye, rain-dish] }
+  279: { name: { DE: "Pelipper", EN: "Pelipper" }, types: [WATER, FLYING], stats: [60, 50, 100, 85, 70, 65], abilities: [keen-eye, rain-dish] }
+  280: { name: { DE: "Trasla", EN: "Ralts" }, types: [PSYCHIC], stats: [28, 25, 25, 45, 35, 40], abilities: [synchronize, trace, telepathy] }
+  281: { name: { DE: "Kirlia", EN: "Kirlia" }, types: [PSYCHIC], stats: [38, 35, 35, 65, 55, 50], abilities: [synchronize, trace, telepathy] }
+  282: { name: { DE: "Guardevoir", EN: "Gardevoir" }, types: [PSYCHIC], stats: [68, 65, 65, 125, 115, 80], abilities: [synchronize, trace, telepathy] }
+  283: { name: { DE: "Gehweiher", EN: "Surskit" }, types: [BUG, WATER], stats: [40, 30, 32, 50, 52, 65], abilities: [swift-swim, rain-dish] }
+  284: { name: { DE: "Maskeregen", EN: "Masquerain" }, types: [BUG, FLYING], stats: [70, 60, 62, 80, 82, 60], abilities: [intimidate, unnerve] }
+  285: { name: { DE: "Knilz", EN: "Shroomish" }, types: [GRASS], stats: [60, 40, 60, 40, 60, 35], abilities: [effect-spore, poison-heal, quick-feet] }
+  286: { name: { DE: "Kapilz", EN: "Breloom" }, types: [GRASS, FIGHTING], stats: [60, 130, 80, 60, 60, 70], abilities: [effect-spore, poison-heal, technician] }
+  287: { name: { DE: "Bummelz", EN: "Slakoth" }, types: [NORMAL], stats: [60, 60, 60, 35, 35, 30], abilities: [truant] }
+  288: { name: { DE: "Muntier", EN: "Vigoroth" }, types: [NORMAL], stats: [80, 80, 80, 55, 55, 90], abilities: [vital-spirit] }
+  289: { name: { DE: "Letarking", EN: "Slaking" }, types: [NORMAL], stats: [150, 160, 100, 95, 65, 100], abilities: [truant] }
+  290: { name: { DE: "Nincada", EN: "Nincada" }, types: [BUG, GROUND], stats: [31, 45, 90, 30, 30, 40], abilities: [compound-eyes, run-away] }
+  291: { name: { DE: "Ninjask", EN: "Ninjask" }, types: [BUG, FLYING], stats: [61, 90, 45, 50, 50, 160], abilities: [speed-boost, infiltrator] }
+  292: { name: { DE: "Ninjatom", EN: "Shedinja" }, types: [BUG, GHOST], stats: [1, 90, 45, 30, 30, 40], abilities: [wonder-guard] }
+  293: { name: { DE: "Flurmel", EN: "Whismur" }, types: [NORMAL], stats: [64, 51, 23, 51, 23, 28], abilities: [soundproof, rattled] }
+  294: { name: { DE: "Krakeelo", EN: "Loudred" }, types: [NORMAL], stats: [84, 71, 43, 71, 43, 48], abilities: [soundproof, scrappy] }
+  295: { name: { DE: "Krawumms", EN: "Exploud" }, types: [NORMAL], stats: [104, 91, 63, 91, 63, 68], abilities: [soundproof, scrappy] }
+  296: { name: { DE: "Makuhita", EN: "Makuhita" }, types: [FIGHTING], stats: [72, 60, 30, 20, 30, 25], abilities: [thick-fat, guts, sheer-force] }
+  297: { name: { DE: "Hariyama", EN: "Hariyama" }, types: [FIGHTING], stats: [144, 120, 60, 40, 60, 50], abilities: [thick-fat, guts, sheer-force] }
+  298: { name: { DE: "Azurill", EN: "Azurill" }, types: [NORMAL], stats: [50, 20, 40, 20, 40, 20], abilities: [thick-fat, huge-power, sap-sipper] }
+  299: { name: { DE: "Nasgnet", EN: "Nosepass" }, types: [ROCK], stats: [30, 45, 135, 45, 90, 30], abilities: [sturdy, magnet-pull, sand-force] }
+  300: { name: { DE: "Eneco", EN: "Skitty" }, types: [NORMAL], stats: [50, 45, 45, 35, 35, 50], abilities: [cute-charm, normalize, wonder-skin] }
+  301: { name: { DE: "Enekoro", EN: "Delcatty" }, types: [NORMAL], stats: [70, 65, 65, 55, 55, 70], abilities: [cute-charm, normalize, wonder-skin] }
+  302: { name: { DE: "Zobiris", EN: "Sableye" }, types: [DARK, GHOST], stats: [50, 75, 75, 65, 65, 50], abilities: [keen-eye, stall, prankster] }
+  303: { name: { DE: "Flunkifer", EN: "Mawile" }, types: [STEEL], stats: [50, 85, 85, 55, 55, 50], abilities: [hyper-cutter, intimidate, sheer-force] }
+  304: { name: { DE: "Stollunior", EN: "Aron" }, types: [STEEL, ROCK], stats: [50, 70, 100, 40, 40, 30], abilities: [sturdy, rock-head, heavy-metal] }
+  305: { name: { DE: "Stollrak", EN: "Lairon" }, types: [STEEL, ROCK], stats: [60, 90, 140, 50, 50, 40], abilities: [sturdy, rock-head, heavy-metal] }
+  306: { name: { DE: "Stolloss", EN: "Aggron" }, types: [STEEL, ROCK], stats: [70, 110, 180, 60, 60, 50], abilities: [sturdy, rock-head, heavy-metal] }
+  307: { name: { DE: "Meditie", EN: "Meditite" }, types: [FIGHTING, PSYCHIC], stats: [30, 40, 55, 40, 55, 60], abilities: [pure-power, telepathy] }
+  308: { name: { DE: "Meditalis", EN: "Medicham" }, types: [FIGHTING, PSYCHIC], stats: [60, 60, 75, 60, 75, 80], abilities: [pure-power, telepathy] }
+  309: { name: { DE: "Frizelbliz", EN: "Electrike" }, types: [ELECTRIC], stats: [40, 45, 40, 65, 40, 65], abilities: [static, lightning-rod, minus] }
+  310: { name: { DE: "Voltenso", EN: "Manectric" }, types: [ELECTRIC], stats: [70, 75, 60, 105, 60, 105], abilities: [static, lightning-rod, minus] }
+  311: { name: { DE: "Plusle", EN: "Plusle" }, types: [ELECTRIC], stats: [60, 50, 40, 85, 75, 95], abilities: [plus] }
+  312: { name: { DE: "Minun", EN: "Minun" }, types: [ELECTRIC], stats: [60, 40, 50, 75, 85, 95], abilities: [minus] }
+  313: { name: { DE: "Volbeat", EN: "Volbeat" }, types: [BUG], stats: [65, 73, 55, 47, 75, 85], abilities: [illuminate, swarm, prankster] }
+  314: { name: { DE: "Illumise", EN: "Illumise" }, types: [BUG], stats: [65, 47, 55, 73, 75, 85], abilities: [oblivious, tinted-lens, prankster] }
+  315: { name: { DE: "Roselia", EN: "Roselia" }, types: [GRASS, POISON], stats: [50, 60, 45, 100, 80, 65], abilities: [natural-cure, poison-point, leaf-guard] }
+  316: { name: { DE: "Schluppuck", EN: "Gulpin" }, types: [POISON], stats: [70, 43, 53, 43, 53, 40], abilities: [liquid-ooze, sticky-hold, gluttony] }
+  317: { name: { DE: "Schlukwech", EN: "Swalot" }, types: [POISON], stats: [100, 73, 83, 73, 83, 55], abilities: [liquid-ooze, sticky-hold, gluttony] }
+  318: { name: { DE: "Kanivanha", EN: "Carvanha" }, types: [WATER, DARK], stats: [45, 90, 20, 65, 20, 65], abilities: [rough-skin, speed-boost] }
+  319: { name: { DE: "Tohaido", EN: "Sharpedo" }, types: [WATER, DARK], stats: [70, 120, 40, 95, 40, 95], abilities: [rough-skin, speed-boost] }
+  320: { name: { DE: "Wailmer", EN: "Wailmer" }, types: [WATER], stats: [130, 70, 35, 70, 35, 60], abilities: [water-veil, oblivious, pressure] }
+  321: { name: { DE: "Wailord", EN: "Wailord" }, types: [WATER], stats: [170, 90, 45, 90, 45, 60], abilities: [water-veil, oblivious, pressure] }
+  322: { name: { DE: "Camaub", EN: "Numel" }, types: [FIRE, GROUND], stats: [60, 60, 40, 65, 45, 35], abilities: [oblivious, simple, own-tempo] }
+  323: { name: { DE: "Camerupt", EN: "Camerupt" }, types: [FIRE, GROUND], stats: [70, 100, 70, 105, 75, 40], abilities: [magma-armor, solid-rock, anger-point] }
+  324: { name: { DE: "Qurtel", EN: "Torkoal" }, types: [FIRE], stats: [70, 85, 140, 85, 70, 20], abilities: [white-smoke, shell-armor] }
+  325: { name: { DE: "Spoink", EN: "Spoink" }, types: [PSYCHIC], stats: [60, 25, 35, 70, 80, 60], abilities: [thick-fat, own-tempo, gluttony] }
+  326: { name: { DE: "Groink", EN: "Grumpig" }, types: [PSYCHIC], stats: [80, 45, 65, 90, 110, 80], abilities: [thick-fat, own-tempo, gluttony] }
+  327: { name: { DE: "Pandir", EN: "Spinda" }, types: [NORMAL], stats: [60, 60, 60, 60, 60, 60], abilities: [own-tempo, tangled-feet, contrary] }
+  328: { name: { DE: "Knacklion", EN: "Trapinch" }, types: [GROUND], stats: [45, 100, 45, 45, 45, 10], abilities: [hyper-cutter, arena-trap, sheer-force] }
+  329: { name: { DE: "Vibrava", EN: "Vibrava" }, types: [GROUND, DRAGON], stats: [50, 70, 50, 50, 50, 70], abilities: [levitate] }
+  330: { name: { DE: "Libelldra", EN: "Flygon" }, types: [GROUND, DRAGON], stats: [80, 100, 80, 80, 80, 100], abilities: [levitate] }
+  331: { name: { DE: "Tuska", EN: "Cacnea" }, types: [GRASS], stats: [50, 85, 40, 85, 40, 35], abilities: [sand-veil, water-absorb] }
+  332: { name: { DE: "Noktuska", EN: "Cacturne" }, types: [GRASS, DARK], stats: [70, 115, 60, 115, 60, 55], abilities: [sand-veil, water-absorb] }
+  333: { name: { DE: "Wablu", EN: "Swablu" }, types: [NORMAL, FLYING], stats: [45, 40, 60, 40, 75, 50], abilities: [natural-cure, cloud-nine] }
+  334: { name: { DE: "Altaria", EN: "Altaria" }, types: [DRAGON, FLYING], stats: [75, 70, 90, 70, 105, 80], abilities: [natural-cure, cloud-nine] }
+  335: { name: { DE: "Sengo", EN: "Zangoose" }, types: [NORMAL], stats: [73, 115, 60, 60, 60, 90], abilities: [immunity, toxic-boost] }
+  336: { name: { DE: "Vipitis", EN: "Seviper" }, types: [POISON], stats: [73, 100, 60, 100, 60, 65], abilities: [shed-skin, infiltrator] }
+  337: { name: { DE: "Lunastein", EN: "Lunatone" }, types: [ROCK, PSYCHIC], stats: [70, 55, 65, 95, 85, 70], abilities: [levitate] }
+  338: { name: { DE: "Sonnfel", EN: "Solrock" }, types: [ROCK, PSYCHIC], stats: [70, 95, 85, 55, 65, 70], abilities: [levitate] }
+  339: { name: { DE: "Schmerbe", EN: "Barboach" }, types: [WATER, GROUND], stats: [50, 48, 43, 46, 41, 60], abilities: [oblivious, anticipation, hydration] }
+  340: { name: { DE: "Welsar", EN: "Whiscash" }, types: [WATER, GROUND], stats: [110, 78, 73, 76, 71, 60], abilities: [oblivious, anticipation, hydration] }
+  341: { name: { DE: "Krebscorps", EN: "Corphish" }, types: [WATER], stats: [43, 80, 65, 50, 35, 35], abilities: [hyper-cutter, shell-armor, adaptability] }
+  342: { name: { DE: "Krebutack", EN: "Crawdaunt" }, types: [WATER, DARK], stats: [63, 120, 85, 90, 55, 55], abilities: [hyper-cutter, shell-armor, adaptability] }
+  343: { name: { DE: "Puppance", EN: "Baltoy" }, types: [GROUND, PSYCHIC], stats: [40, 40, 55, 40, 70, 55], abilities: [levitate] }
+  344: { name: { DE: "Lepumentas", EN: "Claydol" }, types: [GROUND, PSYCHIC], stats: [60, 70, 105, 70, 120, 75], abilities: [levitate] }
+  345: { name: { DE: "Liliep", EN: "Lileep" }, types: [ROCK, GRASS], stats: [66, 41, 77, 61, 87, 23], abilities: [suction-cups, storm-drain] }
+  346: { name: { DE: "Wielie", EN: "Cradily" }, types: [ROCK, GRASS], stats: [86, 81, 97, 81, 107, 43], abilities: [suction-cups, storm-drain] }
+  347: { name: { DE: "Anorith", EN: "Anorith" }, types: [ROCK, BUG], stats: [45, 95, 50, 40, 50, 75], abilities: [battle-armor, swift-swim] }
+  348: { name: { DE: "Armaldo", EN: "Armaldo" }, types: [ROCK, BUG], stats: [75, 125, 100, 70, 80, 45], abilities: [battle-armor, swift-swim] }
+  349: { name: { DE: "Barschwa", EN: "Feebas" }, types: [WATER], stats: [20, 15, 20, 10, 55, 80], abilities: [swift-swim, adaptability] }
+  350: { name: { DE: "Milotic", EN: "Milotic" }, types: [WATER], stats: [95, 60, 79, 100, 125, 81], abilities: [marvel-scale, cute-charm] }
+  351: { name: { DE: "Formeo", EN: "Castform" }, types: [NORMAL], stats: [70, 70, 70, 70, 70, 70], abilities: [forecast] }
+  352: { name: { DE: "Kecleon", EN: "Kecleon" }, types: [NORMAL], stats: [60, 90, 70, 60, 120, 40], abilities: [color-change] }
+  353: { name: { DE: "Shuppet", EN: "Shuppet" }, types: [GHOST], stats: [44, 75, 35, 63, 33, 45], abilities: [insomnia, frisk, cursed-body] }
+  354: { name: { DE: "Banette", EN: "Banette" }, types: [GHOST], stats: [64, 115, 65, 83, 63, 65], abilities: [insomnia, frisk, cursed-body] }
+  355: { name: { DE: "Zwirrlicht", EN: "Duskull" }, types: [GHOST], stats: [20, 40, 90, 30, 90, 25], abilities: [levitate] }
+  356: { name: { DE: "Zwirrklop", EN: "Dusclops" }, types: [GHOST], stats: [40, 70, 130, 60, 130, 25], abilities: [pressure] }
+  357: { name: { DE: "Tropius", EN: "Tropius" }, types: [GRASS, FLYING], stats: [99, 68, 83, 72, 87, 51], abilities: [chlorophyll, solar-power, harvest] }
+  358: { name: { DE: "Palimpalim", EN: "Chimecho" }, types: [PSYCHIC], stats: [65, 50, 70, 95, 80, 65], abilities: [levitate] }
+  359: { name: { DE: "Absol", EN: "Absol" }, types: [DARK], stats: [65, 130, 60, 75, 60, 75], abilities: [pressure, super-luck, justified] }
+  360: { name: { DE: "Isso", EN: "Wynaut" }, types: [PSYCHIC], stats: [95, 23, 48, 23, 48, 23], abilities: [shadow-tag, telepathy] }
+  361: { name: { DE: "Schneppke", EN: "Snorunt" }, types: [ICE], stats: [50, 50, 50, 50, 50, 50], abilities: [inner-focus, ice-body, moody] }
+  362: { name: { DE: "Firnontor", EN: "Glalie" }, types: [ICE], stats: [80, 80, 80, 80, 80, 80], abilities: [inner-focus, ice-body, moody] }
+  363: { name: { DE: "Seemops", EN: "Spheal" }, types: [ICE, WATER], stats: [70, 40, 50, 55, 50, 25], abilities: [thick-fat, ice-body, oblivious] }
+  364: { name: { DE: "Seejong", EN: "Sealeo" }, types: [ICE, WATER], stats: [90, 60, 70, 75, 70, 45], abilities: [thick-fat, ice-body, oblivious] }
+  365: { name: { DE: "Walraisa", EN: "Walrein" }, types: [ICE, WATER], stats: [110, 80, 90, 95, 90, 65], abilities: [thick-fat, ice-body, oblivious] }
+  366: { name: { DE: "Perlu", EN: "Clamperl" }, types: [WATER], stats: [35, 64, 85, 74, 55, 32], abilities: [shell-armor, rattled] }
+  367: { name: { DE: "Aalabyss", EN: "Huntail" }, types: [WATER], stats: [55, 104, 105, 94, 75, 52], abilities: [swift-swim, water-veil] }
+  368: { name: { DE: "Saganabyss", EN: "Gorebyss" }, types: [WATER], stats: [55, 84, 105, 114, 75, 52], abilities: [swift-swim, hydration] }
+  369: { name: { DE: "Relicanth", EN: "Relicanth" }, types: [WATER, ROCK], stats: [100, 90, 130, 45, 65, 55], abilities: [swift-swim, rock-head, sturdy] }
+  370: { name: { DE: "Liebiskus", EN: "Luvdisc" }, types: [WATER], stats: [43, 30, 55, 40, 65, 97], abilities: [swift-swim, hydration] }
+  371: { name: { DE: "Kindwurm", EN: "Bagon" }, types: [DRAGON], stats: [45, 75, 60, 40, 30, 50], abilities: [rock-head, sheer-force] }
+  372: { name: { DE: "Draschel", EN: "Shelgon" }, types: [DRAGON], stats: [65, 95, 100, 60, 50, 50], abilities: [rock-head, overcoat] }
+  373: { name: { DE: "Brutalanda", EN: "Salamence" }, types: [DRAGON, FLYING], stats: [95, 135, 80, 110, 80, 100], abilities: [intimidate, moxie] }
+  374: { name: { DE: "Tanhel", EN: "Beldum" }, types: [STEEL, PSYCHIC], stats: [40, 55, 80, 35, 60, 30], abilities: [clear-body, light-metal] }
+  375: { name: { DE: "Metang", EN: "Metang" }, types: [STEEL, PSYCHIC], stats: [60, 75, 100, 55, 80, 50], abilities: [clear-body, light-metal] }
+  376: { name: { DE: "Metagross", EN: "Metagross" }, types: [STEEL, PSYCHIC], stats: [80, 135, 130, 95, 90, 70], abilities: [clear-body, light-metal] }
+  377: { name: { DE: "Regirock", EN: "Regirock" }, types: [ROCK], stats: [80, 100, 200, 50, 100, 50], abilities: [clear-body, sturdy] }
+  378: { name: { DE: "Regice", EN: "Regice" }, types: [ICE], stats: [80, 50, 100, 100, 200, 50], abilities: [clear-body, ice-body] }
+  379: { name: { DE: "Registeel", EN: "Registeel" }, types: [STEEL], stats: [80, 75, 150, 75, 150, 50], abilities: [clear-body, light-metal] }
+  380: { name: { DE: "Latias", EN: "Latias" }, types: [DRAGON, PSYCHIC], stats: [80, 80, 90, 110, 130, 110], abilities: [levitate] }
+  381: { name: { DE: "Latios", EN: "Latios" }, types: [DRAGON, PSYCHIC], stats: [80, 90, 80, 130, 110, 110], abilities: [levitate] }
+  382: { name: { DE: "Kyogre", EN: "Kyogre" }, types: [WATER], stats: [100, 100, 90, 150, 140, 90], abilities: [drizzle] }
+  383: { name: { DE: "Groudon", EN: "Groudon" }, types: [GROUND], stats: [100, 150, 140, 100, 90, 90], abilities: [drought] }
+  384: { name: { DE: "Rayquaza", EN: "Rayquaza" }, types: [DRAGON, FLYING], stats: [105, 150, 90, 150, 90, 95], abilities: [air-lock] }
+  385: { name: { DE: "Jirachi", EN: "Jirachi" }, types: [STEEL, PSYCHIC], stats: [100, 100, 100, 100, 100, 100], abilities: [serene-grace] }
+  386: { name: { DE: "Deoxys", EN: "Deoxys" }, types: [PSYCHIC], stats: [50, 150, 50, 150, 50, 150], abilities: [pressure] }
+  387: { name: { DE: "Chelast", EN: "Turtwig" }, types: [GRASS], stats: [55, 68, 64, 45, 55, 31], abilities: [overgrow, shell-armor] }
+  388: { name: { DE: "Chelcarain", EN: "Grotle" }, types: [GRASS], stats: [75, 89, 85, 55, 65, 36], abilities: [overgrow, shell-armor] }
+  389: { name: { DE: "Chelterrar", EN: "Torterra" }, types: [GRASS, GROUND], stats: [95, 109, 105, 75, 85, 56], abilities: [overgrow, shell-armor] }
+  390: { name: { DE: "Panflam", EN: "Chimchar" }, types: [FIRE], stats: [44, 58, 44, 58, 44, 61], abilities: [blaze, iron-fist] }
+  391: { name: { DE: "Panpyro", EN: "Monferno" }, types: [FIRE, FIGHTING], stats: [64, 78, 52, 78, 52, 81], abilities: [blaze, iron-fist] }
+  392: { name: { DE: "Panferno", EN: "Infernape" }, types: [FIRE, FIGHTING], stats: [76, 104, 71, 104, 71, 108], abilities: [blaze, iron-fist] }
+  393: { name: { DE: "Plinfa", EN: "Piplup" }, types: [WATER], stats: [53, 51, 53, 61, 56, 40], abilities: [torrent, defiant] }
+  394: { name: { DE: "Pliprin", EN: "Prinplup" }, types: [WATER], stats: [64, 66, 68, 81, 76, 50], abilities: [torrent, defiant] }
+  395: { name: { DE: "Impoleon", EN: "Empoleon" }, types: [WATER, STEEL], stats: [84, 86, 88, 111, 101, 60], abilities: [torrent, defiant] }
+  396: { name: { DE: "Staralili", EN: "Starly" }, types: [NORMAL, FLYING], stats: [40, 55, 30, 30, 30, 60], abilities: [keen-eye] }
+  397: { name: { DE: "Staravia", EN: "Staravia" }, types: [NORMAL, FLYING], stats: [55, 75, 50, 40, 40, 80], abilities: [intimidate, reckless] }
+  398: { name: { DE: "Staraptor", EN: "Staraptor" }, types: [NORMAL, FLYING], stats: [85, 120, 70, 50, 50, 100], abilities: [intimidate, reckless] }
+  399: { name: { DE: "Bidiza", EN: "Bidoof" }, types: [NORMAL], stats: [59, 45, 40, 35, 40, 31], abilities: [simple, unaware, moody] }
+  400: { name: { DE: "Bidifas", EN: "Bibarel" }, types: [NORMAL, WATER], stats: [79, 85, 60, 55, 60, 71], abilities: [simple, unaware, moody] }
+  401: { name: { DE: "Zirpurze", EN: "Kricketot" }, types: [BUG], stats: [37, 25, 41, 25, 41, 25], abilities: [shed-skin, run-away] }
+  402: { name: { DE: "Zirpeise", EN: "Kricketune" }, types: [BUG], stats: [77, 85, 51, 55, 51, 65], abilities: [swarm, technician] }
+  403: { name: { DE: "Sheinux", EN: "Shinx" }, types: [ELECTRIC], stats: [45, 65, 34, 40, 34, 45], abilities: [rivalry, intimidate, guts] }
+  404: { name: { DE: "Luxio", EN: "Luxio" }, types: [ELECTRIC], stats: [60, 85, 49, 60, 49, 60], abilities: [rivalry, intimidate, guts] }
+  405: { name: { DE: "Luxtra", EN: "Luxray" }, types: [ELECTRIC], stats: [80, 120, 79, 95, 79, 70], abilities: [rivalry, intimidate, guts] }
+  406: { name: { DE: "Knospi", EN: "Budew" }, types: [GRASS, POISON], stats: [40, 30, 35, 50, 70, 55], abilities: [natural-cure, poison-point, leaf-guard] }
+  407: { name: { DE: "Roserade", EN: "Roserade" }, types: [GRASS, POISON], stats: [60, 70, 55, 125, 105, 90], abilities: [natural-cure, poison-point, technician] }
+  408: { name: { DE: "Koknodon", EN: "Cranidos" }, types: [ROCK], stats: [67, 125, 40, 30, 30, 58], abilities: [mold-breaker, sheer-force] }
+  409: { name: { DE: "Rameidon", EN: "Rampardos" }, types: [ROCK], stats: [97, 165, 60, 65, 50, 58], abilities: [mold-breaker, sheer-force] }
+  410: { name: { DE: "Schilterus", EN: "Shieldon" }, types: [ROCK, STEEL], stats: [30, 42, 118, 42, 88, 30], abilities: [sturdy, soundproof] }
+  411: { name: { DE: "Bollterus", EN: "Bastiodon" }, types: [ROCK, STEEL], stats: [60, 52, 168, 47, 138, 30], abilities: [sturdy, soundproof] }
+  412: { name: { DE: "Burmy", EN: "Burmy" }, types: [BUG], stats: [40, 29, 45, 29, 45, 36], abilities: [shed-skin, overcoat] }
   413:
     name: { DE: "Burmadame", EN: "Wormadam" }
     types: [BUG, GRASS]
+    stats: [60, 59, 85, 79, 105, 36]
+    abilities: [anticipation, overcoat]
     forms:
-      1: { name: { DE: "Burmadame (Sand)", EN: "Sandy Wormadam" }, types: [BUG, GROUND], sprite: "10004" }
-      2: { name: { DE: "Burmadame (Lumpen)", EN: "Trash Wormadam" }, types: [BUG, STEEL], sprite: "10005" }
-  414: { name: { DE: "Moterpel", EN: "Mothim" }, types: [BUG, FLYING] }
-  415: { name: { DE: "Wadribie", EN: "Combee" }, types: [BUG, FLYING] }
-  416: { name: { DE: "Honweisel", EN: "Vespiquen" }, types: [BUG, FLYING] }
-  417: { name: { DE: "Pachirisu", EN: "Pachirisu" }, types: [ELECTRIC] }
-  418: { name: { DE: "Bamelin", EN: "Buizel" }, types: [WATER] }
-  419: { name: { DE: "Bojelin", EN: "Floatzel" }, types: [WATER] }
-  420: { name: { DE: "Kikugi", EN: "Cherubi" }, types: [GRASS] }
-  421: { name: { DE: "Kinoso", EN: "Cherrim" }, types: [GRASS] }
-  422: { name: { DE: "Schalellos", EN: "Shellos" }, types: [WATER] }
-  423: { name: { DE: "Gastrodon", EN: "Gastrodon" }, types: [WATER, GROUND] }
-  424: { name: { DE: "Ambidiffel", EN: "Ambipom" }, types: [NORMAL] }
-  425: { name: { DE: "Driftlon", EN: "Drifloon" }, types: [GHOST, FLYING] }
-  426: { name: { DE: "Drifzepeli", EN: "Drifblim" }, types: [GHOST, FLYING] }
-  427: { name: { DE: "Haspiror", EN: "Buneary" }, types: [NORMAL] }
-  428: { name: { DE: "Schlapor", EN: "Lopunny" }, types: [NORMAL] }
-  429: { name: { DE: "Traunmagil", EN: "Mismagius" }, types: [GHOST] }
-  430: { name: { DE: "Kramshef", EN: "Honchkrow" }, types: [DARK, FLYING] }
-  431: { name: { DE: "Charmian", EN: "Glameow" }, types: [NORMAL] }
-  432: { name: { DE: "Shnurgarst", EN: "Purugly" }, types: [NORMAL] }
-  433: { name: { DE: "Klingplim", EN: "Chingling" }, types: [PSYCHIC] }
-  434: { name: { DE: "Skunkapuh", EN: "Stunky" }, types: [POISON, DARK] }
-  435: { name: { DE: "Skuntank", EN: "Skuntank" }, types: [POISON, DARK] }
-  436: { name: { DE: "Bronzel", EN: "Bronzor" }, types: [STEEL, PSYCHIC] }
-  437: { name: { DE: "Bronzong", EN: "Bronzong" }, types: [STEEL, PSYCHIC] }
-  438: { name: { DE: "Mobai", EN: "Bonsly" }, types: [ROCK] }
-  439: { name: { DE: "Pantimimi", EN: "Mime Jr." }, types: [PSYCHIC] }
-  440: { name: { DE: "Wonneira", EN: "Happiny" }, types: [NORMAL] }
-  441: { name: { DE: "Plaudagei", EN: "Chatot" }, types: [NORMAL, FLYING] }
-  442: { name: { DE: "Kryppuk", EN: "Spiritomb" }, types: [GHOST, DARK] }
-  443: { name: { DE: "Kaumalat", EN: "Gible" }, types: [DRAGON, GROUND] }
-  444: { name: { DE: "Knarksel", EN: "Gabite" }, types: [DRAGON, GROUND] }
-  445: { name: { DE: "Knakrack", EN: "Garchomp" }, types: [DRAGON, GROUND] }
-  446: { name: { DE: "Mampfaxo", EN: "Munchlax" }, types: [NORMAL] }
-  447: { name: { DE: "Riolu", EN: "Riolu" }, types: [FIGHTING] }
-  448: { name: { DE: "Lucario", EN: "Lucario" }, types: [FIGHTING, STEEL] }
-  449: { name: { DE: "Hippopotas", EN: "Hippopotas" }, types: [GROUND] }
-  450: { name: { DE: "Hippoterus", EN: "Hippowdon" }, types: [GROUND] }
-  451: { name: { DE: "Pionskora", EN: "Skorupi" }, types: [POISON, BUG] }
-  452: { name: { DE: "Piondragi", EN: "Drapion" }, types: [POISON, DARK] }
-  453: { name: { DE: "Glibunkel", EN: "Croagunk" }, types: [POISON, FIGHTING] }
-  454: { name: { DE: "Toxiquak", EN: "Toxicroak" }, types: [POISON, FIGHTING] }
-  455: { name: { DE: "Venuflibis", EN: "Carnivine" }, types: [GRASS] }
-  456: { name: { DE: "Finneon", EN: "Finneon" }, types: [WATER] }
-  457: { name: { DE: "Lumineon", EN: "Lumineon" }, types: [WATER] }
-  458: { name: { DE: "Mantirps", EN: "Mantyke" }, types: [WATER, FLYING] }
-  459: { name: { DE: "Shnebedeck", EN: "Snover" }, types: [GRASS, ICE] }
-  460: { name: { DE: "Rexblisar", EN: "Abomasnow" }, types: [GRASS, ICE] }
-  461: { name: { DE: "Snibunna", EN: "Weavile" }, types: [DARK, ICE] }
-  462: { name: { DE: "Magnezone", EN: "Magnezone" }, types: [ELECTRIC, STEEL] }
-  463: { name: { DE: "Schlurplek", EN: "Lickilicky" }, types: [NORMAL] }
-  464: { name: { DE: "Rihornior", EN: "Rhyperior" }, types: [GROUND, ROCK] }
-  465: { name: { DE: "Tangoloss", EN: "Tangrowth" }, types: [GRASS] }
-  466: { name: { DE: "Elevoltek", EN: "Electivire" }, types: [ELECTRIC] }
-  467: { name: { DE: "Magbrant", EN: "Magmortar" }, types: [FIRE] }
-  468: { name: { DE: "Togekiss", EN: "Togekiss" }, types: [NORMAL, FLYING] }
-  469: { name: { DE: "Yanmega", EN: "Yanmega" }, types: [BUG, FLYING] }
-  470: { name: { DE: "Folipurba", EN: "Leafeon" }, types: [GRASS] }
-  471: { name: { DE: "Glaziola", EN: "Glaceon" }, types: [ICE] }
-  472: { name: { DE: "Skorgro", EN: "Gliscor" }, types: [GROUND, FLYING] }
-  473: { name: { DE: "Mamutel", EN: "Mamoswine" }, types: [ICE, GROUND] }
-  474: { name: { DE: "Porygon-Z", EN: "Porygon-Z" }, types: [NORMAL] }
-  475: { name: { DE: "Galagladi", EN: "Gallade" }, types: [PSYCHIC, FIGHTING] }
-  476: { name: { DE: "Voluminas", EN: "Probopass" }, types: [ROCK, STEEL] }
-  477: { name: { DE: "Zwirrfinst", EN: "Dusknoir" }, types: [GHOST] }
-  478: { name: { DE: "Frosdedje", EN: "Froslass" }, types: [ICE, GHOST] }
+      1: { name: { DE: "Burmadame (Sand)", EN: "Sandy Wormadam" }, types: [BUG, GROUND], sprite: "10004", stats: [60, 79, 105, 59, 85, 36], abilities: [anticipation, overcoat] }
+      2: { name: { DE: "Burmadame (Lumpen)", EN: "Trash Wormadam" }, types: [BUG, STEEL], sprite: "10005", stats: [60, 69, 95, 69, 95, 36], abilities: [anticipation, overcoat] }
+  414: { name: { DE: "Moterpel", EN: "Mothim" }, types: [BUG, FLYING], stats: [70, 94, 50, 94, 50, 66], abilities: [swarm, tinted-lens] }
+  415: { name: { DE: "Wadribie", EN: "Combee" }, types: [BUG, FLYING], stats: [30, 30, 42, 30, 42, 70], abilities: [honey-gather, hustle] }
+  416: { name: { DE: "Honweisel", EN: "Vespiquen" }, types: [BUG, FLYING], stats: [70, 80, 102, 80, 102, 40], abilities: [pressure, unnerve] }
+  417: { name: { DE: "Pachirisu", EN: "Pachirisu" }, types: [ELECTRIC], stats: [60, 45, 70, 45, 90, 95], abilities: [run-away, pickup, volt-absorb] }
+  418: { name: { DE: "Bamelin", EN: "Buizel" }, types: [WATER], stats: [55, 65, 35, 60, 30, 85], abilities: [swift-swim, water-veil] }
+  419: { name: { DE: "Bojelin", EN: "Floatzel" }, types: [WATER], stats: [85, 105, 55, 85, 50, 115], abilities: [swift-swim, water-veil] }
+  420: { name: { DE: "Kikugi", EN: "Cherubi" }, types: [GRASS], stats: [45, 35, 45, 62, 53, 35], abilities: [chlorophyll] }
+  421: { name: { DE: "Kinoso", EN: "Cherrim" }, types: [GRASS], stats: [70, 60, 70, 87, 78, 85], abilities: [flower-gift] }
+  422: { name: { DE: "Schalellos", EN: "Shellos" }, types: [WATER], stats: [76, 48, 48, 57, 62, 34], abilities: [sticky-hold, storm-drain, sand-force] }
+  423: { name: { DE: "Gastrodon", EN: "Gastrodon" }, types: [WATER, GROUND], stats: [111, 83, 68, 92, 82, 39], abilities: [sticky-hold, storm-drain, sand-force] }
+  424: { name: { DE: "Ambidiffel", EN: "Ambipom" }, types: [NORMAL], stats: [75, 100, 66, 60, 66, 115], abilities: [technician, pickup, skill-link] }
+  425: { name: { DE: "Driftlon", EN: "Drifloon" }, types: [GHOST, FLYING], stats: [90, 50, 34, 60, 44, 70], abilities: [aftermath, unburden, flare-boost] }
+  426: { name: { DE: "Drifzepeli", EN: "Drifblim" }, types: [GHOST, FLYING], stats: [150, 80, 44, 90, 54, 80], abilities: [aftermath, unburden, flare-boost] }
+  427: { name: { DE: "Haspiror", EN: "Buneary" }, types: [NORMAL], stats: [55, 66, 44, 44, 56, 85], abilities: [run-away, klutz, limber] }
+  428: { name: { DE: "Schlapor", EN: "Lopunny" }, types: [NORMAL], stats: [65, 76, 84, 54, 96, 105], abilities: [cute-charm, klutz, limber] }
+  429: { name: { DE: "Traunmagil", EN: "Mismagius" }, types: [GHOST], stats: [60, 60, 60, 105, 105, 105], abilities: [levitate] }
+  430: { name: { DE: "Kramshef", EN: "Honchkrow" }, types: [DARK, FLYING], stats: [100, 125, 52, 105, 52, 71], abilities: [insomnia, super-luck, moxie] }
+  431: { name: { DE: "Charmian", EN: "Glameow" }, types: [NORMAL], stats: [49, 55, 42, 42, 37, 85], abilities: [limber, own-tempo, keen-eye] }
+  432: { name: { DE: "Shnurgarst", EN: "Purugly" }, types: [NORMAL], stats: [71, 82, 64, 64, 59, 112], abilities: [thick-fat, own-tempo, defiant] }
+  433: { name: { DE: "Klingplim", EN: "Chingling" }, types: [PSYCHIC], stats: [45, 30, 50, 65, 50, 45], abilities: [levitate] }
+  434: { name: { DE: "Skunkapuh", EN: "Stunky" }, types: [POISON, DARK], stats: [63, 63, 47, 41, 41, 74], abilities: [stench, aftermath, keen-eye] }
+  435: { name: { DE: "Skuntank", EN: "Skuntank" }, types: [POISON, DARK], stats: [103, 93, 67, 71, 61, 84], abilities: [stench, aftermath, keen-eye] }
+  436: { name: { DE: "Bronzel", EN: "Bronzor" }, types: [STEEL, PSYCHIC], stats: [57, 24, 86, 24, 86, 23], abilities: [levitate, heatproof, heavy-metal] }
+  437: { name: { DE: "Bronzong", EN: "Bronzong" }, types: [STEEL, PSYCHIC], stats: [67, 89, 116, 79, 116, 33], abilities: [levitate, heatproof, heavy-metal] }
+  438: { name: { DE: "Mobai", EN: "Bonsly" }, types: [ROCK], stats: [50, 80, 95, 10, 45, 10], abilities: [sturdy, rock-head, rattled] }
+  439: { name: { DE: "Pantimimi", EN: "Mime Jr." }, types: [PSYCHIC], stats: [20, 25, 45, 70, 90, 60], abilities: [soundproof, filter, technician] }
+  440: { name: { DE: "Wonneira", EN: "Happiny" }, types: [NORMAL], stats: [100, 5, 5, 15, 65, 30], abilities: [natural-cure, serene-grace, friend-guard] }
+  441: { name: { DE: "Plaudagei", EN: "Chatot" }, types: [NORMAL, FLYING], stats: [76, 65, 45, 92, 42, 91], abilities: [keen-eye, tangled-feet, big-pecks] }
+  442: { name: { DE: "Kryppuk", EN: "Spiritomb" }, types: [GHOST, DARK], stats: [50, 92, 108, 92, 108, 35], abilities: [pressure, infiltrator] }
+  443: { name: { DE: "Kaumalat", EN: "Gible" }, types: [DRAGON, GROUND], stats: [58, 70, 45, 40, 45, 42], abilities: [sand-veil, rough-skin] }
+  444: { name: { DE: "Knarksel", EN: "Gabite" }, types: [DRAGON, GROUND], stats: [68, 90, 65, 50, 55, 82], abilities: [sand-veil, rough-skin] }
+  445: { name: { DE: "Knakrack", EN: "Garchomp" }, types: [DRAGON, GROUND], stats: [108, 130, 95, 80, 85, 102], abilities: [sand-veil, rough-skin] }
+  446: { name: { DE: "Mampfaxo", EN: "Munchlax" }, types: [NORMAL], stats: [135, 85, 40, 40, 85, 5], abilities: [pickup, thick-fat, gluttony] }
+  447: { name: { DE: "Riolu", EN: "Riolu" }, types: [FIGHTING], stats: [40, 70, 40, 35, 40, 60], abilities: [steadfast, inner-focus, prankster] }
+  448: { name: { DE: "Lucario", EN: "Lucario" }, types: [FIGHTING, STEEL], stats: [70, 110, 70, 115, 70, 90], abilities: [steadfast, inner-focus, justified] }
+  449: { name: { DE: "Hippopotas", EN: "Hippopotas" }, types: [GROUND], stats: [68, 72, 78, 38, 42, 32], abilities: [sand-stream, sand-force] }
+  450: { name: { DE: "Hippoterus", EN: "Hippowdon" }, types: [GROUND], stats: [108, 112, 118, 68, 72, 47], abilities: [sand-stream, sand-force] }
+  451: { name: { DE: "Pionskora", EN: "Skorupi" }, types: [POISON, BUG], stats: [40, 50, 90, 30, 55, 65], abilities: [battle-armor, sniper, keen-eye] }
+  452: { name: { DE: "Piondragi", EN: "Drapion" }, types: [POISON, DARK], stats: [70, 90, 110, 60, 75, 95], abilities: [battle-armor, sniper, keen-eye] }
+  453: { name: { DE: "Glibunkel", EN: "Croagunk" }, types: [POISON, FIGHTING], stats: [48, 61, 40, 61, 40, 50], abilities: [anticipation, dry-skin, poison-touch] }
+  454: { name: { DE: "Toxiquak", EN: "Toxicroak" }, types: [POISON, FIGHTING], stats: [83, 106, 65, 86, 65, 85], abilities: [anticipation, dry-skin, poison-touch] }
+  455: { name: { DE: "Venuflibis", EN: "Carnivine" }, types: [GRASS], stats: [74, 100, 72, 90, 72, 46], abilities: [levitate] }
+  456: { name: { DE: "Finneon", EN: "Finneon" }, types: [WATER], stats: [49, 49, 56, 49, 61, 66], abilities: [swift-swim, storm-drain, water-veil] }
+  457: { name: { DE: "Lumineon", EN: "Lumineon" }, types: [WATER], stats: [69, 69, 76, 69, 86, 91], abilities: [swift-swim, storm-drain, water-veil] }
+  458: { name: { DE: "Mantirps", EN: "Mantyke" }, types: [WATER, FLYING], stats: [45, 20, 50, 60, 120, 50], abilities: [swift-swim, water-absorb, water-veil] }
+  459: { name: { DE: "Shnebedeck", EN: "Snover" }, types: [GRASS, ICE], stats: [60, 62, 50, 62, 60, 40], abilities: [snow-warning, soundproof] }
+  460: { name: { DE: "Rexblisar", EN: "Abomasnow" }, types: [GRASS, ICE], stats: [90, 92, 75, 92, 85, 60], abilities: [snow-warning, soundproof] }
+  461: { name: { DE: "Snibunna", EN: "Weavile" }, types: [DARK, ICE], stats: [70, 120, 65, 45, 85, 125], abilities: [pressure, pickpocket] }
+  462: { name: { DE: "Magnezone", EN: "Magnezone" }, types: [ELECTRIC, STEEL], stats: [70, 70, 115, 130, 90, 60], abilities: [magnet-pull, sturdy, analytic] }
+  463: { name: { DE: "Schlurplek", EN: "Lickilicky" }, types: [NORMAL], stats: [110, 85, 95, 80, 95, 50], abilities: [own-tempo, oblivious, cloud-nine] }
+  464: { name: { DE: "Rihornior", EN: "Rhyperior" }, types: [GROUND, ROCK], stats: [115, 140, 130, 55, 55, 40], abilities: [lightning-rod, solid-rock, reckless] }
+  465: { name: { DE: "Tangoloss", EN: "Tangrowth" }, types: [GRASS], stats: [100, 100, 125, 110, 50, 50], abilities: [chlorophyll, leaf-guard, regenerator] }
+  466: { name: { DE: "Elevoltek", EN: "Electivire" }, types: [ELECTRIC], stats: [75, 123, 67, 95, 85, 95], abilities: [motor-drive, vital-spirit] }
+  467: { name: { DE: "Magbrant", EN: "Magmortar" }, types: [FIRE], stats: [75, 95, 67, 125, 95, 83], abilities: [flame-body, vital-spirit] }
+  468: { name: { DE: "Togekiss", EN: "Togekiss" }, types: [NORMAL, FLYING], stats: [85, 50, 95, 120, 115, 80], abilities: [hustle, serene-grace, super-luck] }
+  469: { name: { DE: "Yanmega", EN: "Yanmega" }, types: [BUG, FLYING], stats: [86, 76, 86, 116, 56, 95], abilities: [speed-boost, tinted-lens, frisk] }
+  470: { name: { DE: "Folipurba", EN: "Leafeon" }, types: [GRASS], stats: [65, 110, 130, 60, 65, 95], abilities: [leaf-guard, chlorophyll] }
+  471: { name: { DE: "Glaziola", EN: "Glaceon" }, types: [ICE], stats: [65, 60, 110, 130, 95, 65], abilities: [snow-cloak, ice-body] }
+  472: { name: { DE: "Skorgro", EN: "Gliscor" }, types: [GROUND, FLYING], stats: [75, 95, 125, 45, 75, 95], abilities: [hyper-cutter, sand-veil, poison-heal] }
+  473: { name: { DE: "Mamutel", EN: "Mamoswine" }, types: [ICE, GROUND], stats: [110, 130, 80, 70, 60, 80], abilities: [oblivious, snow-cloak, thick-fat] }
+  474: { name: { DE: "Porygon-Z", EN: "Porygon-Z" }, types: [NORMAL], stats: [85, 80, 70, 135, 75, 90], abilities: [adaptability, download, analytic] }
+  475: { name: { DE: "Galagladi", EN: "Gallade" }, types: [PSYCHIC, FIGHTING], stats: [68, 125, 65, 65, 115, 80], abilities: [steadfast, justified] }
+  476: { name: { DE: "Voluminas", EN: "Probopass" }, types: [ROCK, STEEL], stats: [60, 55, 145, 75, 150, 40], abilities: [sturdy, magnet-pull, sand-force] }
+  477: { name: { DE: "Zwirrfinst", EN: "Dusknoir" }, types: [GHOST], stats: [45, 100, 135, 65, 135, 45], abilities: [pressure] }
+  478: { name: { DE: "Frosdedje", EN: "Froslass" }, types: [ICE, GHOST], stats: [70, 80, 70, 80, 70, 110], abilities: [snow-cloak, cursed-body] }
   479:
     name: { DE: "Rotom", EN: "Rotom" }
     types: [ELECTRIC, GHOST]
+    stats: [50, 50, 77, 95, 77, 91]
+    abilities: [levitate]
     forms:
-      1: { name: { DE: "Hitze-Rotom", EN: "Heat Rotom" }, types: [ELECTRIC, FIRE], sprite: "10008" }
-      2: { name: { DE: "Wasch-Rotom", EN: "Wash Rotom" }, types: [ELECTRIC, WATER], sprite: "10009" }
-      3: { name: { DE: "Frost-Rotom", EN: "Frost Rotom" }, types: [ELECTRIC, ICE], sprite: "10010" }
-      4: { name: { DE: "Wirbel-Rotom", EN: "Fan Rotom" }, types: [ELECTRIC, FLYING], sprite: "10011" }
-      5: { name: { DE: "Schneid-Rotom", EN: "Mow Rotom" }, types: [ELECTRIC, GRASS], sprite: "10012" }
-  480: { name: { DE: "Selfe", EN: "Uxie" }, types: [PSYCHIC] }
-  481: { name: { DE: "Vesprit", EN: "Mesprit" }, types: [PSYCHIC] }
-  482: { name: { DE: "Tobutz", EN: "Azelf" }, types: [PSYCHIC] }
-  483: { name: { DE: "Dialga", EN: "Dialga" }, types: [STEEL, DRAGON] }
-  484: { name: { DE: "Palkia", EN: "Palkia" }, types: [WATER, DRAGON] }
-  485: { name: { DE: "Heatran", EN: "Heatran" }, types: [FIRE, STEEL] }
-  486: { name: { DE: "Regigigas", EN: "Regigigas" }, types: [NORMAL] }
-  487: { name: { DE: "Giratina", EN: "Giratina" }, types: [GHOST, DRAGON] }
-  488: { name: { DE: "Cresselia", EN: "Cresselia" }, types: [PSYCHIC] }
-  489: { name: { DE: "Phione", EN: "Phione" }, types: [WATER] }
-  490: { name: { DE: "Manaphy", EN: "Manaphy" }, types: [WATER] }
-  491: { name: { DE: "Darkrai", EN: "Darkrai" }, types: [DARK] }
+      1: { name: { DE: "Hitze-Rotom", EN: "Heat Rotom" }, types: [ELECTRIC, FIRE], sprite: "10008", stats: [50, 65, 107, 105, 107, 86], abilities: [levitate] }
+      2: { name: { DE: "Wasch-Rotom", EN: "Wash Rotom" }, types: [ELECTRIC, WATER], sprite: "10009", stats: [50, 65, 107, 105, 107, 86], abilities: [levitate] }
+      3: { name: { DE: "Frost-Rotom", EN: "Frost Rotom" }, types: [ELECTRIC, ICE], sprite: "10010", stats: [50, 65, 107, 105, 107, 86], abilities: [levitate] }
+      4: { name: { DE: "Wirbel-Rotom", EN: "Fan Rotom" }, types: [ELECTRIC, FLYING], sprite: "10011", stats: [50, 65, 107, 105, 107, 86], abilities: [levitate] }
+      5: { name: { DE: "Schneid-Rotom", EN: "Mow Rotom" }, types: [ELECTRIC, GRASS], sprite: "10012", stats: [50, 65, 107, 105, 107, 86], abilities: [levitate] }
+  480: { name: { DE: "Selfe", EN: "Uxie" }, types: [PSYCHIC], stats: [75, 75, 130, 75, 130, 95], abilities: [levitate] }
+  481: { name: { DE: "Vesprit", EN: "Mesprit" }, types: [PSYCHIC], stats: [80, 105, 105, 105, 105, 80], abilities: [levitate] }
+  482: { name: { DE: "Tobutz", EN: "Azelf" }, types: [PSYCHIC], stats: [75, 125, 70, 125, 70, 115], abilities: [levitate] }
+  483: { name: { DE: "Dialga", EN: "Dialga" }, types: [STEEL, DRAGON], stats: [100, 120, 120, 150, 100, 90], abilities: [pressure, telepathy] }
+  484: { name: { DE: "Palkia", EN: "Palkia" }, types: [WATER, DRAGON], stats: [90, 120, 100, 150, 120, 100], abilities: [pressure, telepathy] }
+  485: { name: { DE: "Heatran", EN: "Heatran" }, types: [FIRE, STEEL], stats: [91, 90, 106, 130, 106, 77], abilities: [flash-fire, flame-body] }
+  486: { name: { DE: "Regigigas", EN: "Regigigas" }, types: [NORMAL], stats: [110, 160, 110, 80, 110, 100], abilities: [slow-start] }
+  487: { name: { DE: "Giratina", EN: "Giratina" }, types: [GHOST, DRAGON], stats: [150, 100, 120, 100, 120, 90], abilities: [pressure, telepathy] }
+  488: { name: { DE: "Cresselia", EN: "Cresselia" }, types: [PSYCHIC], stats: [120, 70, 120, 75, 130, 85], abilities: [levitate] }
+  489: { name: { DE: "Phione", EN: "Phione" }, types: [WATER], stats: [80, 80, 80, 80, 80, 80], abilities: [hydration] }
+  490: { name: { DE: "Manaphy", EN: "Manaphy" }, types: [WATER], stats: [100, 100, 100, 100, 100, 100], abilities: [hydration] }
+  491: { name: { DE: "Darkrai", EN: "Darkrai" }, types: [DARK], stats: [70, 90, 90, 135, 90, 125], abilities: [bad-dreams] }
   492:
     name: { DE: "Shaymin", EN: "Shaymin" }
     types: [GRASS]
+    stats: [100, 100, 100, 100, 100, 100]
+    abilities: [natural-cure]
     forms:
-      1: { name: { DE: "Shaymin (Zenit)", EN: "Sky Shaymin" }, types: [GRASS, FLYING], sprite: "10006" }
+      1: { name: { DE: "Shaymin (Zenit)", EN: "Sky Shaymin" }, types: [GRASS, FLYING], sprite: "10006", stats: [100, 103, 75, 120, 75, 127], abilities: [serene-grace] }
   493:
     name: { DE: "Arceus", EN: "Arceus" }
     types: [NORMAL]
+    stats: [120, 120, 120, 120, 120, 120]
+    abilities: [multitype]
     forms:
-      1: { name: { DE: "Arceus (Kampf)", EN: "Fighting Arceus" }, types: [FIGHTING], sprite: "493-fighting" }
-      2: { name: { DE: "Arceus (Flug)", EN: "Flying Arceus" }, types: [FLYING], sprite: "493-flying" }
-      3: { name: { DE: "Arceus (Gift)", EN: "Poison Arceus" }, types: [POISON], sprite: "493-poison" }
-      4: { name: { DE: "Arceus (Boden)", EN: "Ground Arceus" }, types: [GROUND], sprite: "493-ground" }
-      5: { name: { DE: "Arceus (Gestein)", EN: "Rock Arceus" }, types: [ROCK], sprite: "493-rock" }
-      6: { name: { DE: "Arceus (Käfer)", EN: "Bug Arceus" }, types: [BUG], sprite: "493-bug" }
-      7: { name: { DE: "Arceus (Geist)", EN: "Ghost Arceus" }, types: [GHOST], sprite: "493-ghost" }
-      8: { name: { DE: "Arceus (Stahl)", EN: "Steel Arceus" }, types: [STEEL], sprite: "493-steel" }
-      9: { name: { DE: "Arceus (Feuer)", EN: "Fire Arceus" }, types: [FIRE], sprite: "493-fire" }
-      10: { name: { DE: "Arceus (Wasser)", EN: "Water Arceus" }, types: [WATER], sprite: "493-water" }
-      11: { name: { DE: "Arceus (Pflanze)", EN: "Grass Arceus" }, types: [GRASS], sprite: "493-grass" }
-      12: { name: { DE: "Arceus (Elektro)", EN: "Electric Arceus" }, types: [ELECTRIC], sprite: "493-electric" }
-      13: { name: { DE: "Arceus (Psycho)", EN: "Psychic Arceus" }, types: [PSYCHIC], sprite: "493-psychic" }
-      14: { name: { DE: "Arceus (Eis)", EN: "Ice Arceus" }, types: [ICE], sprite: "493-ice" }
-      15: { name: { DE: "Arceus (Drache)", EN: "Dragon Arceus" }, types: [DRAGON], sprite: "493-dragon" }
-      16: { name: { DE: "Arceus (Unlicht)", EN: "Dark Arceus" }, types: [DARK], sprite: "493-dark" }
-  494: { name: { DE: "Victini", EN: "Victini" }, types: [PSYCHIC, FIRE] }
-  495: { name: { DE: "Serpifeu", EN: "Snivy" }, types: [GRASS] }
-  496: { name: { DE: "Efoserp", EN: "Servine" }, types: [GRASS] }
-  497: { name: { DE: "Serpiroyal", EN: "Serperior" }, types: [GRASS] }
-  498: { name: { DE: "Floink", EN: "Tepig" }, types: [FIRE] }
-  499: { name: { DE: "Ferkokel", EN: "Pignite" }, types: [FIRE, FIGHTING] }
-  500: { name: { DE: "Flambirex", EN: "Emboar" }, types: [FIRE, FIGHTING] }
-  501: { name: { DE: "Ottaro", EN: "Oshawott" }, types: [WATER] }
-  502: { name: { DE: "Zwottronin", EN: "Dewott" }, types: [WATER] }
-  503: { name: { DE: "Admurai", EN: "Samurott" }, types: [WATER] }
-  504: { name: { DE: "Nagelotz", EN: "Patrat" }, types: [NORMAL] }
-  505: { name: { DE: "Kukmarda", EN: "Watchog" }, types: [NORMAL] }
-  506: { name: { DE: "Yorkleff", EN: "Lillipup" }, types: [NORMAL] }
-  507: { name: { DE: "Terribark", EN: "Herdier" }, types: [NORMAL] }
-  508: { name: { DE: "Bissbark", EN: "Stoutland" }, types: [NORMAL] }
-  509: { name: { DE: "Felilou", EN: "Purrloin" }, types: [DARK] }
-  510: { name: { DE: "Kleoparda", EN: "Liepard" }, types: [DARK] }
-  511: { name: { DE: "Vegimak", EN: "Pansage" }, types: [GRASS] }
-  512: { name: { DE: "Vegichita", EN: "Simisage" }, types: [GRASS] }
-  513: { name: { DE: "Grillmak", EN: "Pansear" }, types: [FIRE] }
-  514: { name: { DE: "Grillchita", EN: "Simisear" }, types: [FIRE] }
-  515: { name: { DE: "Sodamak", EN: "Panpour" }, types: [WATER] }
-  516: { name: { DE: "Sodachita", EN: "Simipour" }, types: [WATER] }
-  517: { name: { DE: "Somniam", EN: "Munna" }, types: [PSYCHIC] }
-  518: { name: { DE: "Somnivora", EN: "Musharna" }, types: [PSYCHIC] }
-  519: { name: { DE: "Dusselgurr", EN: "Pidove" }, types: [NORMAL, FLYING] }
-  520: { name: { DE: "Navitaub", EN: "Tranquill" }, types: [NORMAL, FLYING] }
-  521: { name: { DE: "Fasasnob", EN: "Unfezant" }, types: [NORMAL, FLYING] }
-  522: { name: { DE: "Elezeba", EN: "Blitzle" }, types: [ELECTRIC] }
-  523: { name: { DE: "Zebritz", EN: "Zebstrika" }, types: [ELECTRIC] }
-  524: { name: { DE: "Kiesling", EN: "Roggenrola" }, types: [ROCK] }
-  525: { name: { DE: "Sedimantur", EN: "Boldore" }, types: [ROCK] }
-  526: { name: { DE: "Brockoloss", EN: "Gigalith" }, types: [ROCK] }
-  527: { name: { DE: "Fleknoil", EN: "Woobat" }, types: [PSYCHIC, FLYING] }
-  528: { name: { DE: "Fletiamo", EN: "Swoobat" }, types: [PSYCHIC, FLYING] }
-  529: { name: { DE: "Rotomurf", EN: "Drilbur" }, types: [GROUND] }
-  530: { name: { DE: "Stalobor", EN: "Excadrill" }, types: [GROUND, STEEL] }
-  531: { name: { DE: "Ohrdoch", EN: "Audino" }, types: [NORMAL] }
-  532: { name: { DE: "Praktibalk", EN: "Timburr" }, types: [FIGHTING] }
-  533: { name: { DE: "Strepoli", EN: "Gurdurr" }, types: [FIGHTING] }
-  534: { name: { DE: "Meistagrif", EN: "Conkeldurr" }, types: [FIGHTING] }
-  535: { name: { DE: "Schallquap", EN: "Tympole" }, types: [WATER] }
-  536: { name: { DE: "Mebrana", EN: "Palpitoad" }, types: [WATER, GROUND] }
-  537: { name: { DE: "Branawarz", EN: "Seismitoad" }, types: [WATER, GROUND] }
-  538: { name: { DE: "Jiutesto", EN: "Throh" }, types: [FIGHTING] }
-  539: { name: { DE: "Karadonis", EN: "Sawk" }, types: [FIGHTING] }
-  540: { name: { DE: "Strawickl", EN: "Sewaddle" }, types: [BUG, GRASS] }
-  541: { name: { DE: "Folikon", EN: "Swadloon" }, types: [BUG, GRASS] }
-  542: { name: { DE: "Matrifol", EN: "Leavanny" }, types: [BUG, GRASS] }
-  543: { name: { DE: "Toxiped", EN: "Venipede" }, types: [BUG, POISON] }
-  544: { name: { DE: "Rollum", EN: "Whirlipede" }, types: [BUG, POISON] }
-  545: { name: { DE: "Cerapendra", EN: "Scolipede" }, types: [BUG, POISON] }
-  546: { name: { DE: "Waumboll", EN: "Cottonee" }, types: [GRASS] }
-  547: { name: { DE: "Elfun", EN: "Whimsicott" }, types: [GRASS] }
-  548: { name: { DE: "Lilminip", EN: "Petilil" }, types: [GRASS] }
-  549: { name: { DE: "Dressella", EN: "Lilligant" }, types: [GRASS] }
-  550: { name: { DE: "Barschuft", EN: "Basculin" }, types: [WATER] }
-  551: { name: { DE: "Ganovil", EN: "Sandile" }, types: [GROUND, DARK] }
-  552: { name: { DE: "Rokkaiman", EN: "Krokorok" }, types: [GROUND, DARK] }
-  553: { name: { DE: "Rabigator", EN: "Krookodile" }, types: [GROUND, DARK] }
-  554: { name: { DE: "Flampion", EN: "Darumaka" }, types: [FIRE] }
-  555: { name: { DE: "Flampivian", EN: "Darmanitan" }, types: [FIRE] }
-  556: { name: { DE: "Maracamba", EN: "Maractus" }, types: [GRASS] }
-  557: { name: { DE: "Lithomith", EN: "Dwebble" }, types: [BUG, ROCK] }
-  558: { name: { DE: "Castellith", EN: "Crustle" }, types: [BUG, ROCK] }
-  559: { name: { DE: "Zurrokex", EN: "Scraggy" }, types: [DARK, FIGHTING] }
-  560: { name: { DE: "Irokex", EN: "Scrafty" }, types: [DARK, FIGHTING] }
-  561: { name: { DE: "Symvolara", EN: "Sigilyph" }, types: [PSYCHIC, FLYING] }
-  562: { name: { DE: "Makabaja", EN: "Yamask" }, types: [GHOST] }
-  563: { name: { DE: "Echnatoll", EN: "Cofagrigus" }, types: [GHOST] }
-  564: { name: { DE: "Galapaflos", EN: "Tirtouga" }, types: [WATER, ROCK] }
-  565: { name: { DE: "Karippas", EN: "Carracosta" }, types: [WATER, ROCK] }
-  566: { name: { DE: "Flapteryx", EN: "Archen" }, types: [ROCK, FLYING] }
-  567: { name: { DE: "Aeropteryx", EN: "Archeops" }, types: [ROCK, FLYING] }
-  568: { name: { DE: "Unratütox", EN: "Trubbish" }, types: [POISON] }
-  569: { name: { DE: "Deponitox", EN: "Garbodor" }, types: [POISON] }
-  570: { name: { DE: "Zorua", EN: "Zorua" }, types: [DARK] }
-  571: { name: { DE: "Zoroark", EN: "Zoroark" }, types: [DARK] }
-  572: { name: { DE: "Picochilla", EN: "Minccino" }, types: [NORMAL] }
-  573: { name: { DE: "Chillabell", EN: "Cinccino" }, types: [NORMAL] }
-  574: { name: { DE: "Mollimorba", EN: "Gothita" }, types: [PSYCHIC] }
-  575: { name: { DE: "Hypnomorba", EN: "Gothorita" }, types: [PSYCHIC] }
-  576: { name: { DE: "Morbitesse", EN: "Gothitelle" }, types: [PSYCHIC] }
-  577: { name: { DE: "Monozyto", EN: "Solosis" }, types: [PSYCHIC] }
-  578: { name: { DE: "Mitodos", EN: "Duosion" }, types: [PSYCHIC] }
-  579: { name: { DE: "Zytomega", EN: "Reuniclus" }, types: [PSYCHIC] }
-  580: { name: { DE: "Piccolente", EN: "Ducklett" }, types: [WATER, FLYING] }
-  581: { name: { DE: "Swaroness", EN: "Swanna" }, types: [WATER, FLYING] }
-  582: { name: { DE: "Gelatini", EN: "Vanillite" }, types: [ICE] }
-  583: { name: { DE: "Gelatroppo", EN: "Vanillish" }, types: [ICE] }
-  584: { name: { DE: "Gelatwino", EN: "Vanilluxe" }, types: [ICE] }
-  585: { name: { DE: "Sesokitz", EN: "Deerling" }, types: [NORMAL, GRASS] }
-  586: { name: { DE: "Kronjuwild", EN: "Sawsbuck" }, types: [NORMAL, GRASS] }
-  587: { name: { DE: "Emolga", EN: "Emolga" }, types: [ELECTRIC, FLYING] }
-  588: { name: { DE: "Laukaps", EN: "Karrablast" }, types: [BUG] }
-  589: { name: { DE: "Cavalanzas", EN: "Escavalier" }, types: [BUG, STEEL] }
-  590: { name: { DE: "Tarnpignon", EN: "Foongus" }, types: [GRASS, POISON] }
-  591: { name: { DE: "Hutsassa", EN: "Amoonguss" }, types: [GRASS, POISON] }
-  592: { name: { DE: "Quabbel", EN: "Frillish" }, types: [WATER, GHOST] }
-  593: { name: { DE: "Apoquallyp", EN: "Jellicent" }, types: [WATER, GHOST] }
-  594: { name: { DE: "Mamolida", EN: "Alomomola" }, types: [WATER] }
-  595: { name: { DE: "Wattzapf", EN: "Joltik" }, types: [BUG, ELECTRIC] }
-  596: { name: { DE: "Voltula", EN: "Galvantula" }, types: [BUG, ELECTRIC] }
-  597: { name: { DE: "Kastadur", EN: "Ferroseed" }, types: [GRASS, STEEL] }
-  598: { name: { DE: "Tentantel", EN: "Ferrothorn" }, types: [GRASS, STEEL] }
-  599: { name: { DE: "Klikk", EN: "Klink" }, types: [STEEL] }
-  600: { name: { DE: "Kliklak", EN: "Klang" }, types: [STEEL] }
-  601: { name: { DE: "Klikdiklak", EN: "Klinklang" }, types: [STEEL] }
-  602: { name: { DE: "Zapplardin", EN: "Tynamo" }, types: [ELECTRIC] }
-  603: { name: { DE: "Zapplalek", EN: "Eelektrik" }, types: [ELECTRIC] }
-  604: { name: { DE: "Zapplarang", EN: "Eelektross" }, types: [ELECTRIC] }
-  605: { name: { DE: "Pygraulon", EN: "Elgyem" }, types: [PSYCHIC] }
-  606: { name: { DE: "Megalon", EN: "Beheeyem" }, types: [PSYCHIC] }
-  607: { name: { DE: "Lichtel", EN: "Litwick" }, types: [GHOST, FIRE] }
-  608: { name: { DE: "Laternecto", EN: "Lampent" }, types: [GHOST, FIRE] }
-  609: { name: { DE: "Skelabra", EN: "Chandelure" }, types: [GHOST, FIRE] }
-  610: { name: { DE: "Milza", EN: "Axew" }, types: [DRAGON] }
-  611: { name: { DE: "Sharfax", EN: "Fraxure" }, types: [DRAGON] }
-  612: { name: { DE: "Maxax", EN: "Haxorus" }, types: [DRAGON] }
-  613: { name: { DE: "Petznief", EN: "Cubchoo" }, types: [ICE] }
-  614: { name: { DE: "Siberio", EN: "Beartic" }, types: [ICE] }
-  615: { name: { DE: "Frigometri", EN: "Cryogonal" }, types: [ICE] }
-  616: { name: { DE: "Schnuthelm", EN: "Shelmet" }, types: [BUG] }
-  617: { name: { DE: "Hydragil", EN: "Accelgor" }, types: [BUG] }
-  618: { name: { DE: "Flunschlik", EN: "Stunfisk" }, types: [GROUND, ELECTRIC] }
-  619: { name: { DE: "Lin-Fu", EN: "Mienfoo" }, types: [FIGHTING] }
-  620: { name: { DE: "Wie-Shu", EN: "Mienshao" }, types: [FIGHTING] }
-  621: { name: { DE: "Shardrago", EN: "Druddigon" }, types: [DRAGON] }
-  622: { name: { DE: "Golbit", EN: "Golett" }, types: [GROUND, GHOST] }
-  623: { name: { DE: "Golgantes", EN: "Golurk" }, types: [GROUND, GHOST] }
-  624: { name: { DE: "Gladiantri", EN: "Pawniard" }, types: [DARK, STEEL] }
-  625: { name: { DE: "Caesurio", EN: "Bisharp" }, types: [DARK, STEEL] }
-  626: { name: { DE: "Bisofank", EN: "Bouffalant" }, types: [NORMAL] }
-  627: { name: { DE: "Geronimatz", EN: "Rufflet" }, types: [NORMAL, FLYING] }
-  628: { name: { DE: "Washakwil", EN: "Braviary" }, types: [NORMAL, FLYING] }
-  629: { name: { DE: "Skallyk", EN: "Vullaby" }, types: [DARK, FLYING] }
-  630: { name: { DE: "Grypheldis", EN: "Mandibuzz" }, types: [DARK, FLYING] }
-  631: { name: { DE: "Furnifraß", EN: "Heatmor" }, types: [FIRE] }
-  632: { name: { DE: "Fermicula", EN: "Durant" }, types: [BUG, STEEL] }
-  633: { name: { DE: "Kapuno", EN: "Deino" }, types: [DARK, DRAGON] }
-  634: { name: { DE: "Duodino", EN: "Zweilous" }, types: [DARK, DRAGON] }
-  635: { name: { DE: "Trikephalo", EN: "Hydreigon" }, types: [DARK, DRAGON] }
-  636: { name: { DE: "Ignivor", EN: "Larvesta" }, types: [BUG, FIRE] }
-  637: { name: { DE: "Ramoth", EN: "Volcarona" }, types: [BUG, FIRE] }
-  638: { name: { DE: "Kobalium", EN: "Cobalion" }, types: [STEEL, FIGHTING] }
-  639: { name: { DE: "Terrakium", EN: "Terrakion" }, types: [ROCK, FIGHTING] }
-  640: { name: { DE: "Viridium", EN: "Virizion" }, types: [GRASS, FIGHTING] }
-  641: { name: { DE: "Boreos", EN: "Tornadus" }, types: [FLYING] }
-  642: { name: { DE: "Voltolos", EN: "Thundurus" }, types: [ELECTRIC, FLYING] }
-  643: { name: { DE: "Reshiram", EN: "Reshiram" }, types: [DRAGON, FIRE] }
-  644: { name: { DE: "Zekrom", EN: "Zekrom" }, types: [DRAGON, ELECTRIC] }
-  645: { name: { DE: "Demeteros", EN: "Landorus" }, types: [GROUND, FLYING] }
-  646: { name: { DE: "Kyurem", EN: "Kyurem" }, types: [DRAGON, ICE] }
-  647: { name: { DE: "Keldeo", EN: "Keldeo" }, types: [WATER, FIGHTING] }
-  648: { name: { DE: "Meloetta", EN: "Meloetta" }, types: [NORMAL, PSYCHIC] }
-  649: { name: { DE: "Genesect", EN: "Genesect" }, types: [BUG, STEEL] }
+      1: { name: { DE: "Arceus (Kampf)", EN: "Fighting Arceus" }, types: [FIGHTING], sprite: "493-fighting", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      2: { name: { DE: "Arceus (Flug)", EN: "Flying Arceus" }, types: [FLYING], sprite: "493-flying", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      3: { name: { DE: "Arceus (Gift)", EN: "Poison Arceus" }, types: [POISON], sprite: "493-poison", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      4: { name: { DE: "Arceus (Boden)", EN: "Ground Arceus" }, types: [GROUND], sprite: "493-ground", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      5: { name: { DE: "Arceus (Gestein)", EN: "Rock Arceus" }, types: [ROCK], sprite: "493-rock", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      6: { name: { DE: "Arceus (Käfer)", EN: "Bug Arceus" }, types: [BUG], sprite: "493-bug", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      7: { name: { DE: "Arceus (Geist)", EN: "Ghost Arceus" }, types: [GHOST], sprite: "493-ghost", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      8: { name: { DE: "Arceus (Stahl)", EN: "Steel Arceus" }, types: [STEEL], sprite: "493-steel", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      9: { name: { DE: "Arceus (Feuer)", EN: "Fire Arceus" }, types: [FIRE], sprite: "493-fire", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      10: { name: { DE: "Arceus (Wasser)", EN: "Water Arceus" }, types: [WATER], sprite: "493-water", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      11: { name: { DE: "Arceus (Pflanze)", EN: "Grass Arceus" }, types: [GRASS], sprite: "493-grass", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      12: { name: { DE: "Arceus (Elektro)", EN: "Electric Arceus" }, types: [ELECTRIC], sprite: "493-electric", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      13: { name: { DE: "Arceus (Psycho)", EN: "Psychic Arceus" }, types: [PSYCHIC], sprite: "493-psychic", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      14: { name: { DE: "Arceus (Eis)", EN: "Ice Arceus" }, types: [ICE], sprite: "493-ice", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      15: { name: { DE: "Arceus (Drache)", EN: "Dragon Arceus" }, types: [DRAGON], sprite: "493-dragon", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+      16: { name: { DE: "Arceus (Unlicht)", EN: "Dark Arceus" }, types: [DARK], sprite: "493-dark", stats: [120, 120, 120, 120, 120, 120], abilities: [multitype] }
+  494: { name: { DE: "Victini", EN: "Victini" }, types: [PSYCHIC, FIRE], stats: [100, 100, 100, 100, 100, 100], abilities: [victory-star] }
+  495: { name: { DE: "Serpifeu", EN: "Snivy" }, types: [GRASS], stats: [45, 45, 55, 45, 55, 63], abilities: [overgrow, contrary] }
+  496: { name: { DE: "Efoserp", EN: "Servine" }, types: [GRASS], stats: [60, 60, 75, 60, 75, 83], abilities: [overgrow, contrary] }
+  497: { name: { DE: "Serpiroyal", EN: "Serperior" }, types: [GRASS], stats: [75, 75, 95, 75, 95, 113], abilities: [overgrow, contrary] }
+  498: { name: { DE: "Floink", EN: "Tepig" }, types: [FIRE], stats: [65, 63, 45, 45, 45, 45], abilities: [blaze, thick-fat] }
+  499: { name: { DE: "Ferkokel", EN: "Pignite" }, types: [FIRE, FIGHTING], stats: [90, 93, 55, 70, 55, 55], abilities: [blaze, thick-fat] }
+  500: { name: { DE: "Flambirex", EN: "Emboar" }, types: [FIRE, FIGHTING], stats: [110, 123, 65, 100, 65, 65], abilities: [blaze, reckless] }
+  501: { name: { DE: "Ottaro", EN: "Oshawott" }, types: [WATER], stats: [55, 55, 45, 63, 45, 45], abilities: [torrent, shell-armor] }
+  502: { name: { DE: "Zwottronin", EN: "Dewott" }, types: [WATER], stats: [75, 75, 60, 83, 60, 60], abilities: [torrent, shell-armor] }
+  503: { name: { DE: "Admurai", EN: "Samurott" }, types: [WATER], stats: [95, 100, 85, 108, 70, 70], abilities: [torrent, shell-armor] }
+  504: { name: { DE: "Nagelotz", EN: "Patrat" }, types: [NORMAL], stats: [45, 55, 39, 35, 39, 42], abilities: [run-away, keen-eye, analytic] }
+  505: { name: { DE: "Kukmarda", EN: "Watchog" }, types: [NORMAL], stats: [60, 85, 69, 60, 69, 77], abilities: [illuminate, keen-eye, analytic] }
+  506: { name: { DE: "Yorkleff", EN: "Lillipup" }, types: [NORMAL], stats: [45, 60, 45, 25, 45, 55], abilities: [vital-spirit, pickup, run-away] }
+  507: { name: { DE: "Terribark", EN: "Herdier" }, types: [NORMAL], stats: [65, 80, 65, 35, 65, 60], abilities: [intimidate, sand-rush, scrappy] }
+  508: { name: { DE: "Bissbark", EN: "Stoutland" }, types: [NORMAL], stats: [85, 100, 90, 45, 90, 80], abilities: [intimidate, sand-rush, scrappy] }
+  509: { name: { DE: "Felilou", EN: "Purrloin" }, types: [DARK], stats: [41, 50, 37, 50, 37, 66], abilities: [limber, unburden, prankster] }
+  510: { name: { DE: "Kleoparda", EN: "Liepard" }, types: [DARK], stats: [64, 88, 50, 88, 50, 106], abilities: [limber, unburden, prankster] }
+  511: { name: { DE: "Vegimak", EN: "Pansage" }, types: [GRASS], stats: [50, 53, 48, 53, 48, 64], abilities: [gluttony, overgrow] }
+  512: { name: { DE: "Vegichita", EN: "Simisage" }, types: [GRASS], stats: [75, 98, 63, 98, 63, 101], abilities: [gluttony, overgrow] }
+  513: { name: { DE: "Grillmak", EN: "Pansear" }, types: [FIRE], stats: [50, 53, 48, 53, 48, 64], abilities: [gluttony, blaze] }
+  514: { name: { DE: "Grillchita", EN: "Simisear" }, types: [FIRE], stats: [75, 98, 63, 98, 63, 101], abilities: [gluttony, blaze] }
+  515: { name: { DE: "Sodamak", EN: "Panpour" }, types: [WATER], stats: [50, 53, 48, 53, 48, 64], abilities: [gluttony, torrent] }
+  516: { name: { DE: "Sodachita", EN: "Simipour" }, types: [WATER], stats: [75, 98, 63, 98, 63, 101], abilities: [gluttony, torrent] }
+  517: { name: { DE: "Somniam", EN: "Munna" }, types: [PSYCHIC], stats: [76, 25, 45, 67, 55, 24], abilities: [forewarn, synchronize, telepathy] }
+  518: { name: { DE: "Somnivora", EN: "Musharna" }, types: [PSYCHIC], stats: [116, 55, 85, 107, 95, 29], abilities: [forewarn, synchronize, telepathy] }
+  519: { name: { DE: "Dusselgurr", EN: "Pidove" }, types: [NORMAL, FLYING], stats: [50, 55, 50, 36, 30, 43], abilities: [big-pecks, super-luck, rivalry] }
+  520: { name: { DE: "Navitaub", EN: "Tranquill" }, types: [NORMAL, FLYING], stats: [62, 77, 62, 50, 42, 65], abilities: [big-pecks, super-luck, rivalry] }
+  521: { name: { DE: "Fasasnob", EN: "Unfezant" }, types: [NORMAL, FLYING], stats: [80, 105, 80, 65, 55, 93], abilities: [big-pecks, super-luck, rivalry] }
+  522: { name: { DE: "Elezeba", EN: "Blitzle" }, types: [ELECTRIC], stats: [45, 60, 32, 50, 32, 76], abilities: [lightning-rod, motor-drive, sap-sipper] }
+  523: { name: { DE: "Zebritz", EN: "Zebstrika" }, types: [ELECTRIC], stats: [75, 100, 63, 80, 63, 116], abilities: [lightning-rod, motor-drive, sap-sipper] }
+  524: { name: { DE: "Kiesling", EN: "Roggenrola" }, types: [ROCK], stats: [55, 75, 85, 25, 25, 15], abilities: [sturdy, sand-force] }
+  525: { name: { DE: "Sedimantur", EN: "Boldore" }, types: [ROCK], stats: [70, 105, 105, 50, 40, 20], abilities: [sturdy, sand-force] }
+  526: { name: { DE: "Brockoloss", EN: "Gigalith" }, types: [ROCK], stats: [85, 135, 130, 60, 70, 25], abilities: [sturdy, sand-force] }
+  527: { name: { DE: "Fleknoil", EN: "Woobat" }, types: [PSYCHIC, FLYING], stats: [55, 45, 43, 55, 43, 72], abilities: [unaware, klutz, simple] }
+  528: { name: { DE: "Fletiamo", EN: "Swoobat" }, types: [PSYCHIC, FLYING], stats: [67, 57, 55, 77, 55, 114], abilities: [unaware, klutz, simple] }
+  529: { name: { DE: "Rotomurf", EN: "Drilbur" }, types: [GROUND], stats: [60, 85, 40, 30, 45, 68], abilities: [sand-rush, sand-force, mold-breaker] }
+  530: { name: { DE: "Stalobor", EN: "Excadrill" }, types: [GROUND, STEEL], stats: [110, 135, 60, 50, 65, 88], abilities: [sand-rush, sand-force, mold-breaker] }
+  531: { name: { DE: "Ohrdoch", EN: "Audino" }, types: [NORMAL], stats: [103, 60, 86, 60, 86, 50], abilities: [healer, regenerator, klutz] }
+  532: { name: { DE: "Praktibalk", EN: "Timburr" }, types: [FIGHTING], stats: [75, 80, 55, 25, 35, 35], abilities: [guts, sheer-force, iron-fist] }
+  533: { name: { DE: "Strepoli", EN: "Gurdurr" }, types: [FIGHTING], stats: [85, 105, 85, 40, 50, 40], abilities: [guts, sheer-force, iron-fist] }
+  534: { name: { DE: "Meistagrif", EN: "Conkeldurr" }, types: [FIGHTING], stats: [105, 140, 95, 55, 65, 45], abilities: [guts, sheer-force, iron-fist] }
+  535: { name: { DE: "Schallquap", EN: "Tympole" }, types: [WATER], stats: [50, 50, 40, 50, 40, 64], abilities: [swift-swim, hydration, water-absorb] }
+  536: { name: { DE: "Mebrana", EN: "Palpitoad" }, types: [WATER, GROUND], stats: [75, 65, 55, 65, 55, 69], abilities: [swift-swim, hydration, water-absorb] }
+  537: { name: { DE: "Branawarz", EN: "Seismitoad" }, types: [WATER, GROUND], stats: [105, 85, 75, 85, 75, 74], abilities: [swift-swim, poison-touch, water-absorb] }
+  538: { name: { DE: "Jiutesto", EN: "Throh" }, types: [FIGHTING], stats: [120, 100, 85, 30, 85, 45], abilities: [guts, inner-focus, mold-breaker] }
+  539: { name: { DE: "Karadonis", EN: "Sawk" }, types: [FIGHTING], stats: [75, 125, 75, 30, 75, 85], abilities: [sturdy, inner-focus, mold-breaker] }
+  540: { name: { DE: "Strawickl", EN: "Sewaddle" }, types: [BUG, GRASS], stats: [45, 53, 70, 40, 60, 42], abilities: [swarm, chlorophyll, overcoat] }
+  541: { name: { DE: "Folikon", EN: "Swadloon" }, types: [BUG, GRASS], stats: [55, 63, 90, 50, 80, 42], abilities: [leaf-guard, chlorophyll, overcoat] }
+  542: { name: { DE: "Matrifol", EN: "Leavanny" }, types: [BUG, GRASS], stats: [75, 103, 80, 70, 70, 92], abilities: [swarm, chlorophyll, overcoat] }
+  543: { name: { DE: "Toxiped", EN: "Venipede" }, types: [BUG, POISON], stats: [30, 45, 59, 30, 39, 57], abilities: [poison-point, swarm, quick-feet] }
+  544: { name: { DE: "Rollum", EN: "Whirlipede" }, types: [BUG, POISON], stats: [40, 55, 99, 40, 79, 47], abilities: [poison-point, swarm, quick-feet] }
+  545: { name: { DE: "Cerapendra", EN: "Scolipede" }, types: [BUG, POISON], stats: [60, 90, 89, 55, 69, 112], abilities: [poison-point, swarm, quick-feet] }
+  546: { name: { DE: "Waumboll", EN: "Cottonee" }, types: [GRASS], stats: [40, 27, 60, 37, 50, 66], abilities: [prankster, infiltrator, chlorophyll] }
+  547: { name: { DE: "Elfun", EN: "Whimsicott" }, types: [GRASS], stats: [60, 67, 85, 77, 75, 116], abilities: [prankster, infiltrator, chlorophyll] }
+  548: { name: { DE: "Lilminip", EN: "Petilil" }, types: [GRASS], stats: [45, 35, 50, 70, 50, 30], abilities: [chlorophyll, own-tempo, leaf-guard] }
+  549: { name: { DE: "Dressella", EN: "Lilligant" }, types: [GRASS], stats: [70, 60, 75, 110, 75, 90], abilities: [chlorophyll, own-tempo, leaf-guard] }
+  550: { name: { DE: "Barschuft", EN: "Basculin" }, types: [WATER], stats: [70, 92, 65, 80, 55, 98], abilities: [reckless, adaptability, mold-breaker] }
+  551: { name: { DE: "Ganovil", EN: "Sandile" }, types: [GROUND, DARK], stats: [50, 72, 35, 35, 35, 65], abilities: [intimidate, moxie, anger-point] }
+  552: { name: { DE: "Rokkaiman", EN: "Krokorok" }, types: [GROUND, DARK], stats: [60, 82, 45, 45, 45, 74], abilities: [intimidate, moxie, anger-point] }
+  553: { name: { DE: "Rabigator", EN: "Krookodile" }, types: [GROUND, DARK], stats: [95, 117, 70, 65, 70, 92], abilities: [intimidate, moxie, anger-point] }
+  554: { name: { DE: "Flampion", EN: "Darumaka" }, types: [FIRE], stats: [70, 90, 45, 15, 45, 50], abilities: [hustle, inner-focus] }
+  555: { name: { DE: "Flampivian", EN: "Darmanitan" }, types: [FIRE], stats: [105, 140, 55, 30, 55, 95], abilities: [sheer-force, zen-mode] }
+  556: { name: { DE: "Maracamba", EN: "Maractus" }, types: [GRASS], stats: [75, 86, 67, 106, 67, 60], abilities: [water-absorb, chlorophyll, storm-drain] }
+  557: { name: { DE: "Lithomith", EN: "Dwebble" }, types: [BUG, ROCK], stats: [50, 65, 85, 35, 35, 55], abilities: [sturdy, shell-armor, weak-armor] }
+  558: { name: { DE: "Castellith", EN: "Crustle" }, types: [BUG, ROCK], stats: [70, 95, 125, 65, 75, 45], abilities: [sturdy, shell-armor, weak-armor] }
+  559: { name: { DE: "Zurrokex", EN: "Scraggy" }, types: [DARK, FIGHTING], stats: [50, 75, 70, 35, 70, 48], abilities: [shed-skin, moxie, intimidate] }
+  560: { name: { DE: "Irokex", EN: "Scrafty" }, types: [DARK, FIGHTING], stats: [65, 90, 115, 45, 115, 58], abilities: [shed-skin, moxie, intimidate] }
+  561: { name: { DE: "Symvolara", EN: "Sigilyph" }, types: [PSYCHIC, FLYING], stats: [72, 58, 80, 103, 80, 97], abilities: [wonder-skin, magic-guard, tinted-lens] }
+  562: { name: { DE: "Makabaja", EN: "Yamask" }, types: [GHOST], stats: [38, 30, 85, 55, 65, 30], abilities: [mummy] }
+  563: { name: { DE: "Echnatoll", EN: "Cofagrigus" }, types: [GHOST], stats: [58, 50, 145, 95, 105, 30], abilities: [mummy] }
+  564: { name: { DE: "Galapaflos", EN: "Tirtouga" }, types: [WATER, ROCK], stats: [54, 78, 103, 53, 45, 22], abilities: [solid-rock, sturdy, swift-swim] }
+  565: { name: { DE: "Karippas", EN: "Carracosta" }, types: [WATER, ROCK], stats: [74, 108, 133, 83, 65, 32], abilities: [solid-rock, sturdy, swift-swim] }
+  566: { name: { DE: "Flapteryx", EN: "Archen" }, types: [ROCK, FLYING], stats: [55, 112, 45, 74, 45, 70], abilities: [defeatist] }
+  567: { name: { DE: "Aeropteryx", EN: "Archeops" }, types: [ROCK, FLYING], stats: [75, 140, 65, 112, 65, 110], abilities: [defeatist] }
+  568: { name: { DE: "Unratütox", EN: "Trubbish" }, types: [POISON], stats: [50, 50, 62, 40, 62, 65], abilities: [stench, sticky-hold, aftermath] }
+  569: { name: { DE: "Deponitox", EN: "Garbodor" }, types: [POISON], stats: [80, 95, 82, 60, 82, 75], abilities: [stench, weak-armor, aftermath] }
+  570: { name: { DE: "Zorua", EN: "Zorua" }, types: [DARK], stats: [40, 65, 40, 80, 40, 65], abilities: [illusion] }
+  571: { name: { DE: "Zoroark", EN: "Zoroark" }, types: [DARK], stats: [60, 105, 60, 120, 60, 105], abilities: [illusion] }
+  572: { name: { DE: "Picochilla", EN: "Minccino" }, types: [NORMAL], stats: [55, 50, 40, 40, 40, 75], abilities: [cute-charm, technician, skill-link] }
+  573: { name: { DE: "Chillabell", EN: "Cinccino" }, types: [NORMAL], stats: [75, 95, 60, 65, 60, 115], abilities: [cute-charm, technician, skill-link] }
+  574: { name: { DE: "Mollimorba", EN: "Gothita" }, types: [PSYCHIC], stats: [45, 30, 50, 55, 65, 45], abilities: [frisk, shadow-tag] }
+  575: { name: { DE: "Hypnomorba", EN: "Gothorita" }, types: [PSYCHIC], stats: [60, 45, 70, 75, 85, 55], abilities: [frisk, shadow-tag] }
+  576: { name: { DE: "Morbitesse", EN: "Gothitelle" }, types: [PSYCHIC], stats: [70, 55, 95, 95, 110, 65], abilities: [frisk, shadow-tag] }
+  577: { name: { DE: "Monozyto", EN: "Solosis" }, types: [PSYCHIC], stats: [45, 30, 40, 105, 50, 20], abilities: [overcoat, magic-guard, regenerator] }
+  578: { name: { DE: "Mitodos", EN: "Duosion" }, types: [PSYCHIC], stats: [65, 40, 50, 125, 60, 30], abilities: [overcoat, magic-guard, regenerator] }
+  579: { name: { DE: "Zytomega", EN: "Reuniclus" }, types: [PSYCHIC], stats: [110, 65, 75, 125, 85, 30], abilities: [overcoat, magic-guard, regenerator] }
+  580: { name: { DE: "Piccolente", EN: "Ducklett" }, types: [WATER, FLYING], stats: [62, 44, 50, 44, 50, 55], abilities: [keen-eye, big-pecks, hydration] }
+  581: { name: { DE: "Swaroness", EN: "Swanna" }, types: [WATER, FLYING], stats: [75, 87, 63, 87, 63, 98], abilities: [keen-eye, big-pecks, hydration] }
+  582: { name: { DE: "Gelatini", EN: "Vanillite" }, types: [ICE], stats: [36, 50, 50, 65, 60, 44], abilities: [ice-body, weak-armor] }
+  583: { name: { DE: "Gelatroppo", EN: "Vanillish" }, types: [ICE], stats: [51, 65, 65, 80, 75, 59], abilities: [ice-body, weak-armor] }
+  584: { name: { DE: "Gelatwino", EN: "Vanilluxe" }, types: [ICE], stats: [71, 95, 85, 110, 95, 79], abilities: [ice-body, weak-armor] }
+  585: { name: { DE: "Sesokitz", EN: "Deerling" }, types: [NORMAL, GRASS], stats: [60, 60, 50, 40, 50, 75], abilities: [chlorophyll, sap-sipper, serene-grace] }
+  586: { name: { DE: "Kronjuwild", EN: "Sawsbuck" }, types: [NORMAL, GRASS], stats: [80, 100, 70, 60, 70, 95], abilities: [chlorophyll, sap-sipper, serene-grace] }
+  587: { name: { DE: "Emolga", EN: "Emolga" }, types: [ELECTRIC, FLYING], stats: [55, 75, 60, 75, 60, 103], abilities: [static, motor-drive] }
+  588: { name: { DE: "Laukaps", EN: "Karrablast" }, types: [BUG], stats: [50, 75, 45, 40, 45, 60], abilities: [swarm, shed-skin, no-guard] }
+  589: { name: { DE: "Cavalanzas", EN: "Escavalier" }, types: [BUG, STEEL], stats: [70, 135, 105, 60, 105, 20], abilities: [swarm, shell-armor, overcoat] }
+  590: { name: { DE: "Tarnpignon", EN: "Foongus" }, types: [GRASS, POISON], stats: [69, 55, 45, 55, 55, 15], abilities: [effect-spore, regenerator] }
+  591: { name: { DE: "Hutsassa", EN: "Amoonguss" }, types: [GRASS, POISON], stats: [114, 85, 70, 85, 80, 30], abilities: [effect-spore, regenerator] }
+  592: { name: { DE: "Quabbel", EN: "Frillish" }, types: [WATER, GHOST], stats: [55, 40, 50, 65, 85, 40], abilities: [water-absorb, cursed-body, damp] }
+  593: { name: { DE: "Apoquallyp", EN: "Jellicent" }, types: [WATER, GHOST], stats: [100, 60, 70, 85, 105, 60], abilities: [water-absorb, cursed-body, damp] }
+  594: { name: { DE: "Mamolida", EN: "Alomomola" }, types: [WATER], stats: [165, 75, 80, 40, 45, 65], abilities: [healer, hydration, regenerator] }
+  595: { name: { DE: "Wattzapf", EN: "Joltik" }, types: [BUG, ELECTRIC], stats: [50, 47, 50, 57, 50, 65], abilities: [compound-eyes, unnerve, swarm] }
+  596: { name: { DE: "Voltula", EN: "Galvantula" }, types: [BUG, ELECTRIC], stats: [70, 77, 60, 97, 60, 108], abilities: [compound-eyes, unnerve, swarm] }
+  597: { name: { DE: "Kastadur", EN: "Ferroseed" }, types: [GRASS, STEEL], stats: [44, 50, 91, 24, 86, 10], abilities: [iron-barbs] }
+  598: { name: { DE: "Tentantel", EN: "Ferrothorn" }, types: [GRASS, STEEL], stats: [74, 94, 131, 54, 116, 20], abilities: [iron-barbs] }
+  599: { name: { DE: "Klikk", EN: "Klink" }, types: [STEEL], stats: [40, 55, 70, 45, 60, 30], abilities: [plus, minus, clear-body] }
+  600: { name: { DE: "Kliklak", EN: "Klang" }, types: [STEEL], stats: [60, 80, 95, 70, 85, 50], abilities: [plus, minus, clear-body] }
+  601: { name: { DE: "Klikdiklak", EN: "Klinklang" }, types: [STEEL], stats: [60, 100, 115, 70, 85, 90], abilities: [plus, minus, clear-body] }
+  602: { name: { DE: "Zapplardin", EN: "Tynamo" }, types: [ELECTRIC], stats: [35, 55, 40, 45, 40, 60], abilities: [levitate] }
+  603: { name: { DE: "Zapplalek", EN: "Eelektrik" }, types: [ELECTRIC], stats: [65, 85, 70, 75, 70, 40], abilities: [levitate] }
+  604: { name: { DE: "Zapplarang", EN: "Eelektross" }, types: [ELECTRIC], stats: [85, 115, 80, 105, 80, 50], abilities: [levitate] }
+  605: { name: { DE: "Pygraulon", EN: "Elgyem" }, types: [PSYCHIC], stats: [55, 55, 55, 85, 55, 30], abilities: [telepathy, synchronize, analytic] }
+  606: { name: { DE: "Megalon", EN: "Beheeyem" }, types: [PSYCHIC], stats: [75, 75, 75, 125, 95, 40], abilities: [telepathy, synchronize, analytic] }
+  607: { name: { DE: "Lichtel", EN: "Litwick" }, types: [GHOST, FIRE], stats: [50, 30, 55, 65, 55, 20], abilities: [flash-fire, flame-body, shadow-tag] }
+  608: { name: { DE: "Laternecto", EN: "Lampent" }, types: [GHOST, FIRE], stats: [60, 40, 60, 95, 60, 55], abilities: [flash-fire, flame-body, shadow-tag] }
+  609: { name: { DE: "Skelabra", EN: "Chandelure" }, types: [GHOST, FIRE], stats: [60, 55, 90, 145, 90, 80], abilities: [flash-fire, flame-body, shadow-tag] }
+  610: { name: { DE: "Milza", EN: "Axew" }, types: [DRAGON], stats: [46, 87, 60, 30, 40, 57], abilities: [rivalry, mold-breaker, unnerve] }
+  611: { name: { DE: "Sharfax", EN: "Fraxure" }, types: [DRAGON], stats: [66, 117, 70, 40, 50, 67], abilities: [rivalry, mold-breaker, unnerve] }
+  612: { name: { DE: "Maxax", EN: "Haxorus" }, types: [DRAGON], stats: [76, 147, 90, 60, 70, 97], abilities: [rivalry, mold-breaker, unnerve] }
+  613: { name: { DE: "Petznief", EN: "Cubchoo" }, types: [ICE], stats: [55, 70, 40, 60, 40, 40], abilities: [snow-cloak, rattled] }
+  614: { name: { DE: "Siberio", EN: "Beartic" }, types: [ICE], stats: [95, 110, 80, 70, 80, 50], abilities: [snow-cloak, swift-swim] }
+  615: { name: { DE: "Frigometri", EN: "Cryogonal" }, types: [ICE], stats: [70, 50, 30, 95, 135, 105], abilities: [levitate] }
+  616: { name: { DE: "Schnuthelm", EN: "Shelmet" }, types: [BUG], stats: [50, 40, 85, 40, 65, 25], abilities: [hydration, shell-armor, overcoat] }
+  617: { name: { DE: "Hydragil", EN: "Accelgor" }, types: [BUG], stats: [80, 70, 40, 100, 60, 145], abilities: [hydration, sticky-hold, unburden] }
+  618: { name: { DE: "Flunschlik", EN: "Stunfisk" }, types: [GROUND, ELECTRIC], stats: [109, 66, 84, 81, 99, 32], abilities: [static, limber, sand-veil] }
+  619: { name: { DE: "Lin-Fu", EN: "Mienfoo" }, types: [FIGHTING], stats: [45, 85, 50, 55, 50, 65], abilities: [inner-focus, regenerator, reckless] }
+  620: { name: { DE: "Wie-Shu", EN: "Mienshao" }, types: [FIGHTING], stats: [65, 125, 60, 95, 60, 105], abilities: [inner-focus, regenerator, reckless] }
+  621: { name: { DE: "Shardrago", EN: "Druddigon" }, types: [DRAGON], stats: [77, 120, 90, 60, 90, 48], abilities: [rough-skin, sheer-force, mold-breaker] }
+  622: { name: { DE: "Golbit", EN: "Golett" }, types: [GROUND, GHOST], stats: [59, 74, 50, 35, 50, 35], abilities: [iron-fist, klutz, no-guard] }
+  623: { name: { DE: "Golgantes", EN: "Golurk" }, types: [GROUND, GHOST], stats: [89, 124, 80, 55, 80, 55], abilities: [iron-fist, klutz, no-guard] }
+  624: { name: { DE: "Gladiantri", EN: "Pawniard" }, types: [DARK, STEEL], stats: [45, 85, 70, 40, 40, 60], abilities: [defiant, inner-focus, pressure] }
+  625: { name: { DE: "Caesurio", EN: "Bisharp" }, types: [DARK, STEEL], stats: [65, 125, 100, 60, 70, 70], abilities: [defiant, inner-focus, pressure] }
+  626: { name: { DE: "Bisofank", EN: "Bouffalant" }, types: [NORMAL], stats: [95, 110, 95, 40, 95, 55], abilities: [reckless, sap-sipper, soundproof] }
+  627: { name: { DE: "Geronimatz", EN: "Rufflet" }, types: [NORMAL, FLYING], stats: [70, 83, 50, 37, 50, 60], abilities: [keen-eye, sheer-force, hustle] }
+  628: { name: { DE: "Washakwil", EN: "Braviary" }, types: [NORMAL, FLYING], stats: [100, 123, 75, 57, 75, 80], abilities: [keen-eye, sheer-force, defiant] }
+  629: { name: { DE: "Skallyk", EN: "Vullaby" }, types: [DARK, FLYING], stats: [70, 55, 75, 45, 65, 60], abilities: [big-pecks, overcoat, weak-armor] }
+  630: { name: { DE: "Grypheldis", EN: "Mandibuzz" }, types: [DARK, FLYING], stats: [110, 65, 105, 55, 95, 80], abilities: [big-pecks, overcoat, weak-armor] }
+  631: { name: { DE: "Furnifraß", EN: "Heatmor" }, types: [FIRE], stats: [85, 97, 66, 105, 66, 65], abilities: [gluttony, flash-fire, white-smoke] }
+  632: { name: { DE: "Fermicula", EN: "Durant" }, types: [BUG, STEEL], stats: [58, 109, 112, 48, 48, 109], abilities: [swarm, hustle, truant] }
+  633: { name: { DE: "Kapuno", EN: "Deino" }, types: [DARK, DRAGON], stats: [52, 65, 50, 45, 50, 38], abilities: [hustle] }
+  634: { name: { DE: "Duodino", EN: "Zweilous" }, types: [DARK, DRAGON], stats: [72, 85, 70, 65, 70, 58], abilities: [hustle] }
+  635: { name: { DE: "Trikephalo", EN: "Hydreigon" }, types: [DARK, DRAGON], stats: [92, 105, 90, 125, 90, 98], abilities: [levitate] }
+  636: { name: { DE: "Ignivor", EN: "Larvesta" }, types: [BUG, FIRE], stats: [55, 85, 55, 50, 55, 60], abilities: [flame-body, swarm] }
+  637: { name: { DE: "Ramoth", EN: "Volcarona" }, types: [BUG, FIRE], stats: [85, 60, 65, 135, 105, 100], abilities: [flame-body, swarm] }
+  638: { name: { DE: "Kobalium", EN: "Cobalion" }, types: [STEEL, FIGHTING], stats: [91, 90, 129, 90, 72, 108], abilities: [justified] }
+  639: { name: { DE: "Terrakium", EN: "Terrakion" }, types: [ROCK, FIGHTING], stats: [91, 129, 90, 72, 90, 108], abilities: [justified] }
+  640: { name: { DE: "Viridium", EN: "Virizion" }, types: [GRASS, FIGHTING], stats: [91, 90, 72, 90, 129, 108], abilities: [justified] }
+  641: { name: { DE: "Boreos", EN: "Tornadus" }, types: [FLYING], stats: [79, 115, 70, 125, 80, 111], abilities: [prankster, defiant] }
+  642: { name: { DE: "Voltolos", EN: "Thundurus" }, types: [ELECTRIC, FLYING], stats: [79, 115, 70, 125, 80, 111], abilities: [prankster, defiant] }
+  643: { name: { DE: "Reshiram", EN: "Reshiram" }, types: [DRAGON, FIRE], stats: [100, 120, 100, 150, 120, 90], abilities: [turboblaze] }
+  644: { name: { DE: "Zekrom", EN: "Zekrom" }, types: [DRAGON, ELECTRIC], stats: [100, 150, 120, 120, 100, 90], abilities: [teravolt] }
+  645: { name: { DE: "Demeteros", EN: "Landorus" }, types: [GROUND, FLYING], stats: [89, 125, 90, 115, 80, 101], abilities: [sand-force, sheer-force] }
+  646: { name: { DE: "Kyurem", EN: "Kyurem" }, types: [DRAGON, ICE], stats: [125, 130, 90, 130, 90, 95], abilities: [pressure] }
+  647: { name: { DE: "Keldeo", EN: "Keldeo" }, types: [WATER, FIGHTING], stats: [91, 72, 90, 129, 90, 108], abilities: [justified] }
+  648: { name: { DE: "Meloetta", EN: "Meloetta" }, types: [NORMAL, PSYCHIC], stats: [100, 77, 77, 128, 128, 90], abilities: [serene-grace] }
+  649: { name: { DE: "Genesect", EN: "Genesect" }, types: [BUG, STEEL], stats: [71, 120, 95, 120, 95, 99], abilities: [download] }

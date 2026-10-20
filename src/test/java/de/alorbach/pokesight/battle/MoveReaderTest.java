@@ -6,6 +6,7 @@ import de.alorbach.pokesight.ocr.Word;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.ruleset.Ruleset;
 import de.alorbach.pokesight.ruleset.RulesetLoader;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -55,6 +56,7 @@ class MoveReaderTest {
         assertThat(reader.match(List.of(text.split(" "))).orElse(-1)).isEqualTo(expected);
     }
 
+    @Tag("ocr") // real OCR on screenshots: run by gradlew ocrTest, not test
     @ParameterizedTest(name = "{0}")
     @CsvSource(delimiter = '|', value = {
             // file | area x, y, width, height relative to the screenshot | expected move ids

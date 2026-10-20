@@ -11,8 +11,10 @@ import java.util.List;
  *
  * @param regions     the screen areas to read (single and/or double battle), or the whole screen if none was selected
  * @param description human-readable summary of the regions for the status line
+ * @param ownRegion   the area of the player's own name box; null if not selected
  */
-public record SessionSettings(GameDefinition game, Language language, List<CaptureRegion> regions, String description) {
+public record SessionSettings(GameDefinition game, Language language, List<CaptureRegion> regions, String description,
+                              CaptureRegion ownRegion) {
 
     public SessionSettings {
         regions = List.copyOf(regions);

@@ -8,3 +8,4 @@ spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69
 capitalNames: false      # names in mixed case ("Gengar") since Gen 5
 region: paldea           # wild Pokémon appear in their regional form
 floatingNames: true      # the name floats above the opponent; only labels above HP bars are read
+terastal: true           # opponents can terastallize; pick the Tera type on the card

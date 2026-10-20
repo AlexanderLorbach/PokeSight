@@ -483,6 +483,76 @@
     -fx-text-fill: ps-pokemon-yellow;
 }
 
+/* The player's Pokémon on the field: its moves and its switch-in row. */
+.best-move-user.active-user {
+    -fx-text-fill: ps-good;
+    -fx-font-weight: bold;
+}
+
+.best-move-name.active-move {
+    -fx-underline: true;
+}
+
+/* "Infernape is out: ..." - green if it has the best move, yellow if another team member hits harder. */
+.active-hint {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 0 4 0;
+}
+
+.active-hint.stay   { -fx-text-fill: ps-good; }
+.active-hint.switch { -fx-text-fill: ps-pokemon-yellow; }
+
+/* An ability that changes its matchups: surely (counted) or maybe (not counted). */
+.ability-note {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 10;
+    -fx-background-radius: 8;
+}
+
+.ability-note.certain  { -fx-background-color: ps-surface-3; -fx-text-fill: ps-text; }
+.ability-note.possible { -fx-background-color: rgba(255, 203, 5, 0.12); -fx-text-fill: ps-pokemon-yellow; }
+
+.tera-badge {
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-padding: 3 10;
+    -fx-background-radius: 12;
+    -fx-background-color: linear-gradient(to right, #7ad4f5, #e98fd8);
+    -fx-text-fill: #1d1d1f;
+}
+
+.switch-ins {
+    -fx-background-color: rgba(42, 117, 187, 0.10);
+    -fx-background-radius: 10;
+    -fx-padding: 8 10;
+}
+
+.switch-in-grid {
+    -fx-hgap: 6;
+    -fx-vgap: 6;
+    -fx-alignment: center-left;
+}
+
+.action-label {
+    -fx-text-fill: ps-text-muted;
+    -fx-padding: 0 0 0 8;
+}
+
+/* Start screen: a newer version is available. */
+.update-notice {
+    -fx-spacing: 10;
+    -fx-padding: 8 12;
+    -fx-background-color: rgba(61, 220, 132, 0.12);
+    -fx-background-radius: 10;
+}
+
+.update-text {
+    -fx-text-fill: ps-good;
+    -fx-font-weight: bold;
+}
+
 /* ---------- Borderless mode: cards fill the window ---------- */
 .compact-view {
     -fx-background-color: ps-surface-0;

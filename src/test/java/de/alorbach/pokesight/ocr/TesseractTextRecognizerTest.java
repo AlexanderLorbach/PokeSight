@@ -7,6 +7,7 @@ import de.alorbach.pokesight.battle.Sighting;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.ruleset.Ruleset;
 import de.alorbach.pokesight.ruleset.RulesetLoader;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.awt.Color;
@@ -21,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** Runs the real Tesseract engine with the bundled models on rendered name boxes. */
+@Tag("ocr") // real OCR on screenshots: run by gradlew ocrTest, not test
 class TesseractTextRecognizerTest {
 
     private static final Ruleset GEN4 = RulesetLoader.load("gen4");
