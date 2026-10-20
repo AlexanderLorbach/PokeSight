@@ -24,6 +24,17 @@ class SettingsStoreTest {
     Path directory;
 
     @Test
+    void leavesNoTemporaryFileWhenSavingFails() throws Exception {
+        SettingsStore store = new SettingsStore(directory);
+        Files.createDirectories(directory.resolve("settings.yaml").resolve("blocked")); // a folder where the file goes
+
+        assertThatThrownBy(() -> store.saveApp(AppSettings.DEFAULT)).isInstanceOf(java.io.UncheckedIOException.class);
+        try (var files = Files.list(directory)) {
+            assertThat(files.map(file -> file.getFileName().toString())).containsExactly("settings.yaml");
+        }
+    }
+
+    @Test
     void savesAndLoadsAppSettings() {
         SettingsStore store = new SettingsStore(directory);
         AppSettings settings = AppSettings.DEFAULT.withGame("platinum", Language.DE)

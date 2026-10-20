@@ -5,11 +5,11 @@ import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.tesseract.ResultIterator;
 import org.bytedeco.tesseract.TessBaseAPI;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,15 +26,24 @@ import static org.bytedeco.tesseract.global.tesseract.TessDeleteText;
  */
 public final class TesseractTextRecognizer implements TextRecognizer {
 
+    private static final System.Logger LOG = System.getLogger(TesseractTextRecognizer.class.getName());
+
     private final TessBaseAPI api = new TessBaseAPI();
     private final Path dataDirectory;
+    /** Freeing the native engine twice would crash the JVM. */
+    private boolean closed;
 
     public TesseractTextRecognizer(Language language) throws IOException {
         String model = switch (language) {
             case EN -> "eng";
             case DE -> "deu";
         };
-        dataDirectory = Files.createTempDirectory("pokesight-tessdata");
+        try {
+            dataDirectory = Files.createTempDirectory("pokesight-tessdata");
+        } catch (IOException e) {
+            api.deallocate();
+            throw e;
+        }
         try (InputStream in = TesseractTextRecognizer.class.getResourceAsStream("/tessdata/" + model + ".traineddata")) {
             if (in == null) {
                 throw new IOException("OCR model " + model + ".traineddata is missing from the application");
@@ -57,6 +66,9 @@ public final class TesseractTextRecognizer implements TextRecognizer {
 
     @Override
     public List<Word> read(BufferedImage image) {
+        if (closed) {
+            throw new IllegalStateException("The OCR engine is closed");
+        }
         BufferedImage gray = toGray(image);
         byte[] pixels = ((DataBufferByte) gray.getRaster().getDataBuffer()).getData();
         api.SetImage(pixels, gray.getWidth(), gray.getHeight(), 1, gray.getWidth());
@@ -103,21 +115,28 @@ public final class TesseractTextRecognizer implements TextRecognizer {
             return image;
         }
         BufferedImage gray = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
-        gray.getGraphics().drawImage(image, 0, 0, null);
+        Graphics2D graphics = gray.createGraphics();
+        graphics.drawImage(image, 0, 0, null);
+        graphics.dispose();
         return gray;
     }
 
     @Override
     public void close() {
+        if (closed) {
+            return;
+        }
+        closed = true;
         api.End();
         api.deallocate();
+        // A temporary copy that cannot be deleted (e.g. locked by a virus scanner) must not break closing a session.
         try (var files = Files.list(dataDirectory)) {
             for (Path file : files.toList()) {
                 Files.deleteIfExists(file);
             }
             Files.deleteIfExists(dataDirectory);
         } catch (IOException e) {
-            throw new UncheckedIOException("Cannot delete " + dataDirectory, e);
+            LOG.log(System.Logger.Level.WARNING, "Cannot delete the temporary OCR model in " + dataDirectory, e);
         }
     }
 }

@@ -117,7 +117,7 @@ public final class StartView extends BorderPane {
         if (selectedGame == null || language.getValue() == null) {
             return; // the combo boxes always have a value as long as there is a game
         }
-        store.saveApp(store.app().withGame(selectedGame.id(), language.getValue()));
+        Theme.saveOrWarn(getScene().getWindow(), () -> store.saveApp(store.app().withGame(selectedGame.id(), language.getValue())));
 
         List<CaptureRegion> regions = new ArrayList<>();
         singleArea.region().ifPresent(regions::add);
@@ -169,7 +169,8 @@ public final class StartView extends BorderPane {
         private void set(CaptureRegion newRegion) {
             region = newRegion;
             GameSettings settings = store.game(gameId);
-            store.saveGame(gameId, single ? settings.withSingleArea(newRegion) : settings.withDoubleArea(newRegion));
+            Theme.saveOrWarn(getScene().getWindow(),
+                    () -> store.saveGame(gameId, single ? settings.withSingleArea(newRegion) : settings.withDoubleArea(newRegion)));
             refresh();
         }
 

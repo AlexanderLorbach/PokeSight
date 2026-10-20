@@ -57,6 +57,19 @@ public final class Theme {
     }
 
     /** A dark error dialog without the light Windows title bar. */
+    /**
+     * Runs a settings save; a failure (e.g. a read-only settings folder) is shown instead of breaking the action
+     * the user started: the choice still applies to this session.
+     */
+    public static void saveOrWarn(Window owner, Runnable save) {
+        try {
+            save.run();
+        } catch (UncheckedIOException e) {
+            showError(owner, "Cannot save the settings", e.getMessage() + System.lineSeparator()
+                    + "The change applies until PokeSight is closed.");
+        }
+    }
+
     public static void showError(Window owner, String header, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR, message);
         alert.setHeaderText(header);

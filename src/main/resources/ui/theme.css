@@ -377,11 +377,6 @@
     -fx-font-size: 24px;
 }
 
-.pokemon-meta {
-    -fx-text-fill: ps-text-muted;
-    -fx-font-size: 13px;
-}
-
 .read-text {
     -fx-text-fill: ps-text-muted;
     -fx-font-size: 12px;

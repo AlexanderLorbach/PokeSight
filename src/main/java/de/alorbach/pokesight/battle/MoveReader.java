@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
 
 /**
  * Reads the moves of your active Pokémon from the game's move selection (the fight menu): up to four move names,
@@ -31,7 +32,8 @@ public final class MoveReader {
     public MoveReader(TextRecognizer recognizer, Ruleset ruleset, Language language) {
         this.recognizer = Objects.requireNonNull(recognizer);
         // Older games abbreviate or join words ("ThunderPunch", "DoubleSlap"); without spaces they match again.
-        ruleset.moves().forEach((id, move) -> movesByName.putIfAbsent(NameMatcher.normalize(move.name(language)), id));
+        // In move id order: the ruleset's map has no fixed order, and ties must not depend on it.
+        new TreeMap<>(ruleset.moves()).forEach((id, move) -> movesByName.putIfAbsent(NameMatcher.normalize(move.name(language)), id));
     }
 
     /** Move ids in reading order (left to right, top to bottom), without duplicates; every text colour is tried. */

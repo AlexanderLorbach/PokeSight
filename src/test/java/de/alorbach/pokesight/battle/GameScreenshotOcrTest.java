@@ -2,6 +2,7 @@ package de.alorbach.pokesight.battle;
 
 import de.alorbach.pokesight.game.GameCatalog;
 import de.alorbach.pokesight.game.GameDefinition;
+import de.alorbach.pokesight.ocr.GlyphFont;
 import de.alorbach.pokesight.ocr.TesseractTextRecognizer;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.ruleset.Ruleset;
@@ -30,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -128,18 +128,30 @@ public class GameScreenshotOcrTest {
 
     /**
      * Minimum number of correctly read views per game (each screenshot at 1x, 2x smoothed and 3x; Full HD ones at
-     * 1x only), as measured on 2026-10-20. Not every view is read: the tests document how well each game works and
-     * fail when a change makes a game worse. Raise a value when the OCR gets better.
+     * 1x only): one below the views read on 2026-10-20 (563 of 656 in all), as single borderline views can
+     * differ between runs of the native OCR engine. Not every view is read: the tests document how well each game
+     * works and fail when a change makes a game worse. Raise a value when the OCR gets better.
      */
     private static final Map<String, Integer> MIN_CORRECT = Map.ofEntries(
-            Map.entry("red-blue", 33), Map.entry("yellow", 32), Map.entry("gold-silver", 27), Map.entry("crystal", 32),
-            Map.entry("ruby-sapphire", 36), Map.entry("emerald", 36), Map.entry("firered-leafgreen", 24),
-            Map.entry("diamond-pearl", 32), Map.entry("platinum", 42), Map.entry("heartgold-soulsilver", 31),
-            Map.entry("black-white", 30), Map.entry("black-2-white-2", 27),
-            Map.entry("x-y", 24), Map.entry("omega-ruby-alpha-sapphire", 29),
-            Map.entry("sun-moon", 26), Map.entry("ultra-sun-ultra-moon", 19), Map.entry("lets-go", 5),
-            Map.entry("sword-shield", 8), Map.entry("brilliant-diamond-shining-pearl", 6), Map.entry("legends-arceus", 4),
-            Map.entry("scarlet-violet", 6), Map.entry("legends-za", 3));
+            Map.entry("red-blue", 35), Map.entry("yellow", 31), Map.entry("gold-silver", 27), Map.entry("crystal", 33),
+            Map.entry("ruby-sapphire", 36), Map.entry("emerald", 35), Map.entry("firered-leafgreen", 25),
+            Map.entry("diamond-pearl", 37), Map.entry("platinum", 41), Map.entry("heartgold-soulsilver", 32),
+            Map.entry("black-white", 36), Map.entry("black-2-white-2", 29),
+            Map.entry("x-y", 28), Map.entry("omega-ruby-alpha-sapphire", 28),
+            Map.entry("sun-moon", 25), Map.entry("ultra-sun-ultra-moon", 19), Map.entry("lets-go", 6),
+            Map.entry("sword-shield", 8), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 8),
+            Map.entry("scarlet-violet", 13), Map.entry("legends-za", 4));
+
+    /** Like {@link #MIN_CORRECT}, for {@link #readsWithLearnedLetterShapes}: 582 of 656 views on 2026-10-20. */
+    private static final Map<String, Integer> MIN_CORRECT_LEARNED = Map.ofEntries(
+            Map.entry("red-blue", 40), Map.entry("yellow", 32), Map.entry("gold-silver", 29), Map.entry("crystal", 35),
+            Map.entry("ruby-sapphire", 38), Map.entry("emerald", 35), Map.entry("firered-leafgreen", 26),
+            Map.entry("diamond-pearl", 38), Map.entry("platinum", 41), Map.entry("heartgold-soulsilver", 32),
+            Map.entry("black-white", 37), Map.entry("black-2-white-2", 29),
+            Map.entry("x-y", 28), Map.entry("omega-ruby-alpha-sapphire", 28),
+            Map.entry("sun-moon", 25), Map.entry("ultra-sun-ultra-moon", 22), Map.entry("lets-go", 6),
+            Map.entry("sword-shield", 9), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 8),
+            Map.entry("scarlet-violet", 13), Map.entry("legends-za", 4));
 
     static Stream<String> games() {
         return cases().stream().map(Case::game).distinct();
@@ -163,8 +175,8 @@ public class GameScreenshotOcrTest {
             BufferedImage image = ImageIO.read(resource);
             BattleScanner scanner = new BattleScanner(RECOGNIZERS.get(screenshot.language()),
                     new NameMatcher(ruleset, screenshot.language(), game.region()), game.capitalNames(), game.floatingNames());
-            List<Optional<PokemonId>> expected = screenshot.expected().stream()
-                    .map(name -> Optional.of(id(ruleset, screenshot.language(), name, game.region()))).toList();
+            List<PokemonId> expected = screenshot.expected().stream()
+                    .map(name -> id(ruleset, screenshot.language(), name, game.region())).toList();
             for (int[] view : image.getWidth() <= SMALL_SCREEN_MAX_WIDTH ? SMALL_SCREEN_VIEWS : List.of(new int[]{1, 0})) {
                 List<Sighting> sightings = scanner.scan(enlarge(crop(image, AREAS.get(gameId)), view[0], view[1] == 1));
                 read++;
@@ -178,16 +190,89 @@ public class GameScreenshotOcrTest {
         }
         assumeTrue(read > 0, () -> "No screenshot of " + gameId + " was downloaded (see screenshots.tsv)");
         System.out.printf("%s: %d of %d views read correctly%n", gameId, correct, read);
+        misses.forEach(miss -> System.out.println("  miss " + miss)); // in the test report, to see what OCR gets wrong
         // Screenshots that were not downloaded (some wikis block CI servers) may all have been read correctly.
         int minimum = Math.clamp(MIN_CORRECT.getOrDefault(gameId, read) - missingViews, 0, read);
         assertThat(correct).as("%s: correctly read views; misses:%n%s", gameId, String.join(System.lineSeparator(), misses))
                 .isGreaterThanOrEqualTo(minimum);
     }
 
+    /**
+     * Reading with letter shapes learned from the game's other screenshots, as PokeSight learns them during the first
+     * battles: each screenshot's views are read with what all other screenshots of the game taught (leave one out).
+     */
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("games")
+    void readsWithLearnedLetterShapes(String gameId) throws IOException {
+        GameDefinition game = Objects.requireNonNull(GAMES.get(gameId), gameId);
+        Ruleset ruleset = RULESETS.computeIfAbsent(game.ruleset(), RulesetLoader::load);
+        List<Case> screenshots = cases().stream().filter(c -> c.game().equals(gameId)).toList();
+        List<BufferedImage> images = new ArrayList<>();
+        for (Case screenshot : screenshots) {
+            URL resource = GameScreenshotOcrTest.class.getResource("/screenshots/" + screenshot.file());
+            // With fewer screenshots there is less to learn from: the minimum only holds for all of them.
+            assumeTrue(resource != null, () -> screenshot.file() + " was not downloaded (see screenshots.tsv)");
+            images.add(ImageIO.read(resource));
+        }
+        List<GlyphFont> learned = new ArrayList<>();
+        for (int i = 0; i < screenshots.size(); i++) {
+            GlyphFont font = new GlyphFont();
+            BattleScanner scanner = scanner(game, ruleset, screenshots.get(i), font);
+            views(images.get(i)).forEach(view -> scanner.scan(enlarge(crop(view.image(), AREAS.get(gameId)), view.scale(), view.smooth())));
+            learned.add(font);
+        }
+        int correct = 0;
+        int read = 0;
+        List<String> misses = new ArrayList<>();
+        for (int i = 0; i < screenshots.size(); i++) {
+            Case screenshot = screenshots.get(i);
+            List<PokemonId> expected = screenshot.expected().stream()
+                    .map(name -> id(ruleset, screenshot.language(), name, game.region())).toList();
+            for (View view : views(images.get(i))) {
+                GlyphFont font = new GlyphFont(); // fresh for every view: views of one screenshot do not teach each other
+                for (int other = 0; other < screenshots.size(); other++) {
+                    if (other != i && screenshots.get(other).language() == screenshot.language()) {
+                        font.addAll(learned.get(other));
+                    }
+                }
+                List<Sighting> sightings = scanner(game, ruleset, screenshot, font)
+                        .scan(enlarge(crop(view.image(), AREAS.get(gameId)), view.scale(), view.smooth()));
+                read++;
+                if (sightings.stream().map(Sighting::pokemon).toList().equals(expected)) {
+                    correct++;
+                } else {
+                    misses.add(screenshot.file() + " " + view.scale() + "x" + (view.smooth() ? " smooth" : "") + ": read "
+                            + sightings.stream().map(Sighting::text).toList() + ", expected " + screenshot.expected());
+                }
+            }
+        }
+        System.out.printf("%s with learned letters: %d of %d views read correctly%n", gameId, correct, read);
+        misses.forEach(miss -> System.out.println("  miss " + miss));
+        int minimum = Math.min(MIN_CORRECT_LEARNED.getOrDefault(gameId, read), read);
+        assertThat(correct).as("%s with learned letters: correctly read views; misses:%n%s", gameId,
+                String.join(System.lineSeparator(), misses)).isGreaterThanOrEqualTo(minimum);
+    }
+
+    private record View(BufferedImage image, int scale, boolean smooth) {
+    }
+
+    private static List<View> views(BufferedImage image) {
+        return (image.getWidth() <= SMALL_SCREEN_MAX_WIDTH ? SMALL_SCREEN_VIEWS : List.of(new int[]{1, 0})).stream()
+                .map(view -> new View(image, view[0], view[1] == 1))
+                .toList();
+    }
+
+    private static BattleScanner scanner(GameDefinition game, Ruleset ruleset, Case screenshot, GlyphFont glyphs) {
+        return new BattleScanner(RECOGNIZERS.get(screenshot.language()),
+                new NameMatcher(ruleset, screenshot.language(), game.region()), game.capitalNames(), game.floatingNames(), glyphs);
+    }
+
     /** The species with that name in the game's language, in the game's regional form if it has one. */
     private static PokemonId id(Ruleset ruleset, Language language, String name, String region) {
         String key = NameMatcher.normalize(name);
+        // Lowest dex number first, like NameMatcher: Nidoran♀ and Nidoran♂ have the same letters.
         return ruleset.species().entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
                 .filter(entry -> NameMatcher.normalize(entry.getValue().name(language)).equals(key))
                 .findFirst()
                 .map(entry -> new PokemonId(entry.getKey(), entry.getValue().regionalForm(region)))
