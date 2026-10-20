@@ -79,6 +79,30 @@ class MoveReaderTest {
         }
     }
 
+    /** The team editor reads the Pokémon's name next to its moves like a name box in battle (ui.TeamScan). */
+    @Tag("ocr") // real OCR on screenshots: run by gradlew ocrTest, not test
+    @ParameterizedTest(name = "{0} {1}")
+    @CsvSource(delimiter = '|', value = {
+            // file | name area x, y, width, height relative to the screenshot | expected dex number, 0 = none
+            "sv-en-moves-trop-kick-high-jump-kick-rapid-spin.png | 0.04, 0.15, 0.22, 0.07 | 763", // Tsareena
+            "sv-en-moves-trop-kick-high-jump-kick-rapid-spin.png | 0.04, 0.27, 0.22, 0.07 | 823", // Corviknight
+            "bdsp-en-moves-bite-acid-spray.png | 0.1, 0.07, 0.2, 0.07 | 0",                     // nickname "Lily"
+    })
+    void readsThePokemonNameNextToItsMoves(String file, String area, int expected) throws IOException {
+        URL resource = MoveReaderTest.class.getResource("/screenshots/" + file);
+        assumeTrue(resource != null, () -> file + " was not downloaded (see screenshots.tsv)");
+        BufferedImage image = ImageIO.read(resource);
+        double[] a = Arrays.stream(area.split(",")).mapToDouble(value -> Double.parseDouble(value.strip())).toArray();
+        BufferedImage nameBox = image.getSubimage((int) (a[0] * image.getWidth()), (int) (a[1] * image.getHeight()),
+                (int) (a[2] * image.getWidth()), (int) (a[3] * image.getHeight()));
+        Ruleset ruleset = RulesetLoader.load(file.startsWith("sv") ? "gen9" : "gen8");
+
+        try (TesseractTextRecognizer recognizer = new TesseractTextRecognizer(Language.EN)) {
+            List<Sighting> names = new BattleScanner(recognizer, new NameMatcher(ruleset, Language.EN), false).scan(nameBox);
+            assertThat(names.stream().findFirst().map(sighting -> sighting.pokemon().speciesId()).orElse(0)).isEqualTo(expected);
+        }
+    }
+
     private static TextRecognizer recognizing(List<Word> words) {
         return new TextRecognizer() {
             @Override
