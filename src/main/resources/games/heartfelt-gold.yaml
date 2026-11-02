@@ -4,6 +4,7 @@ name: Pokémon Heartfelt Gold
 ruleset: heartfelt-gold  # generated from the hack's sources (tools/GenerateHgEngineRuleset.java): Gen 9 + Fairy
 languages: [EN]
 # Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
-# Pokémon of all generations: the HeartGold sprites stop at Arceus, so the default sprites are used.
-spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69afd48dc1273da9033ede9c/sprites/pokemon/{name}.png"
+# The game's own sprites: hg-engine's DS-style sprites of all generations (pinned commit, as the ruleset's source).
+spriteUrl: "https://raw.githubusercontent.com/BluRosie/hg-engine/61b510cfb6cf7d77c3b083150fad3499f82fd326/data/graphics/sprites/{name}/male/front.png"
+spriteSheets: true       # two 80x80 frames per file, palette colour 0 = background
 capitalNames: false      # the hack's Species.c has mixed-case names ("Bulbasaur", cut to 10 letters: "ScreamTail")

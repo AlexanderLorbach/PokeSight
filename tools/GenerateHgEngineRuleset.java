@@ -40,8 +40,9 @@ import java.util.regex.Pattern;
  * {@code data/Moves.c} (in-game names, power, type, category). From hg-engine: the type chart in
  * {@code src/battle/battle_pokemon.c} (hacks usually do not change it). The reference ruleset (generated from PokeAPI)
  * only supplies what the hack's sources lack: dex numbers are checked against PokeAPI identifiers, form keys, form
- * names, sprites and regions come from the reference, ability and type names too, and moves are keyed by the
- * reference's move ids (which also excludes variable-power moves, Z-Moves and Max Moves as the reference does).
+ * names and regions come from the reference, ability and type names too, and moves are keyed by the reference's move
+ * ids (which also excludes variable-power moves, Z-Moves and Max Moves as the reference does). Sprites are the game's
+ * own: hg-engine's species folders ({@code data/graphics/sprites/<species>}), checked to exist.
  *
  * <p>Writes {@code type-chart.yaml}, {@code pokemon.yaml}, {@code moves.yaml} and {@code abilities.yaml}, English only
  * (hg-engine works on the US ROM).
@@ -70,6 +71,8 @@ public class GenerateHgEngineRuleset {
     private static final Map<String, String> CATEGORIES = Map.of("SPLIT_PHYSICAL", "PHYSICAL", "SPLIT_SPECIAL", "SPECIAL");
     /** Variable powers are 0 or 1 (as in PokeAPI). */
     private static final int MAX_PLACEHOLDER_POWER = 1;
+    /** The battle sprite of a species folder: two 80x80 frames side by side (games set {@code spriteSheets: true}). */
+    private static final String SPRITE_PATH = "data/graphics/sprites/{name}/male/front.png";
 
     private static final Pattern ENTRY = Pattern.compile("\\n {4}\\[(\\w+)] = \\{");
     private static final Pattern TERNARY = Pattern.compile("\\(\\((\\w+)\\) \\? \\(([^()]*)\\) : \\(([^()]*)\\)\\)");
@@ -209,6 +212,7 @@ public class GenerateHgEngineRuleset {
         Set<HackSpecies> baseSet = Set.copyOf(baseSpecies);
         Map<Integer, ReferenceSpecies> referenceSpecies = referenceSpecies();
         Map<String, String> identifiers = pokeApiIdentifiers();
+        Set<String> sprites = new TreeSet<>();
 
         StringBuilder yaml = new StringBuilder(header);
         yaml.append("# Key: national dex number. name: as shown in the game (hg-engine cuts names to 10 letters).\n");
@@ -236,14 +240,17 @@ public class GenerateHgEngineRuleset {
             if (!species.abilities().isEmpty()) {
                 yaml.append("    abilities: [").append(String.join(", ", species.abilities())).append("]\n");
             }
+            yaml.append("    sprite: ").append(quote(spriteName(species.constant()))).append('\n');
+            sprites.add(spriteName(species.constant()));
             if (!entry.getValue().forms().isEmpty()) {
                 yaml.append("    forms:\n");
                 for (ReferenceForm form : entry.getValue().forms()) {
                     HackSpecies data = formData(dex, species, form, identifiers, byConstant, baseSet);
                     usedAbilities.addAll(data.abilities());
+                    sprites.add(spriteName(data.constant()));
                     yaml.append("      ").append(form.key()).append(": { name: ").append(nameMap(form.name()))
                             .append(", types: ").append(data.types())
-                            .append(", sprite: ").append(quote(form.sprite()));
+                            .append(", sprite: ").append(quote(spriteName(data.constant())));
                     if (form.region() != null) {
                         yaml.append(", region: ").append(form.region());
                     }
@@ -255,7 +262,53 @@ public class GenerateHgEngineRuleset {
                 }
             }
         }
+        checkSprites(sprites);
         return yaml.toString();
+    }
+
+    /** {@code SPECIES_RATTATA_ALOLAN} -> {@code rattata_alolan}, the species' folder in {@code data/graphics/sprites}. */
+    private static String spriteName(String constant) {
+        return constant.substring("SPECIES_".length()).toLowerCase();
+    }
+
+    /**
+     * Every sprite must exist in hg-engine (the game's spriteUrl points there); a sprite of the hack's own would need
+     * the URL to point to the hack instead.
+     */
+    private void checkSprites(Set<String> sprites) throws InterruptedException {
+        List<String> missing = new ArrayList<>();
+        List<String> ownSprites = new ArrayList<>();
+        try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+            var slots = new java.util.concurrent.Semaphore(16);
+            for (String sprite : sprites) {
+                executor.submit(() -> {
+                    slots.acquire();
+                    try {
+                        String path = SPRITE_PATH.replace("{name}", sprite);
+                        if (!exists(engineSource, path)) {
+                            synchronized (missing) {
+                                missing.add(sprite);
+                            }
+                        }
+                        if (exists(hackSource, path)) {
+                            synchronized (ownSprites) {
+                                ownSprites.add(sprite);
+                            }
+                        }
+                    } finally {
+                        slots.release();
+                    }
+                    return null;
+                });
+            }
+        }
+        if (!missing.isEmpty()) {
+            throw new IllegalStateException("hg-engine has no sprite for " + new TreeSet<>(missing));
+        }
+        if (!ownSprites.isEmpty()) {
+            throw new IllegalStateException("The hack has sprites of its own (point the game's spriteUrl to them): " + new TreeSet<>(ownSprites));
+        }
+        System.out.println("  " + sprites.size() + " sprites found in hg-engine (" + SPRITE_PATH + ")");
     }
 
     private HackSpecies hackSpecies(String constant, String body, String hiddenAbility, Set<String> types) {
@@ -637,6 +690,18 @@ public class GenerateHgEngineRuleset {
     /** A file below a base URL or directory. */
     private String read(String base, String path) throws IOException, InterruptedException {
         return base.startsWith("http") ? download(base + "/" + path) : Files.readString(Path.of(base, path), StandardCharsets.UTF_8);
+    }
+
+    private boolean exists(String base, String path) throws IOException, InterruptedException {
+        if (!base.startsWith("http")) {
+            return Files.isRegularFile(Path.of(base, path));
+        }
+        HttpRequest request = HttpRequest.newBuilder(URI.create(base + "/" + path)).method("HEAD", HttpRequest.BodyPublishers.noBody()).build();
+        int status = http.send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
+        if (status != 200 && status != 404) {
+            throw new IOException("HTTP " + status + " for " + base + "/" + path);
+        }
+        return status == 200;
     }
 
     private String download(String url) throws IOException, InterruptedException {

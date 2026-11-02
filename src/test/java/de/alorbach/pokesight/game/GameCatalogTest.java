@@ -38,10 +38,16 @@ class GameCatalogTest {
         assertThat(games).allSatisfy(game -> {
             assertThat(RulesetLoader.load(game.ruleset()).species()).isNotEmpty();
             assertThat(game.languages()).contains(Language.EN);
-            assertThat(game.spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/").endsWith("{name}.png");
+            assertThat(game.spriteUrl()).containsPattern("/[0-9a-f]{40}/").contains("{name}").endsWith(".png"); // pinned commit
         });
-        assertThat(games).filteredOn(game -> !game.romHack()).hasSize(22)
-                .allSatisfy(game -> assertThat(game.languages()).containsExactly(Language.EN, Language.DE));
+        assertThat(games).filteredOn(game -> !game.romHack()).hasSize(22).allSatisfy(game -> {
+            assertThat(game.languages()).containsExactly(Language.EN, Language.DE);
+            assertThat(game.spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/").endsWith("{name}.png");
+            assertThat(game.spriteSheets()).isFalse();
+        });
+        // ROM hacks show their own sprites where they publish them (Heartfelt Gold: hg-engine's)
+        assertThat(game("heartfelt-gold").spriteUrl()).contains("/BluRosie/hg-engine/");
+        assertThat(game("heartfelt-gold").spriteSheets()).isTrue();
     }
 
     @Test

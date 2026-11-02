@@ -71,6 +71,8 @@ public final class StartView extends BorderPane {
         game.getItems().setAll(games);
         game.setCellFactory(list -> new GameCell(true));
         game.setButtonCell(new GameCell(false));
+        game.getStyleClass().add("game-combo");
+        language.prefWidthProperty().bind(game.widthProperty());
         game.valueProperty().addListener((obs, old, selected) -> gameChanged(selected, saved.language()));
         game.setValue(games.stream()
                 .filter(g -> g.id().equals(saved.game()))
