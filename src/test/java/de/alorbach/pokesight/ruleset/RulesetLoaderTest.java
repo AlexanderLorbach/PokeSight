@@ -134,6 +134,26 @@ class RulesetLoaderTest {
     }
 
     @Test
+    void loadsTheRoweRulesetWithItsChangedPokemonAndMoves() {
+        Ruleset rowe = RulesetLoader.load("rowe");
+
+        assertThat(rowe.species()).hasSize(1025);
+        assertThat(rowe.generation()).isEqualTo(8);
+        assertThat(rowe.typeChart().multiplier(DRAGON, FAIRY)).isZero();
+        assertThat(rowe.typeChart().multiplier(GHOST, STEEL)).isEqualTo(1);
+        assertThat(rowe.findSpecies(24)).map(Species::types).contains(List.of(POISON, DARK));   // Arbok, changed by the hack
+        assertThat(rowe.findSpecies(986)).map(s -> s.name(Language.EN)).contains("BruteBonnet"); // in-game name
+        assertThat(rowe.findSpecies(1)).map(Species::abilities).contains(List.of("overgrow", "solar-power", "chlorophyll"));
+        assertThat(rowe.findSpecies(19)).map(Species::sprite).contains("rattata/anim_front");
+        assertThat(rowe.findSpecies(19).orElseThrow().form(1).sprite()).isEqualTo("rattata/alola/front");
+        assertThat(rowe.findMove(15)).map(Move::type).contains(STEEL);  // Cut
+        assertThat(rowe.findMove(141)).map(Move::power).contains(80);   // Leech Life (B_UPDATED_MOVE_DATA GEN_8)
+        assertThat(rowe.findMove(185)).map(Move::type).contains(DARK);  // "Faint Attack" = Feint Attack
+        assertThat(rowe.findMove(20824)).map(Move::name).map(name -> name.get(Language.EN)).contains("Neutral Pulse"); // the hack's own
+        assertThat(rowe.findMove(20825)).isEmpty(); // Seasonal Beam: type and category change
+    }
+
+    @Test
     void usesGen1Rules() {
         Ruleset gen1 = RulesetLoader.load("gen1");
         assertThat(gen1.typeChart().types()).doesNotContain(DARK, STEEL, FAIRY);

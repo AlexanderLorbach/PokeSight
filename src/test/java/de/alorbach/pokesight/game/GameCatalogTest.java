@@ -48,23 +48,29 @@ class GameCatalogTest {
         // ROM hacks show their own sprites where they publish them (Heartfelt Gold: hg-engine's)
         assertThat(game("heartfelt-gold").spriteUrl()).contains("/BluRosie/hg-engine/");
         assertThat(game("heartfelt-gold").spriteSheets()).isTrue();
+        assertThat(game("rowe").spriteUrl()).contains("/BelialClover/RoweRepo/");
+        assertThat(game("rowe").spriteSheets()).isTrue();
     }
 
     @Test
     void listsRomHacksBelowTheOfficialGames() {
         List<GameDefinition> games = GameCatalog.load();
         GameDefinition heartfeltGold = game("heartfelt-gold");
-
         GameDefinition odyssey = game("odyssey");
+        GameDefinition rowe = game("rowe");
 
-        assertThat(games.stream().dropWhile(game -> !game.romHack())).containsExactly(heartfeltGold, odyssey);
+        assertThat(games.stream().dropWhile(game -> !game.romHack())).containsExactly(heartfeltGold, odyssey, rowe);
         assertThat(heartfeltGold.ruleset()).isEqualTo("heartfelt-gold");
         assertThat(heartfeltGold.languages()).containsExactly(Language.EN); // hg-engine works on the US ROM only
         assertThat(heartfeltGold.capitalNames()).isFalse();
         assertThat(odyssey.ruleset()).isEqualTo("odyssey");
         assertThat(odyssey.languages()).containsExactly(Language.EN);
         assertThat(odyssey.capitalNames()).isFalse();
+        assertThat(rowe.ruleset()).isEqualTo("rowe");
+        assertThat(rowe.languages()).containsExactly(Language.EN);
+        assertThat(rowe.capitalNames()).isFalse();
         assertThat(game("heartgold-soulsilver").romHack()).isFalse();
+        assertThat(game("emerald").romHack()).isFalse();
     }
 
     @Test
