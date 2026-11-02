@@ -54,6 +54,7 @@ class GameCatalogTest {
         assertThat(game("unbound").spriteSheets()).isTrue();
         assertThat(game("emerald-rogue").spriteUrl()).contains("/Pokabbie/pokeemerald-rogue/");
         assertThat(game("emerald-rogue").spriteSheets()).isTrue();
+        assertThat(game("lazarus").spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/sprites/pokemon/{name}.png"); // none of its own
         assertThat(game("glazed").spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/sprites/pokemon/{name}.png"); // none of its own
     }
 
@@ -66,8 +67,9 @@ class GameCatalogTest {
         GameDefinition unbound = game("unbound");
         GameDefinition glazed = game("glazed");
         GameDefinition emeraldRogue = game("emerald-rogue");
+        GameDefinition lazarus = game("lazarus");
 
-        assertThat(games.stream().dropWhile(game -> !game.romHack())).containsExactly(heartfeltGold, odyssey, rowe, unbound, glazed, emeraldRogue);
+        assertThat(games.stream().dropWhile(game -> !game.romHack())).containsExactly(heartfeltGold, odyssey, rowe, unbound, glazed, emeraldRogue, lazarus);
         assertThat(heartfeltGold.ruleset()).isEqualTo("heartfelt-gold");
         assertThat(heartfeltGold.languages()).containsExactly(Language.EN); // hg-engine works on the US ROM only
         assertThat(heartfeltGold.capitalNames()).isFalse();
@@ -86,6 +88,9 @@ class GameCatalogTest {
         assertThat(emeraldRogue.ruleset()).isEqualTo("emerald-rogue");
         assertThat(emeraldRogue.languages()).containsExactly(Language.EN);
         assertThat(emeraldRogue.capitalNames()).isFalse();
+        assertThat(lazarus.ruleset()).isEqualTo("lazarus");
+        assertThat(lazarus.languages()).containsExactly(Language.EN);
+        assertThat(lazarus.capitalNames()).isFalse(); // "Tentacool"
         assertThat(game("heartgold-soulsilver").romHack()).isFalse();
         assertThat(game("emerald").romHack()).isFalse();
     }

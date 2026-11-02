@@ -1,6 +1,7 @@
 # OCR test screenshots, downloaded at build time (task downloadTestScreenshots), pinned by SHA-256.
 # Columns: file, url, sha256, game id (games/<id>.yaml), language, expected opponents top to bottom ("+"-separated,
-# empty = no name may be found; "moves:..." = the damaging moves of a move list, see MoveReaderTest).
+# empty = no name may be found; "moves:..." = the damaging moves of a move list, see MoveReaderTest), optionally
+# where the game screen is in a collage (x,y,width,height in pixels; one row per screen, each with its own file name).
 # Screenshots of fan wikis (© Nintendo / Game Freak / The Pokémon Company) are only downloaded, never committed.
 # Wiki files are labelled by generation, not version: where the version is unknown the screenshot is filed under a
 # game of that generation with the same battle screen.
@@ -285,3 +286,7 @@ emerald-rogue-en-single-raikou.png	https://blogger.googleusercontent.com/img/b/R
 emerald-rogue-en-single-mewtwo.png	https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgZfnT0HBJ_4mPMwKTbZYjf9CL_qmuHr1mTrSNZwlwFaghA-aDc2DxjqTjGO3NwbVNCE4IE0dtsLMxVLjYMSIKfzm9-DswwZDvqfNFPJAXHU_RpBmqXyWV-sQLiaoQ7zjwXJcrVEasvGo6hmtwoutwlPSKbkdi9QszPWkgVRa1XBt2xqwpL8oRznxBzdQ/s0/04%20Pokemon%20Emerald%20Rogue.png	9fde640dac30fee455208ade29007e5b0e355215c084d429e4a84169789da727	emerald-rogue	EN	Mewtwo
 emerald-rogue-en-gym-dialogue.png	https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi2zJjGJJjYisLAt_S0AguPl_dUe-oBazr1f3mh8RfhmpAREeoFAxlaHjyLbqj1qpZVpsosc92NPV671tvIxD8Ja_6b0f5R6QARy2zTS3e2pkM8VvJ2HaqXi6pZLODCzO5XWTG79RD39M_2Na1JtwWEQnX03s7YtZCtAJPUU03Hp3x9aIqtqLXlMo22mA/s0/00%20Pokemon%20Emerald%20Rogue.png	331bc8ddf3bb03067d4d453109c237fe0d16093182cb9943c6f1e8c3353900a1	emerald-rogue	EN	
 emerald-rogue-en-challenger-dialogue.png	https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEitQ4SMh7zz6N4vvhCJ7PxonhTGCfU3yFKn5XYRnlA0y-ChrQpTtB-r7YENiDzWAP0uyP01RC0OqrWhjYbY7nuOmniaZHWpUpIYgDt7siY0c4kCFK56Nw_S3vh7ol6498aCUfgtisPx8DYfqx2JhQlGrCzgqV4TPjzHyAPvWs06eZiMOAiETBONZKnhBg/s0/05%20Pokemon%20Emerald%20Rogue.png	3c1c9a769295b83103db370b55515c46515f070c5cbfb3789c8ea2b0ad4b6725	emerald-rogue	EN	
+lazarus-en-wild-tentacool.webp	https://pokemonlazarus.net/wp-content/uploads/2025/11/Pokemon-Lazarus-1.webp	b5af4ac520a625e46fbe707962c11d9e86a4f1b32e5e05e1e176f06867b0e98a	lazarus	EN	Tentacool	0,480,360,240
+lazarus-en-mega-falinks.webp	https://pokemonlazarus.net/wp-content/uploads/2025/11/Pokemon-Lazarus-1.webp	b5af4ac520a625e46fbe707962c11d9e86a4f1b32e5e05e1e176f06867b0e98a	lazarus	EN	Falinks	720,480,360,240
+lazarus-en-overworld-dialogue.webp	https://pokemonlazarus.net/wp-content/uploads/2025/11/Pokemon-Lazarus-1.webp	b5af4ac520a625e46fbe707962c11d9e86a4f1b32e5e05e1e176f06867b0e98a	lazarus	EN		720,0,360,240
+lazarus-en-crabrawler-dialogue.jpg	https://storage.ghost.io/c/58/fd/58fdc82a-ad84-44e2-ad58-166d1b419bc4/content/images/2025/11/lazarus-gameplay.jpg	9fdd9f134a25ee56455a00acf7825581efaa3f3018294fbe05887f623eb3eaa7	lazarus	EN	
