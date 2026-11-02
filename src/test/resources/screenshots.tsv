@@ -260,3 +260,12 @@ legends-za-de-bibor-4.png	https://www.pokewiki.de/images/2/2b/PLZA_Anvisieren_Sc
 legends-za-de-taubsi-5.png	https://www.pokewiki.de/images/1/1e/Spielmechanik_Anvisieren_PLZA.png	f57abcd95633272fe4764da2f79b403e08850395fffd290d87a6b052ee4e2c79	legends-za	DE	Taubsi
 bdsp-en-moves-bite-acid-spray.png	https://archives.bulbagarden.net/media/upload/1/10/BDSP_battle_move.png	b2a8cf744ffafbe8c1019b0ba4520e0fc243b949a400c27ec02cea037d2fd887	brilliant-diamond-shining-pearl	EN	moves:Bite+Acid Spray
 sv-en-moves-trop-kick-high-jump-kick-rapid-spin.png	https://archives.bulbagarden.net/media/upload/5/59/SV_battle_move.png	7a9c0bffa9bbba11d849dfe0620933c9d1fcf74d088cbdd6940792181ef66c8d	scarlet-violet	EN	moves:Trop Kick+High Jump Kick+Rapid Spin
+# ROM hacks (games/index.yaml romHacks). Few screenshots exist: Heartfelt Gold from pokehackdex.com (video frames, WebP:
+# read with the test-only TwelveMonkeys WebP plugin) and the hack's repository; Odyssey from its page on eeveeexpo.com.
+hfg-en-single-ironbolder.webp	https://pokehackdex.com/games/pokemon-heartfelt-gold/pokemon-heartfelt-gold-wild-ironboldor-battle.webp	475db753eedbc98156e8dd70ced3c206211b7fe4978ba6434da3fdd31158f318	heartfelt-gold	EN	IronBolder
+hfg-en-single-miraidon.webp	https://pokehackdex.com/games/pokemon-heartfelt-gold/pokemon-heartfelt-gold-wild-miraldon-battle.webp	85d5aee196ea9b464f18f822aca471ba60cd146c2cb93d3659dc0dc353e024d2	heartfelt-gold	EN	Miraidon
+hfg-en-single-ragingbolt.webp	https://pokehackdex.com/games/pokemon-heartfelt-gold/pokemon-heartfelt-gold-wild-ragingbolt-battle.webp	31aedff1c83df8252e19d628eedd6a575d4b202b6f72fd7d11dc9daf73f6d69a	heartfelt-gold	EN	RagingBolt
+hfg-en-overworld.png	https://raw.githubusercontent.com/Trinsic64/Heart-Gold-Retiled/79d28acd8b5ffe7444d5a0f6fed99a55944e0c88/Pictures/Screenshot%202026-08-12%20210204.png	3d377faa5b01bd9e39063ca71630647f50c73b610ed94fecdfe50cadceab454f	heartfelt-gold	EN	
+odyssey-en-double-dustox-beautifly.png	https://i.imgur.com/5kXNSY2.png	759f9abbd2d148173dddd2fb8fa8d8168b582f11f599a397f490e983a98e5513	odyssey	EN	Dustox+Beautifly
+odyssey-en-single-gardevoir.png	https://i.imgur.com/k3grlSk.png	3002c851d6a825b99ccac392487e8043a9db45820a7e9409d761b8ee79b7eb10	odyssey	EN	Gardevoir
+odyssey-en-overworld-dialogue.png	https://i.imgur.com/5a1g5fW.png	d36d4d1e2031aa1f312bda16d4d6c4c967e812d2763fa5a98cbb7f0b4f929458	odyssey	EN	
