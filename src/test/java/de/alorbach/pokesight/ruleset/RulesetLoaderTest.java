@@ -173,6 +173,26 @@ class RulesetLoaderTest {
     }
 
     @Test
+    void loadsTheGlazedRulesetFromItsDocumentation() {
+        Ruleset glazed = RulesetLoader.load("glazed");
+
+        assertThat(glazed.species()).hasSize(411); // the wiki's slots: Gen 1-6 Pokémon replacing Emerald ones
+        assertThat(glazed.generation()).isEqualTo(3); // Emerald's ability engine
+        assertThat(glazed.typeChart().multiplier(DRAGON, FAIRY)).isZero();
+        assertThat(glazed.typeChart().multiplier(GHOST, STEEL)).isEqualTo(1); // "Steel no longer resists Dark and Ghost"
+        assertThat(glazed.findSpecies(43)).isEmpty();                         // Oddish's slot holds Deino
+        assertThat(glazed.findSpecies(633)).map(Species::types).contains(List.of(DARK, DRAGON));
+        assertThat(glazed.findSpecies(571)).map(Species::stats).contains(List.of(60, 120, 60, 120, 60, 105)); // Zoroark +15 Atk
+        assertThat(glazed.findSpecies(94)).map(Species::abilities).contains(List.of("levitate")); // Emerald's Gengar
+        assertThat(glazed.findSpecies(453)).map(Species::abilities).contains(List.of()); // Croagunk: no Gen 3 ability
+        assertThat(glazed.findSpecies(5269)).map(Species::sprite).contains("10033");     // Mega Venusaur's own slot
+        assertThat(glazed.findMove(229)).map(Move::power).contains(50);  // Rapid Spin (Beta 8.6.2)
+        assertThat(glazed.findMove(585)).map(Move::type).contains(FAIRY); // Moonblast, listed in the move document
+        assertThat(glazed.findMove(394)).isPresent();                    // Flare Blitz: listed
+        assertThat(glazed.findMove(412)).isEmpty();                      // Energy Ball: a later move not in the game
+    }
+
+    @Test
     void usesGen1Rules() {
         Ruleset gen1 = RulesetLoader.load("gen1");
         assertThat(gen1.typeChart().types()).doesNotContain(DARK, STEEL, FAIRY);

@@ -52,6 +52,7 @@ class GameCatalogTest {
         assertThat(game("rowe").spriteSheets()).isTrue();
         assertThat(game("unbound").spriteUrl()).contains("/Skeli789/Dynamic-Pokemon-Expansion/");
         assertThat(game("unbound").spriteSheets()).isTrue();
+        assertThat(game("glazed").spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/sprites/pokemon/{name}.png"); // none of its own
     }
 
     @Test
@@ -61,8 +62,9 @@ class GameCatalogTest {
         GameDefinition odyssey = game("odyssey");
         GameDefinition rowe = game("rowe");
         GameDefinition unbound = game("unbound");
+        GameDefinition glazed = game("glazed");
 
-        assertThat(games.stream().dropWhile(game -> !game.romHack())).containsExactly(heartfeltGold, odyssey, rowe, unbound);
+        assertThat(games.stream().dropWhile(game -> !game.romHack())).containsExactly(heartfeltGold, odyssey, rowe, unbound, glazed);
         assertThat(heartfeltGold.ruleset()).isEqualTo("heartfelt-gold");
         assertThat(heartfeltGold.languages()).containsExactly(Language.EN); // hg-engine works on the US ROM only
         assertThat(heartfeltGold.capitalNames()).isFalse();
@@ -75,6 +77,9 @@ class GameCatalogTest {
         assertThat(unbound.ruleset()).isEqualTo("unbound");
         assertThat(unbound.languages()).containsExactly(Language.EN);
         assertThat(unbound.capitalNames()).isFalse();
+        assertThat(glazed.ruleset()).isEqualTo("glazed");
+        assertThat(glazed.languages()).containsExactly(Language.EN);
+        assertThat(glazed.capitalNames()).isTrue(); // "PALKIA", like Emerald
         assertThat(game("heartgold-soulsilver").romHack()).isFalse();
         assertThat(game("emerald").romHack()).isFalse();
     }
