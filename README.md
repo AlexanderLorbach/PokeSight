@@ -94,6 +94,11 @@ v2.1): roguelite Emerald with all 1025 Pokémon; types, stats, abilities and mov
 names as in the game (10 letters, "Kilowatrel") and its own sprites, from its source code. The Vanilla edition keeps
 Emerald's data unchanged: choose Pokémon Emerald for it. Names read: 8 / 12.
 
+**[Pokémon Lazarus](https://pokemonlazarus.net/)** (Emerald, pokeemerald-expansion, v2.0): the Ilios region with
+GBC-style graphics. No source code exists; the developer's documentation and the changelogs change no matchup outside
+Mega Evolutions (which PokeSight leaves out), so the rules are the expansion's Gen 9 defaults; sprites are the official
+ones. Names read: 3 / 10 (the only battle screenshots are a 1.5x scaled collage).
+
 ## Getting started
 
 ### Option 1: Download a release (no Java needed)
@@ -259,7 +264,8 @@ packaging/               PokeSight.ico, install.ps1 (installLocal)
 tools/                   GenerateRuleset.java (PokeAPI → YAML), GenerateHgEngineRuleset.java (hg-engine hack → YAML),
                          GenerateOdysseyRuleset.java (Odyssey workbook → YAML), GeneratePokeemeraldRuleset.java
                          (pokeemerald hack → YAML), GenerateCfruRuleset.java (CFRU + DPE hack → YAML),
-                         GenerateGlazedRuleset.java (Glazed documentation → YAML), GenerateIcon.java (app icon)
+                         GenerateGlazedRuleset.java (Glazed documentation → YAML), GenerateLazarusRuleset.java
+                         (Lazarus: gen9 → YAML), GenerateIcon.java (app icon)
 .github/workflows/       release.yml: builds the portable zip for every pushed v* tag
 licenses/                license texts of the bundled third-party software (THIRD-PARTY-NOTICES.md)
 ```
@@ -279,13 +285,14 @@ licenses/                license texts of the bundled third-party software (THIR
   `games/index.yaml` (ROM hacks under `romHacks`, they are listed below the official games). `region` (alola, galar, hisui, paldea) makes recognized Pokémon show in their regional form,
   `floatingNames` reads the labels above HP bars instead of fixed name boxes, `withoutAbilities` ignores abilities
   (Let's Go, Legends), `terastal` offers the Tera type picker.
-- **OCR tests:** `src/test/resources/screenshots.tsv` lists the battle screenshots (URL, SHA-256, game, language and
-  the opponents they show); the build downloads them. `GameScreenshotOcrTest` reads every one with its game's
-  settings and fails when a game reads fewer views than the minimum recorded there, once with Tesseract alone and once
-  with letter shapes learned from the game's other screenshots (it needs all of them; CI skips it, since one wiki
-  blocks downloads from there); `ScreenshotOcrTest` checks Gen 4 at every window size, `MoveReaderTest` the move
-  reading. All of them are tagged `ocr` and run with `ocrTest`. ROM hacks have their own screenshots and minimums;
-  the official games' minimums may only rise, so work on a hack can never make an official game read worse.
+- **OCR tests:** `src/test/resources/screenshots.tsv` lists the battle screenshots (URL, SHA-256, game, language, the
+  opponents they show and, for collages, where the game screen is); the build downloads them. `GameScreenshotOcrTest`
+  reads every one with its game's settings and fails when a game reads fewer views than the minimum recorded there,
+  once with Tesseract alone and once with letter shapes learned from the game's other screenshots (it needs all of
+  them; CI skips it, since one wiki blocks downloads from there); `ScreenshotOcrTest` checks Gen 4 at every window
+  size, `MoveReaderTest` the move reading. All of them are tagged `ocr` and run with `ocrTest`. ROM hacks have their
+  own screenshots and minimums; the official games' minimums may only rise, so work on a hack can never make an
+  official game read worse.
 - **Regenerate a ruleset:** `java tools/GenerateRuleset.java <PokeAPI version group> src/main/resources/rulesets/<id>`.
   It writes the type chart, the species with their alternate forms, base stats and abilities, the damaging moves and
   the ability names, as they were in that game (PokeAPI's change logs are rolled back, e.g. Thunderbolt has 95 power
@@ -325,6 +332,8 @@ licenses/                license texts of the bundled third-party software (THIR
   Pokémon Glazed (binary hack, no source): `java tools/GenerateGlazedRuleset.java src/main/resources/rulesets/gen3 src/main/resources/rulesets/gen7 src/main/resources/rulesets/glazed`
   reads the fan wiki's slot table (pinned revision) and the move document and applies the changelog to the gen3/gen7
   rulesets (sources and assumptions in the tool's Javadoc).
+  Pokémon Lazarus (binary hack on pokeemerald-expansion): `java tools/GenerateLazarusRuleset.java src/main/resources/rulesets/gen9 src/main/resources/rulesets/lazarus`
+  takes the expansion's default (Gen 9) data with English names only (why in the tool's Javadoc).
 - **Data checked** against Pokémon Showdown's per-generation data (base data plus the gen1–gen8 and gen7letsgo mods)
   for every ruleset: type chart, types of all species and their alternate forms, base stats and abilities of all
   species, power, type and category of all moves (until Gen 3 the category follows the type). Gaps in PokeAPI found

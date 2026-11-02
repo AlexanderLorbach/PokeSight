@@ -193,6 +193,20 @@ class RulesetLoaderTest {
     }
 
     @Test
+    void loadsTheLazarusRulesetWithTheExpansionsDefaultData() {
+        Ruleset lazarus = RulesetLoader.load("lazarus");
+        Ruleset gen9 = RulesetLoader.load("gen9");
+
+        assertThat(lazarus.species()).hasSize(1025);
+        assertThat(lazarus.generation()).isEqualTo(9);
+        assertThat(lazarus.findSpecies(740)).map(s -> s.name(Language.EN)).contains("Crabominable"); // 12 letters
+        assertThat(lazarus.findSpecies(740).orElseThrow().name(Language.DE)).isNull(); // English only
+        assertThat(lazarus.findSpecies(134)).map(Species::abilities).isEqualTo(gen9.findSpecies(134).map(Species::abilities));
+        assertThat(lazarus.findMove(64)).map(Move::power).isEqualTo(gen9.findMove(64).map(Move::power)); // Slam: priority only
+        assertThat(lazarus.typeChart().multiplier(FAIRY, DRAGON)).isEqualTo(2);
+    }
+
+    @Test
     void loadsTheGlazedRulesetFromItsDocumentation() {
         Ruleset glazed = RulesetLoader.load("glazed");
 

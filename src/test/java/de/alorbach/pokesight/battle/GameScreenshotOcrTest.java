@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -63,7 +64,7 @@ public class GameScreenshotOcrTest {
         for (String id : List.of("red-blue", "yellow", "gold-silver", "crystal")) {
             AREAS.put(id, gameBoy);
         }
-        for (String id : List.of("ruby-sapphire", "emerald", "firered-leafgreen", "odyssey", "rowe", "unbound", "glazed", "emerald-rogue")) {
+        for (String id : List.of("ruby-sapphire", "emerald", "firered-leafgreen", "odyssey", "rowe", "unbound", "glazed", "emerald-rogue", "lazarus")) {
             AREAS.put(id, gameBoyAdvance);
         }
         for (String id : List.of("diamond-pearl", "platinum", "heartgold-soulsilver", "heartfelt-gold")) {
@@ -88,10 +89,16 @@ public class GameScreenshotOcrTest {
     private static final Map<String, Ruleset> RULESETS = new HashMap<>();
     private static final Map<Language, TesseractTextRecognizer> RECOGNIZERS = new EnumMap<>(Language.class);
 
-    public record Case(String file, String game, Language language, List<String> expected) {
+    /** {@code screen}: where the game screen is in the file (pixels), for collages of several screens; null = all of it. */
+    public record Case(String file, String game, Language language, List<String> expected, Rectangle screen) {
         @Override
         public String toString() {
             return file;
+        }
+
+        BufferedImage read(URL resource) throws IOException {
+            BufferedImage image = ImageIO.read(resource);
+            return screen == null ? image : image.getSubimage(screen.x, screen.y, screen.width, screen.height);
         }
     }
 
@@ -121,7 +128,12 @@ public class GameScreenshotOcrTest {
                     continue; // a move list, read by MoveReaderTest
                 }
                 List<String> expected = fields[5].isEmpty() ? List.of() : Arrays.asList(fields[5].split("\\+"));
-                cases.add(new Case(fields[0], fields[3], Language.valueOf(fields[4]), expected));
+                Rectangle screen = null;
+                if (fields.length > 6 && !fields[6].isEmpty()) { // x,y,width,height
+                    int[] bounds = Arrays.stream(fields[6].split(",")).mapToInt(Integer::parseInt).toArray();
+                    screen = new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
+                }
+                cases.add(new Case(fields[0], fields[3], Language.valueOf(fields[4]), expected, screen));
             }
             return cases;
         } catch (IOException e) {
@@ -145,9 +157,9 @@ public class GameScreenshotOcrTest {
             Map.entry("sword-shield", 8), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 8),
             Map.entry("scarlet-violet", 13), Map.entry("legends-za", 4),
             // ROM hacks, measured 2026-11-02: Heartfelt Gold 6 of 6, Odyssey 8 of 9, R.O.W.E. 7 of 9, Unbound 12 of 12,
-            // Glazed 14 of 15, Emerald Rogue 8 of 12 (official: 563)
+            // Glazed 14 of 15, Emerald Rogue 8 of 12, Lazarus 3 of 10 (only a 1.5x collage exists; official: 563)
             Map.entry("heartfelt-gold", 5), Map.entry("odyssey", 7), Map.entry("rowe", 6), Map.entry("unbound", 11),
-            Map.entry("glazed", 13), Map.entry("emerald-rogue", 7));
+            Map.entry("glazed", 13), Map.entry("emerald-rogue", 7), Map.entry("lazarus", 2));
 
     /**
      * Sum of the official games' {@link #MIN_CORRECT} (and {@link #MIN_CORRECT_LEARNED}): work for a ROM hack must
@@ -167,7 +179,7 @@ public class GameScreenshotOcrTest {
             Map.entry("sword-shield", 9), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 8),
             Map.entry("scarlet-violet", 13), Map.entry("legends-za", 4),
             Map.entry("heartfelt-gold", 5), Map.entry("odyssey", 7), Map.entry("rowe", 6), Map.entry("unbound", 11),
-            Map.entry("glazed", 13), Map.entry("emerald-rogue", 7));
+            Map.entry("glazed", 13), Map.entry("emerald-rogue", 7), Map.entry("lazarus", 2));
 
     static Stream<String> games() {
         return cases().stream().map(Case::game).distinct();
@@ -201,7 +213,7 @@ public class GameScreenshotOcrTest {
                 missingViews += SMALL_SCREEN_VIEWS.size(); // not downloaded (see screenshots.tsv): at most this many views
                 continue;
             }
-            BufferedImage image = ImageIO.read(resource);
+            BufferedImage image = screenshot.read(resource);
             BattleScanner scanner = new BattleScanner(RECOGNIZERS.get(screenshot.language()),
                     new NameMatcher(ruleset, screenshot.language(), game.region()), game.capitalNames(), game.floatingNames());
             List<PokemonId> expected = screenshot.expected().stream()
@@ -241,7 +253,7 @@ public class GameScreenshotOcrTest {
             URL resource = GameScreenshotOcrTest.class.getResource("/screenshots/" + screenshot.file());
             // With fewer screenshots there is less to learn from: the minimum only holds for all of them.
             assumeTrue(resource != null, () -> screenshot.file() + " was not downloaded (see screenshots.tsv)");
-            images.add(ImageIO.read(resource));
+            images.add(screenshot.read(resource));
         }
         List<GlyphFont> learned = new ArrayList<>();
         for (int i = 0; i < screenshots.size(); i++) {
