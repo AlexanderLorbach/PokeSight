@@ -32,17 +32,7 @@ or memory access.
 the rules of its own generation (type chart, types, move power); remakes are separate games with their own rules and
 screens, e.g. Red/Blue (Gen 1, Game Boy font) and FireRed/LeafGreen (Gen 3, GBA font).
 
-**ROM hacks** are listed below the official games, with rules taken from the hack's own sources. The first one is
-[Pokémon Heartfelt Gold](https://pokehackdex.com/romhacks/pokemon-heartfelt-gold/) (HeartGold hack built with
-hg-engine, English only): Pokémon of all generations with their Gen 9 types, the Gen 9 type chart with Fairy, the
-hack's move changes (e.g. Snap Trap is Steel, Slash has 80 power) and the in-game names, which the hack cuts to 10
-letters ("ScreamTail"). It reads the same battle screens as HeartGold.
-[Pokémon Odyssey](https://eeveeexpo.com/odyssey/) (FireRed hack by PacoScarso, English only) brings its own type
-chart with the new Aether type instead of Fairy, Etrian Variants that replace their species (Ratreecate, Grass/Rock
-Corsola), its own Pokémon (Gorochu, Yggdreon, Reefsola: shown without a sprite) and new or changed moves, all from the
-developer's data workbook. Moves the workbook doesn't list keep their Gen 9 values; Fairy moves are left out.
-Both hacks have OCR test screenshots like the official games; the official games' minimums may only rise, so work on
-a hack can never make an official game read worse.
+**ROM hacks:** see [Supported ROM hacks](#supported-rom-hacks).
 
 The name reading is checked on 254 real battle screenshots, at least five per game, at emulator window sizes 1×, 2×
 (smoothed) and 3× (Full HD screenshots of the Switch games at their size). Correctly read views:
@@ -74,6 +64,17 @@ screenshot of your emulator window during a battle helps to improve it.
 
 > PokeSight is a fan project. It is not affiliated with, endorsed or sponsored by Nintendo, Game Freak, Creatures or
 > The Pokémon Company. Pokémon and all related names are trademarks of their respective owners.
+
+## Supported ROM hacks
+
+Listed below the official games with a "ROM hack" badge. Rules come from each hack's own data; English only.
+
+**[Pokémon Heartfelt Gold](https://pokehackdex.com/romhacks/pokemon-heartfelt-gold/)** (HeartGold, hg-engine):
+Pokémon of all generations, Gen 9 types and type chart, the hack's move changes and in-game names, the game's own
+sprites. Names read: 6 / 6.
+
+**[Pokémon Odyssey](https://eeveeexpo.com/odyssey/)** (FireRed): its own Aether type instead of Fairy, Etrian
+Variants, new Pokémon (no sprite) and new or changed moves, from the developer's data. Names read: 8 / 9.
 
 ## Getting started
 
@@ -263,7 +264,8 @@ licenses/                license texts of the bundled third-party software (THIR
   settings and fails when a game reads fewer views than the minimum recorded there, once with Tesseract alone and once
   with letter shapes learned from the game's other screenshots (it needs all of them; CI skips it, since one wiki
   blocks downloads from there); `ScreenshotOcrTest` checks Gen 4 at every window size, `MoveReaderTest` the move
-  reading. All of them are tagged `ocr` and run with `ocrTest`.
+  reading. All of them are tagged `ocr` and run with `ocrTest`. ROM hacks have their own screenshots and minimums;
+  the official games' minimums may only rise, so work on a hack can never make an official game read worse.
 - **Regenerate a ruleset:** `java tools/GenerateRuleset.java <PokeAPI version group> src/main/resources/rulesets/<id>`.
   It writes the type chart, the species with their alternate forms, base stats and abilities, the damaging moves and
   the ability names, as they were in that game (PokeAPI's change logs are rolled back, e.g. Thunderbolt has 95 power
@@ -279,8 +281,9 @@ licenses/                license texts of the bundled third-party software (THIR
 - **Regenerate a ROM hack ruleset** (hacks built with [hg-engine](https://github.com/BluRosie/hg-engine)):
   `java tools/GenerateHgEngineRuleset.java <hack's HG-Engine folder> <hg-engine> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id>`,
   with pinned raw GitHub URLs or local folders (the exact command for Heartfelt Gold is in the tool's Javadoc). It reads
-  the hack's `config.h`, `Species.c`, `HiddenAbilityTable.c` and `Moves.c` and hg-engine's type chart; the gen9 ruleset
-  only supplies dex numbers (checked against PokeAPI), form names and sprites, ability and type names and move ids.
+  the hack's `config.h`, `Species.c`, `HiddenAbilityTable.c` and `Moves.c` and hg-engine's type chart and sprite
+  folders (the game sets `spriteSheets: true`: the first of the two frames is kept, background transparent); the gen9
+  ruleset only supplies dex numbers (checked against PokeAPI), form names, ability and type names and move ids.
   Pokémon Odyssey: `java tools/GenerateOdysseyRuleset.java <workbook .xlsx or its export URL> src/main/resources/rulesets/gen9 src/main/resources/rulesets/odyssey`
   (URL in the tool's Javadoc). It reads the type chart from the cell colours, types, abilities and base stats of every
   species, the Pokédex slot names and the new moves (type and category icons recognized by their hash); the workbook's
