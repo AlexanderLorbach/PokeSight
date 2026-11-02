@@ -249,6 +249,12 @@
     -fx-pref-width: 260;
 }
 
+/* As wide as its widest game, so the drop-down list lines up with it (the language box follows its width) */
+.form .combo-box.game-combo {
+    -fx-pref-width: -1;
+    -fx-min-width: 260;
+}
+
 .area-row {
     -fx-spacing: 8;
 }
