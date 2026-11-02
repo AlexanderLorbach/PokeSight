@@ -5561,8 +5561,8 @@ pokemon:
     abilities: [unnerve]
     sprite: "calyrex/front"
     forms:
-      1: { name: { EN: "Ice Calyrex" }, types: [PSYCHIC, ICE], sprite: "calyrex/ice/front", stats: [100, 165, 150, 85, 130, 50], abilities: [rowe-as-one-ice-rider] }
-      2: { name: { EN: "Shadow Calyrex" }, types: [PSYCHIC, GHOST], sprite: "calyrex/shadow/front", stats: [100, 85, 80, 165, 100, 150], abilities: [rowe-as-one-shadow-rider] }
+      1: { name: { EN: "Ice Calyrex" }, types: [PSYCHIC, ICE], sprite: "calyrex/ice/front", stats: [100, 165, 150, 85, 130, 50], abilities: [as-one-glastrier] }
+      2: { name: { EN: "Shadow Calyrex" }, types: [PSYCHIC, GHOST], sprite: "calyrex/shadow/front", stats: [100, 85, 80, 165, 100, 150], abilities: [as-one-spectrier] }
   899:
     name: { EN: "Wyrdeer" }
     types: [NORMAL, PSYCHIC]

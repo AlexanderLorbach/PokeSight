@@ -89,6 +89,11 @@ public source code. Names read: 12 / 12.
 changelog, the fan wiki's slot table and the developers' move document; abilities are assumed (Emerald's Gen 3 set),
 sprites are the official ones. Names read: 14 / 15.
 
+**[Pokémon Emerald Rogue](https://www.hackdex.app/hack/emerald-rogue)** (Emerald, pokeemerald-expansion, EX edition
+v2.1): roguelite Emerald with all 1025 Pokémon; types, stats, abilities and moves are the expansion's defaults (Gen 9),
+names as in the game (10 letters, "Kilowatrel") and its own sprites, from its source code. The Vanilla edition keeps
+Emerald's data unchanged: choose Pokémon Emerald for it. Names read: 8 / 12.
+
 ## Getting started
 
 ### Option 1: Download a release (no Java needed)
@@ -303,11 +308,14 @@ licenses/                license texts of the bundled third-party software (THIR
   (URL in the tool's Javadoc). It reads the type chart from the cell colours, types, abilities and base stats of every
   species, the Pokédex slot names and the new moves (type and category icons recognized by their hash); the workbook's
   SHA-256 is written into the generated files, since the developer can update it.
-  Hacks built on [pokeemerald](https://github.com/pret/pokeemerald) with the battle engine expansion (Pokémon R.O.W.E.):
+  Hacks built on [pokeemerald](https://github.com/pret/pokeemerald) with the battle engine expansion (Pokémon R.O.W.E.,
+  Emerald Rogue EX):
   `java tools/GeneratePokeemeraldRuleset.java <hack's source> <source with battle_util.c> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id>`
   (exact command in the tool's Javadoc). It evaluates the hack's `#if` settings (config headers) and reads
   `base_stats.h`, `battle_moves.h`, the in-game names and the front sprites (`spriteSheets: true`: the top frame is
-  kept); moves PokeAPI does not know become the hack's own (key 20000 + its move id).
+  kept); moves PokeAPI does not know become the hack's own (key 20000 + its move id). Newer expansions (1.7+, with
+  `species_info.h` and `include/config/`) are detected: their species entries, shared-field macros and conditional
+  values (`P_UPDATED_TYPES >= GEN_6 ? TYPE_FAIRY : TYPE_NORMAL`) are evaluated like the C preprocessor does.
   Hacks built on [CFRU](https://github.com/Skeli789/Complete-Fire-Red-Upgrade) and
   [DPE](https://github.com/Skeli789/Dynamic-Pokemon-Expansion) (Pokémon Unbound):
   `java tools/GenerateCfruRuleset.java <DPE> <CFRU> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id> [DEFINE...]`

@@ -1,0 +1,12 @@
+# Pokémon Emerald Rogue (GBA): roguelite ROM hack of Emerald (US) by Pokabbie; EX edition (v2.1), built on
+# pokeemerald + pokeemerald-expansion: all 1025 Pokémon with Gen 9 types, stats, abilities and moves. English only.
+# The Vanilla edition keeps the unchanged Emerald data: pick Pokémon Emerald for it.
+# https://www.hackdex.app/hack/emerald-rogue - https://github.com/Pokabbie/pokeemerald-rogue (tag EX-v2.1)
+name: Pokémon Emerald Rogue
+ruleset: emerald-rogue   # generated from the hack's sources (tools/GeneratePokeemeraldRuleset.java)
+languages: [EN]
+# Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
+# The game's own GBA-style sprites (pinned commit EX-v2.1, as the ruleset's source).
+spriteUrl: "https://raw.githubusercontent.com/Pokabbie/pokeemerald-rogue/559792325f500d480b892799218ee015962f93a2/graphics/pokemon/{name}.png"
+spriteSheets: true       # 64x64 frames stacked (anim_front: two), palette colour 0 = background
+capitalNames: false      # species names in mixed case, cut to 10 letters ("Kilowatrel")
