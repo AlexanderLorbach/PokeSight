@@ -10,6 +10,7 @@ import de.alorbach.pokesight.ruleset.RulesetLoader;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -62,10 +63,10 @@ public class GameScreenshotOcrTest {
         for (String id : List.of("red-blue", "yellow", "gold-silver", "crystal")) {
             AREAS.put(id, gameBoy);
         }
-        for (String id : List.of("ruby-sapphire", "emerald", "firered-leafgreen")) {
+        for (String id : List.of("ruby-sapphire", "emerald", "firered-leafgreen", "odyssey")) {
             AREAS.put(id, gameBoyAdvance);
         }
-        for (String id : List.of("diamond-pearl", "platinum", "heartgold-soulsilver")) {
+        for (String id : List.of("diamond-pearl", "platinum", "heartgold-soulsilver", "heartfelt-gold")) {
             AREAS.put(id, ds);
         }
         AREAS.put("black-white", dsGen5);
@@ -142,7 +143,16 @@ public class GameScreenshotOcrTest {
             Map.entry("x-y", 28), Map.entry("omega-ruby-alpha-sapphire", 28),
             Map.entry("sun-moon", 25), Map.entry("ultra-sun-ultra-moon", 19), Map.entry("lets-go", 6),
             Map.entry("sword-shield", 8), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 8),
-            Map.entry("scarlet-violet", 13), Map.entry("legends-za", 4));
+            Map.entry("scarlet-violet", 13), Map.entry("legends-za", 4),
+            // ROM hacks, measured 2026-11-02: Heartfelt Gold 6 of 6, Odyssey 8 of 9 (official games unchanged: 563)
+            Map.entry("heartfelt-gold", 5), Map.entry("odyssey", 7));
+
+    /**
+     * Sum of the official games' {@link #MIN_CORRECT} (and {@link #MIN_CORRECT_LEARNED}): work for a ROM hack must
+     * never make an official game worse, so their minimums may only be raised, never traded for a hack's.
+     */
+    private static final int OFFICIAL_MIN_TOTAL = 541;
+    private static final int OFFICIAL_MIN_TOTAL_LEARNED = 560;
 
     /** Like {@link #MIN_CORRECT}, for {@link #readsWithLearnedLetterShapes}: 582 of 656 views on 2026-10-20. */
     private static final Map<String, Integer> MIN_CORRECT_LEARNED = Map.ofEntries(
@@ -153,10 +163,24 @@ public class GameScreenshotOcrTest {
             Map.entry("x-y", 28), Map.entry("omega-ruby-alpha-sapphire", 28),
             Map.entry("sun-moon", 25), Map.entry("ultra-sun-ultra-moon", 22), Map.entry("lets-go", 6),
             Map.entry("sword-shield", 9), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 8),
-            Map.entry("scarlet-violet", 13), Map.entry("legends-za", 4));
+            Map.entry("scarlet-violet", 13), Map.entry("legends-za", 4),
+            Map.entry("heartfelt-gold", 5), Map.entry("odyssey", 7));
 
     static Stream<String> games() {
         return cases().stream().map(Case::game).distinct();
+    }
+
+    @Test
+    void officialGamesKeepTheirMinimums() {
+        List<String> official = GAMES.values().stream().filter(game -> !game.romHack()).map(GameDefinition::id).toList();
+
+        assertThat(games()).as("every game with screenshots needs a minimum").allSatisfy(game -> {
+            assertThat(MIN_CORRECT).containsKey(game);
+            assertThat(MIN_CORRECT_LEARNED).containsKey(game);
+        });
+        assertThat(games().filter(official::contains)).as("official games with screenshots").hasSameSizeAs(official);
+        assertThat(official.stream().mapToInt(MIN_CORRECT::get).sum()).isGreaterThanOrEqualTo(OFFICIAL_MIN_TOTAL);
+        assertThat(official.stream().mapToInt(MIN_CORRECT_LEARNED::get).sum()).isGreaterThanOrEqualTo(OFFICIAL_MIN_TOTAL_LEARNED);
     }
 
     @ParameterizedTest(name = "{0}")

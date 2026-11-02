@@ -36,11 +36,13 @@ screens, e.g. Red/Blue (Gen 1, Game Boy font) and FireRed/LeafGreen (Gen 3, GBA 
 [Pokémon Heartfelt Gold](https://pokehackdex.com/romhacks/pokemon-heartfelt-gold/) (HeartGold hack built with
 hg-engine, English only): Pokémon of all generations with their Gen 9 types, the Gen 9 type chart with Fairy, the
 hack's move changes (e.g. Snap Trap is Steel, Slash has 80 power) and the in-game names, which the hack cuts to 10
-letters ("ScreamTail"). It reads the same battle screens as HeartGold, but there are no test screenshots of it yet.
+letters ("ScreamTail"). It reads the same battle screens as HeartGold.
 [Pokémon Odyssey](https://eeveeexpo.com/odyssey/) (FireRed hack by PacoScarso, English only) brings its own type
 chart with the new Aether type instead of Fairy, Etrian Variants that replace their species (Ratreecate, Grass/Rock
 Corsola), its own Pokémon (Gorochu, Yggdreon, Reefsola: shown without a sprite) and new or changed moves, all from the
 developer's data workbook. Moves the workbook doesn't list keep their Gen 9 values; Fairy moves are left out.
+Both hacks have OCR test screenshots like the official games; the official games' minimums may only rise, so work on
+a hack can never make an official game read worse.
 
 The name reading is checked on 254 real battle screenshots, at least five per game, at emulator window sizes 1×, 2×
 (smoothed) and 3× (Full HD screenshots of the Switch games at their size). Correctly read views:

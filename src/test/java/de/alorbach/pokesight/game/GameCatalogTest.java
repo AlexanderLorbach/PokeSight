@@ -1,6 +1,8 @@
 package de.alorbach.pokesight.game;
 
 import de.alorbach.pokesight.ruleset.Language;
+import de.alorbach.pokesight.ruleset.PokemonType;
+import de.alorbach.pokesight.ruleset.Ruleset;
 import de.alorbach.pokesight.ruleset.RulesetLoader;
 import org.junit.jupiter.api.Test;
 
@@ -57,6 +59,21 @@ class GameCatalogTest {
         assertThat(odyssey.languages()).containsExactly(Language.EN);
         assertThat(odyssey.capitalNames()).isFalse();
         assertThat(game("heartgold-soulsilver").romHack()).isFalse();
+    }
+
+    @Test
+    void romHacksLeaveTheOfficialGamesUnchanged() {
+        List<GameDefinition> games = GameCatalog.load();
+        List<GameDefinition> official = games.stream().filter(game -> !game.romHack()).toList();
+        List<String> hackRulesets = games.stream().filter(GameDefinition::romHack).map(GameDefinition::ruleset).toList();
+
+        assertThat(games.subList(0, official.size())).isEqualTo(official); // official games first, order kept
+        assertThat(official).allSatisfy(game -> {
+            assertThat(hackRulesets).doesNotContain(game.ruleset());
+            Ruleset ruleset = RulesetLoader.load(game.ruleset());
+            assertThat(ruleset.typeChart().types()).doesNotContain(PokemonType.AETHER); // hacks' own types
+            assertThat(ruleset.species().values()).allSatisfy(species -> assertThat(species.sprite()).isNull());
+        });
     }
 
     @Test
