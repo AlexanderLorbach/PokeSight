@@ -80,6 +80,10 @@ Variants, new Pokémon (no sprite) and new or changed moves, from the developer'
 1025 Pokémon and Fairy; the hack's changed types (e.g. Poison/Dark Arbok), stats, abilities and moves, in-game names
 and its own sprites, from its source code (default game options). Names read: 7 / 9.
 
+**[Pokémon Unbound](https://pokefirered.com/pokemon-unbound/)** (FireRed, CFRU + DPE): Pokémon up to Gen 8 and Fairy;
+the hack's changed abilities, stats and move powers, its own moves, in-game names and GBA-style sprites, from Skeli's
+public source code. Names read: 12 / 12.
+
 ## Getting started
 
 ### Option 1: Download a release (no Java needed)
@@ -244,7 +248,8 @@ src/main/resources/      games/*.yaml, rulesets/<id>/*.yaml (generated), ui/ (th
 packaging/               PokeSight.ico, install.ps1 (installLocal)
 tools/                   GenerateRuleset.java (PokeAPI → YAML), GenerateHgEngineRuleset.java (hg-engine hack → YAML),
                          GenerateOdysseyRuleset.java (Odyssey workbook → YAML), GeneratePokeemeraldRuleset.java
-                         (pokeemerald hack → YAML), GenerateIcon.java (app icon)
+                         (pokeemerald hack → YAML), GenerateCfruRuleset.java (CFRU + DPE hack → YAML),
+                         GenerateIcon.java (app icon)
 .github/workflows/       release.yml: builds the portable zip for every pushed v* tag
 licenses/                license texts of the bundled third-party software (THIRD-PARTY-NOTICES.md)
 ```
@@ -298,6 +303,12 @@ licenses/                license texts of the bundled third-party software (THIR
   (exact command in the tool's Javadoc). It evaluates the hack's `#if` settings (config headers) and reads
   `base_stats.h`, `battle_moves.h`, the in-game names and the front sprites (`spriteSheets: true`: the top frame is
   kept); moves PokeAPI does not know become the hack's own (key 20000 + its move id).
+  Hacks built on [CFRU](https://github.com/Skeli789/Complete-Fire-Red-Upgrade) and
+  [DPE](https://github.com/Skeli789/Dynamic-Pokemon-Expansion) (Pokémon Unbound):
+  `java tools/GenerateCfruRuleset.java <DPE> <CFRU> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id> [DEFINE...]`
+  (exact command in the tool's Javadoc; Unbound: `UNBOUND`). It evaluates CFRU's `config.h` plus the given defines and
+  reads DPE's `Base_Stats.c`, name tables and front sprites and CFRU's type chart and `battle_moves.c`; Z-Moves and
+  Max Moves are left out, the hack's own moves get key 20000 + its move id.
 - **Data checked** against Pokémon Showdown's per-generation data (base data plus the gen1–gen8 and gen7letsgo mods)
   for every ruleset: type chart, types of all species and their alternate forms, base stats and abilities of all
   species, power, type and category of all moves (until Gen 3 the category follows the type). Gaps in PokeAPI found

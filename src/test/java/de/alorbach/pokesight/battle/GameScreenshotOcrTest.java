@@ -63,7 +63,7 @@ public class GameScreenshotOcrTest {
         for (String id : List.of("red-blue", "yellow", "gold-silver", "crystal")) {
             AREAS.put(id, gameBoy);
         }
-        for (String id : List.of("ruby-sapphire", "emerald", "firered-leafgreen", "odyssey", "rowe")) {
+        for (String id : List.of("ruby-sapphire", "emerald", "firered-leafgreen", "odyssey", "rowe", "unbound")) {
             AREAS.put(id, gameBoyAdvance);
         }
         for (String id : List.of("diamond-pearl", "platinum", "heartgold-soulsilver", "heartfelt-gold")) {
@@ -144,8 +144,9 @@ public class GameScreenshotOcrTest {
             Map.entry("sun-moon", 25), Map.entry("ultra-sun-ultra-moon", 19), Map.entry("lets-go", 6),
             Map.entry("sword-shield", 8), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 8),
             Map.entry("scarlet-violet", 13), Map.entry("legends-za", 4),
-            // ROM hacks, measured 2026-11-02: Heartfelt Gold 6 of 6, Odyssey 8 of 9, R.O.W.E. 7 of 9 (official: 563)
-            Map.entry("heartfelt-gold", 5), Map.entry("odyssey", 7), Map.entry("rowe", 6));
+            // ROM hacks, measured 2026-11-02: Heartfelt Gold 6 of 6, Odyssey 8 of 9, R.O.W.E. 7 of 9, Unbound 12 of 12
+            // (official: 563)
+            Map.entry("heartfelt-gold", 5), Map.entry("odyssey", 7), Map.entry("rowe", 6), Map.entry("unbound", 11));
 
     /**
      * Sum of the official games' {@link #MIN_CORRECT} (and {@link #MIN_CORRECT_LEARNED}): work for a ROM hack must
@@ -164,7 +165,7 @@ public class GameScreenshotOcrTest {
             Map.entry("sun-moon", 25), Map.entry("ultra-sun-ultra-moon", 22), Map.entry("lets-go", 6),
             Map.entry("sword-shield", 9), Map.entry("brilliant-diamond-shining-pearl", 5), Map.entry("legends-arceus", 8),
             Map.entry("scarlet-violet", 13), Map.entry("legends-za", 4),
-            Map.entry("heartfelt-gold", 5), Map.entry("odyssey", 7), Map.entry("rowe", 6));
+            Map.entry("heartfelt-gold", 5), Map.entry("odyssey", 7), Map.entry("rowe", 6), Map.entry("unbound", 11));
 
     static Stream<String> games() {
         return cases().stream().map(Case::game).distinct();
