@@ -43,7 +43,8 @@ public final class SpriteCache {
     public static final String NAME_PLACEHOLDER = "{name}";
 
     private static final System.Logger LOG = System.getLogger(SpriteCache.class.getName());
-    private static final Pattern VALID_NAME = Pattern.compile("[a-z0-9_-]+"); // PokeAPI "10004", hg-engine "rattata_alolan"
+    // PokeAPI "10004", hg-engine "rattata_alolan", pokeemerald "rattata/alola/front" (a path below the URL's folder)
+    private static final Pattern VALID_NAME = Pattern.compile("[a-z0-9_-]+(/[a-z0-9_-]+)*");
     private static final byte[] PNG_SIGNATURE = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'};
     private static final int PARALLEL_DOWNLOADS = 6;
 
@@ -111,8 +112,13 @@ public final class SpriteCache {
         if (!VALID_NAME.matcher(name).matches()) {
             return Optional.empty();
         }
-        Path file = directory.resolve(name + ".png");
+        Path file = target(name);
         return Files.isRegularFile(file) ? Optional.of(file) : Optional.empty();
+    }
+
+    /** The cache file of a valid name: one folder, "/" becomes "." (not allowed in names, so names stay unique). */
+    private Path target(String name) {
+        return directory.resolve(name.replace('/', '.') + ".png");
     }
 
     /**
@@ -170,8 +176,8 @@ public final class SpriteCache {
         if (sheets) {
             bytes = firstFrame(bytes);
         }
-        Path target = directory.resolve(name + ".png");
-        Path temp = Files.createTempFile(directory, name, ".tmp");
+        Path target = target(name);
+        Path temp = Files.createTempFile(directory, target.getFileName().toString(), ".tmp");
         try {
             Files.write(temp, bytes);
             Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
@@ -181,18 +187,16 @@ public final class SpriteCache {
     }
 
     /**
-     * The first frame of an hg-engine sprite sheet as a PNG: the sheet holds square frames side by side (160x80 = two
-     * 80x80 frames) in a palette whose colour 0 is the background, which becomes transparent.
+     * The first frame of a sprite sheet as a PNG: the sheet holds square frames side by side (hg-engine: 160x80 = two
+     * 80x80 frames) or stacked (pokeemerald: 64x128, or a single 64x64 frame) in a palette whose colour 0 is the
+     * background, which becomes transparent.
      */
     static byte[] firstFrame(byte[] sheetPng) throws IOException {
         BufferedImage sheet = ImageIO.read(new ByteArrayInputStream(sheetPng));
         if (sheet == null || !(sheet.getColorModel() instanceof IndexColorModel)) {
             throw new IOException("Not an indexed-colour sprite sheet");
         }
-        int size = sheet.getHeight();
-        if (sheet.getWidth() < size) {
-            throw new IOException("Not a sprite sheet of square frames: " + sheet.getWidth() + "x" + size);
-        }
+        int size = Math.min(sheet.getWidth(), sheet.getHeight()); // the top left frame
         Raster palette = sheet.getRaster();
         BufferedImage frame = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         for (int y = 0; y < size; y++) {

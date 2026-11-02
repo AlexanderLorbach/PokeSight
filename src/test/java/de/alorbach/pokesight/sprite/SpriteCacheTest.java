@@ -66,6 +66,32 @@ class SpriteCacheTest {
     }
 
     @Test
+    void keepsTheFirstOfStackedFramesAndStoresNamesWithFolders() throws IOException {
+        // pokeemerald: a 2x4 sheet of two 2x2 frames, one above the other, named by its path below the URL's folder
+        IndexColorModel palette = new IndexColorModel(4, 3, new byte[]{-1, -1, 0}, new byte[]{-1, 0, 0}, new byte[]{-1, 0, -1});
+        BufferedImage sheet = new BufferedImage(2, 4, BufferedImage.TYPE_BYTE_BINARY, palette);
+        sheet.getRaster().setPixels(0, 0, 2, 4, new int[]{1, 0, 0, 2, 2, 2, 2, 2});
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(sheet, "png", png);
+        SpriteCache cache = new SpriteCache(directory, URL, uri -> {
+            requested.add(uri);
+            return png.toByteArray();
+        }, true);
+
+        assertThat(cache.downloadMissing(List.of("rattata/alola/front"))).isEqualTo(1);
+
+        assertThat(requested).containsExactly(URI.create("https://example.org/sprites/rattata/alola/front.png"));
+        Path file = cache.file("rattata/alola/front").orElseThrow();
+        assertThat(file.getParent()).isEqualTo(directory);
+        BufferedImage frame = ImageIO.read(file.toFile());
+        assertThat(frame.getWidth()).isEqualTo(2);
+        assertThat(frame.getHeight()).isEqualTo(2);
+        assertThat(frame.getRGB(0, 0)).isEqualTo(0xFFFF0000);
+        assertThat(frame.getRGB(1, 0) >>> 24).isZero();
+        assertThat(frame.getRGB(1, 1)).isEqualTo(0xFF0000FF);
+    }
+
+    @Test
     void rejectsSpriteSheetsWithoutAPalette() {
         SpriteCache cache = new SpriteCache(directory, URL, uri -> PNG, true);
 
@@ -114,7 +140,7 @@ class SpriteCacheTest {
             return PNG;
         });
 
-        assertThat(cache.downloadMissing(List.of("../evil", "a/b"))).isZero();
+        assertThat(cache.downloadMissing(List.of("../evil", "a/../b", "/abs", "a.b", "a//b"))).isZero();
         assertThat(cache.file("../evil")).isEmpty();
         assertThat(requested).isEmpty();
     }
