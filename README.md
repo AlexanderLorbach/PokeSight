@@ -32,6 +32,8 @@ or memory access.
 the rules of its own generation (type chart, types, move power); remakes are separate games with their own rules and
 screens, e.g. Red/Blue (Gen 1, Game Boy font) and FireRed/LeafGreen (Gen 3, GBA font).
 
+**ROM hacks:** see [Supported ROM hacks](#supported-rom-hacks).
+
 The name reading is checked on 254 real battle screenshots, at least five per game, at emulator window sizes 1×, 2×
 (smoothed) and 3× (Full HD screenshots of the Switch games at their size). Correctly read views:
 
@@ -62,6 +64,40 @@ screenshot of your emulator window during a battle helps to improve it.
 
 > PokeSight is a fan project. It is not affiliated with, endorsed or sponsored by Nintendo, Game Freak, Creatures or
 > The Pokémon Company. Pokémon and all related names are trademarks of their respective owners.
+
+## Supported ROM hacks
+
+Listed below the official games with a "ROM hack" badge. Rules come from each hack's own data; English only.
+
+**[Pokémon Heartfelt Gold](https://pokehackdex.com/romhacks/pokemon-heartfelt-gold/)** (HeartGold, hg-engine):
+Pokémon of all generations, Gen 9 types and type chart, the hack's move changes and in-game names, the game's own
+sprites. Names read: 6 / 6.
+
+**[Pokémon Odyssey](https://eeveeexpo.com/odyssey/)** (FireRed): its own Aether type instead of Fairy, Etrian
+Variants, new Pokémon (no sprite) and new or changed moves, from the developer's data. Names read: 8 / 9.
+
+**[Pokémon R.O.W.E.](https://www.hackdex.app/hack/pokemon-rowe)** (Emerald, pokeemerald): open-world Emerald with all
+1025 Pokémon and Fairy; the hack's changed types (e.g. Poison/Dark Arbok), stats, abilities and moves, in-game names
+and its own sprites, from its source code (default game options). Names read: 7 / 9.
+
+**[Pokémon Unbound](https://pokefirered.com/pokemon-unbound/)** (FireRed, CFRU + DPE): Pokémon up to Gen 8 and Fairy;
+the hack's changed abilities, stats and move powers, its own moves, in-game names and GBA-style sprites, from Skeli's
+public source code. Names read: 12 / 12.
+
+**[Pokémon Glazed](https://www.gamebrew.org/wiki/Pokemon_Glazed_GBA)** (Emerald, v9.1): Gen 1-6 Pokémon in Emerald's
+411 slots, Fairy, Gen VII stats and moves, Mega Evolutions as own slots. No source code exists: built from the
+changelog, the fan wiki's slot table and the developers' move document; abilities are assumed (Emerald's Gen 3 set),
+sprites are the official ones. Names read: 14 / 15.
+
+**[Pokémon Emerald Rogue](https://www.hackdex.app/hack/emerald-rogue)** (Emerald, pokeemerald-expansion, EX edition
+v2.1): roguelite Emerald with all 1025 Pokémon; types, stats, abilities and moves are the expansion's defaults (Gen 9),
+names as in the game (10 letters, "Kilowatrel") and its own sprites, from its source code. The Vanilla edition keeps
+Emerald's data unchanged: choose Pokémon Emerald for it. Names read: 8 / 12.
+
+**[Pokémon Lazarus](https://pokemonlazarus.net/)** (Emerald, pokeemerald-expansion, v2.0): the Ilios region with
+GBC-style graphics. No source code exists; the developer's documentation and the changelogs change no matchup outside
+Mega Evolutions (which PokeSight leaves out), so the rules are the expansion's Gen 9 defaults; sprites are the official
+ones. Names read: 3 / 10 (the only battle screenshots are a 1.5x scaled collage).
 
 ## Getting started
 
@@ -225,7 +261,11 @@ src/main/java/de/alorbach/pokesight/
 
 src/main/resources/      games/*.yaml, rulesets/<id>/*.yaml (generated), ui/ (theme, font, icons)
 packaging/               PokeSight.ico, install.ps1 (installLocal)
-tools/                   GenerateRuleset.java (PokeAPI → YAML), GenerateIcon.java (app icon)
+tools/                   GenerateRuleset.java (PokeAPI → YAML), GenerateHgEngineRuleset.java (hg-engine hack → YAML),
+                         GenerateOdysseyRuleset.java (Odyssey workbook → YAML), GeneratePokeemeraldRuleset.java
+                         (pokeemerald hack → YAML), GenerateCfruRuleset.java (CFRU + DPE hack → YAML),
+                         GenerateGlazedRuleset.java (Glazed documentation → YAML), GenerateLazarusRuleset.java
+                         (Lazarus: gen9 → YAML), GenerateIcon.java (app icon)
 .github/workflows/       release.yml: builds the portable zip for every pushed v* tag
 licenses/                license texts of the bundled third-party software (THIRD-PARTY-NOTICES.md)
 ```
@@ -242,15 +282,17 @@ licenses/                license texts of the bundled third-party software (THIR
 - **Release:** push an annotated tag such as `v1.0.0`; the workflow runs both test tasks, builds the portable zip and
   attaches it to a release titled with the tag message's first line.
 - **Add a game:** create `games/<id>.yaml` (copy an existing game of the same generation) and list `<id>` in
-  `games/index.yaml`. `region` (alola, galar, hisui, paldea) makes recognized Pokémon show in their regional form,
+  `games/index.yaml` (ROM hacks under `romHacks`, they are listed below the official games). `region` (alola, galar, hisui, paldea) makes recognized Pokémon show in their regional form,
   `floatingNames` reads the labels above HP bars instead of fixed name boxes, `withoutAbilities` ignores abilities
   (Let's Go, Legends), `terastal` offers the Tera type picker.
-- **OCR tests:** `src/test/resources/screenshots.tsv` lists the battle screenshots (URL, SHA-256, game, language and
-  the opponents they show); the build downloads them. `GameScreenshotOcrTest` reads every one with its game's
-  settings and fails when a game reads fewer views than the minimum recorded there, once with Tesseract alone and once
-  with letter shapes learned from the game's other screenshots (it needs all of them; CI skips it, since one wiki
-  blocks downloads from there); `ScreenshotOcrTest` checks Gen 4 at every window size, `MoveReaderTest` the move
-  reading. All of them are tagged `ocr` and run with `ocrTest`.
+- **OCR tests:** `src/test/resources/screenshots.tsv` lists the battle screenshots (URL, SHA-256, game, language, the
+  opponents they show and, for collages, where the game screen is); the build downloads them. `GameScreenshotOcrTest`
+  reads every one with its game's settings and fails when a game reads fewer views than the minimum recorded there,
+  once with Tesseract alone and once with letter shapes learned from the game's other screenshots (it needs all of
+  them; CI skips it, since one wiki blocks downloads from there); `ScreenshotOcrTest` checks Gen 4 at every window
+  size, `MoveReaderTest` the move reading. All of them are tagged `ocr` and run with `ocrTest`. ROM hacks have their
+  own screenshots and minimums; the official games' minimums may only rise, so work on a hack can never make an
+  official game read worse.
 - **Regenerate a ruleset:** `java tools/GenerateRuleset.java <PokeAPI version group> src/main/resources/rulesets/<id>`.
   It writes the type chart, the species with their alternate forms, base stats and abilities, the damaging moves and
   the ability names, as they were in that game (PokeAPI's change logs are rolled back, e.g. Thunderbolt has 95 power
@@ -263,6 +305,35 @@ licenses/                license texts of the bundled third-party software (THIR
   | gen3 | firered-leafgreen | | lets-go | lets-go-pikachu-lets-go-eevee |
   | gen4 | heartgold-soulsilver | | gen8 | legends-arceus |
   | gen5 | black-2-white-2 | | gen9 | the-indigo-disk |
+- **Regenerate a ROM hack ruleset** (hacks built with [hg-engine](https://github.com/BluRosie/hg-engine)):
+  `java tools/GenerateHgEngineRuleset.java <hack's HG-Engine folder> <hg-engine> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id>`,
+  with pinned raw GitHub URLs or local folders (the exact command for Heartfelt Gold is in the tool's Javadoc). It reads
+  the hack's `config.h`, `Species.c`, `HiddenAbilityTable.c` and `Moves.c` and hg-engine's type chart and sprite
+  folders (the game sets `spriteSheets: true`: the first of the two frames is kept, background transparent); the gen9
+  ruleset only supplies dex numbers (checked against PokeAPI), form names, ability and type names and move ids.
+  Pokémon Odyssey: `java tools/GenerateOdysseyRuleset.java <workbook .xlsx or its export URL> src/main/resources/rulesets/gen9 src/main/resources/rulesets/odyssey`
+  (URL in the tool's Javadoc). It reads the type chart from the cell colours, types, abilities and base stats of every
+  species, the Pokédex slot names and the new moves (type and category icons recognized by their hash); the workbook's
+  SHA-256 is written into the generated files, since the developer can update it.
+  Hacks built on [pokeemerald](https://github.com/pret/pokeemerald) with the battle engine expansion (Pokémon R.O.W.E.,
+  Emerald Rogue EX):
+  `java tools/GeneratePokeemeraldRuleset.java <hack's source> <source with battle_util.c> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id>`
+  (exact command in the tool's Javadoc). It evaluates the hack's `#if` settings (config headers) and reads
+  `base_stats.h`, `battle_moves.h`, the in-game names and the front sprites (`spriteSheets: true`: the top frame is
+  kept); moves PokeAPI does not know become the hack's own (key 20000 + its move id). Newer expansions (1.7+, with
+  `species_info.h` and `include/config/`) are detected: their species entries, shared-field macros and conditional
+  values (`P_UPDATED_TYPES >= GEN_6 ? TYPE_FAIRY : TYPE_NORMAL`) are evaluated like the C preprocessor does.
+  Hacks built on [CFRU](https://github.com/Skeli789/Complete-Fire-Red-Upgrade) and
+  [DPE](https://github.com/Skeli789/Dynamic-Pokemon-Expansion) (Pokémon Unbound):
+  `java tools/GenerateCfruRuleset.java <DPE> <CFRU> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id> [DEFINE...]`
+  (exact command in the tool's Javadoc; Unbound: `UNBOUND`). It evaluates CFRU's `config.h` plus the given defines and
+  reads DPE's `Base_Stats.c`, name tables and front sprites and CFRU's type chart and `battle_moves.c`; Z-Moves and
+  Max Moves are left out, the hack's own moves get key 20000 + its move id.
+  Pokémon Glazed (binary hack, no source): `java tools/GenerateGlazedRuleset.java src/main/resources/rulesets/gen3 src/main/resources/rulesets/gen7 src/main/resources/rulesets/glazed`
+  reads the fan wiki's slot table (pinned revision) and the move document and applies the changelog to the gen3/gen7
+  rulesets (sources and assumptions in the tool's Javadoc).
+  Pokémon Lazarus (binary hack on pokeemerald-expansion): `java tools/GenerateLazarusRuleset.java src/main/resources/rulesets/gen9 src/main/resources/rulesets/lazarus`
+  takes the expansion's default (Gen 9) data with English names only (why in the tool's Javadoc).
 - **Data checked** against Pokémon Showdown's per-generation data (base data plus the gen1–gen8 and gen7letsgo mods)
   for every ruleset: type chart, types of all species and their alternate forms, base stats and abilities of all
   species, power, type and category of all moves (until Gen 3 the category follows the type). Gaps in PokeAPI found

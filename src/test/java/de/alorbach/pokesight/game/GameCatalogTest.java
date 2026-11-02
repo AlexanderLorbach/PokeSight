@@ -1,6 +1,8 @@
 package de.alorbach.pokesight.game;
 
 import de.alorbach.pokesight.ruleset.Language;
+import de.alorbach.pokesight.ruleset.PokemonType;
+import de.alorbach.pokesight.ruleset.Ruleset;
 import de.alorbach.pokesight.ruleset.RulesetLoader;
 import org.junit.jupiter.api.Test;
 
@@ -29,15 +31,82 @@ class GameCatalogTest {
     }
 
     @Test
-    void everyGameHasAnExistingRulesetAndBothLanguages() {
+    void everyGameHasAnExistingRulesetAndPinnedSprites() {
         List<GameDefinition> games = GameCatalog.load();
 
-        assertThat(games).hasSize(22);
         assertThat(games).extracting(GameDefinition::id).doesNotHaveDuplicates();
         assertThat(games).allSatisfy(game -> {
             assertThat(RulesetLoader.load(game.ruleset()).species()).isNotEmpty();
+            assertThat(game.languages()).contains(Language.EN);
+            assertThat(game.spriteUrl()).containsPattern("/[0-9a-f]{40}/").contains("{name}").endsWith(".png"); // pinned commit
+        });
+        assertThat(games).filteredOn(game -> !game.romHack()).hasSize(22).allSatisfy(game -> {
             assertThat(game.languages()).containsExactly(Language.EN, Language.DE);
             assertThat(game.spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/").endsWith("{name}.png");
+            assertThat(game.spriteSheets()).isFalse();
+        });
+        // ROM hacks show their own sprites where they publish them (Heartfelt Gold: hg-engine's)
+        assertThat(game("heartfelt-gold").spriteUrl()).contains("/BluRosie/hg-engine/");
+        assertThat(game("heartfelt-gold").spriteSheets()).isTrue();
+        assertThat(game("rowe").spriteUrl()).contains("/BelialClover/RoweRepo/");
+        assertThat(game("rowe").spriteSheets()).isTrue();
+        assertThat(game("unbound").spriteUrl()).contains("/Skeli789/Dynamic-Pokemon-Expansion/");
+        assertThat(game("unbound").spriteSheets()).isTrue();
+        assertThat(game("emerald-rogue").spriteUrl()).contains("/Pokabbie/pokeemerald-rogue/");
+        assertThat(game("emerald-rogue").spriteSheets()).isTrue();
+        assertThat(game("lazarus").spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/sprites/pokemon/{name}.png"); // none of its own
+        assertThat(game("glazed").spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/sprites/pokemon/{name}.png"); // none of its own
+    }
+
+    @Test
+    void listsRomHacksBelowTheOfficialGames() {
+        List<GameDefinition> games = GameCatalog.load();
+        GameDefinition heartfeltGold = game("heartfelt-gold");
+        GameDefinition odyssey = game("odyssey");
+        GameDefinition rowe = game("rowe");
+        GameDefinition unbound = game("unbound");
+        GameDefinition glazed = game("glazed");
+        GameDefinition emeraldRogue = game("emerald-rogue");
+        GameDefinition lazarus = game("lazarus");
+
+        assertThat(games.stream().dropWhile(game -> !game.romHack())).containsExactly(heartfeltGold, odyssey, rowe, unbound, glazed, emeraldRogue, lazarus);
+        assertThat(heartfeltGold.ruleset()).isEqualTo("heartfelt-gold");
+        assertThat(heartfeltGold.languages()).containsExactly(Language.EN); // hg-engine works on the US ROM only
+        assertThat(heartfeltGold.capitalNames()).isFalse();
+        assertThat(odyssey.ruleset()).isEqualTo("odyssey");
+        assertThat(odyssey.languages()).containsExactly(Language.EN);
+        assertThat(odyssey.capitalNames()).isFalse();
+        assertThat(rowe.ruleset()).isEqualTo("rowe");
+        assertThat(rowe.languages()).containsExactly(Language.EN);
+        assertThat(rowe.capitalNames()).isFalse();
+        assertThat(unbound.ruleset()).isEqualTo("unbound");
+        assertThat(unbound.languages()).containsExactly(Language.EN);
+        assertThat(unbound.capitalNames()).isFalse();
+        assertThat(glazed.ruleset()).isEqualTo("glazed");
+        assertThat(glazed.languages()).containsExactly(Language.EN);
+        assertThat(glazed.capitalNames()).isTrue(); // "PALKIA", like Emerald
+        assertThat(emeraldRogue.ruleset()).isEqualTo("emerald-rogue");
+        assertThat(emeraldRogue.languages()).containsExactly(Language.EN);
+        assertThat(emeraldRogue.capitalNames()).isFalse();
+        assertThat(lazarus.ruleset()).isEqualTo("lazarus");
+        assertThat(lazarus.languages()).containsExactly(Language.EN);
+        assertThat(lazarus.capitalNames()).isFalse(); // "Tentacool"
+        assertThat(game("heartgold-soulsilver").romHack()).isFalse();
+        assertThat(game("emerald").romHack()).isFalse();
+    }
+
+    @Test
+    void romHacksLeaveTheOfficialGamesUnchanged() {
+        List<GameDefinition> games = GameCatalog.load();
+        List<GameDefinition> official = games.stream().filter(game -> !game.romHack()).toList();
+        List<String> hackRulesets = games.stream().filter(GameDefinition::romHack).map(GameDefinition::ruleset).toList();
+
+        assertThat(games.subList(0, official.size())).isEqualTo(official); // official games first, order kept
+        assertThat(official).allSatisfy(game -> {
+            assertThat(hackRulesets).doesNotContain(game.ruleset());
+            Ruleset ruleset = RulesetLoader.load(game.ruleset());
+            assertThat(ruleset.typeChart().types()).doesNotContain(PokemonType.AETHER); // hacks' own types
+            assertThat(ruleset.species().values()).allSatisfy(species -> assertThat(species.sprite()).isNull());
         });
     }
 

@@ -97,6 +97,136 @@ class RulesetLoaderTest {
     }
 
     @Test
+    void loadsTheRomHackRulesetFromTheHacksSources() {
+        Ruleset heartfeltGold = RulesetLoader.load("heartfelt-gold");
+
+        assertThat(heartfeltGold.species()).hasSize(1025);
+        assertThat(heartfeltGold.generation()).isEqualTo(9);
+        assertThat(heartfeltGold.typeChart().multiplier(DRAGON, FAIRY)).isZero();
+        assertThat(heartfeltGold.typeChart().multiplier(GHOST, STEEL)).isEqualTo(1);
+        assertThat(heartfeltGold.findSpecies(35)).map(Species::types).contains(List.of(FAIRY)); // Clefairy
+        assertThat(heartfeltGold.findSpecies(985)).map(s -> s.name(Language.EN)).contains("ScreamTail"); // in-game name
+        assertThat(heartfeltGold.findSpecies(122).orElseThrow().form(1).types()).containsExactly(ICE, PSYCHIC); // Galarian Mr. Mime
+        assertThat(heartfeltGold.findSpecies(658)).map(Species::abilities).contains(List.of("torrent", "battle-bond", "protean"));
+        // The hack's "Champions" move changes and its own move data
+        assertThat(heartfeltGold.findMove(779)).map(Move::type).contains(STEEL);                       // Snap Trap
+        assertThat(heartfeltGold.findMove(163)).map(Move::power).contains(80);                         // Slash
+        assertThat(heartfeltGold.findMove(550)).map(Move::category).contains(Move.Category.SPECIAL);  // Bolt Strike
+        assertThat(heartfeltGold.findMove(757)).isEmpty(); // Max Flare
+    }
+
+    @Test
+    void loadsTheOdysseyRulesetWithItsOwnTypeAndPokemon() {
+        Ruleset odyssey = RulesetLoader.load("odyssey");
+
+        assertThat(odyssey.species()).hasSize(404);
+        assertThat(odyssey.typeChart().types()).contains(AETHER).doesNotContain(FAIRY);
+        assertThat(odyssey.typeChart().multiplier(POISON, WATER)).isEqualTo(2);   // the hack's own chart
+        assertThat(odyssey.typeChart().multiplier(DARK, AETHER)).isEqualTo(2);
+        assertThat(odyssey.typeChart().multiplier(WATER, AETHER)).isEqualTo(0.5);
+        assertThat(odyssey.findSpecies(35)).map(Species::types).contains(List.of(AETHER)); // Clefairy
+        assertThat(odyssey.findSpecies(20)).map(s -> s.name(Language.EN)).contains("Ratreecate"); // Etrian Raticate
+        assertThat(odyssey.findSpecies(5201)).map(Species::sprite).contains(Species.NO_SPRITE);    // Gorochu, the hack's own
+        assertThat(odyssey.findSpecies(5150)).map(Species::sprite).contains("352");                // B.B. Kecleon
+        assertThat(odyssey.findMove(129)).map(Move::type).contains(AETHER);                         // Swift
+        assertThat(odyssey.findMove(246)).map(Move::name).map(name -> name.get(Language.EN)).contains("Ancientpower");
+        assertThat(odyssey.findMove(585)).isEmpty(); // Moonblast: no Fairy type
+    }
+
+    @Test
+    void loadsTheRoweRulesetWithItsChangedPokemonAndMoves() {
+        Ruleset rowe = RulesetLoader.load("rowe");
+
+        assertThat(rowe.species()).hasSize(1025);
+        assertThat(rowe.generation()).isEqualTo(8);
+        assertThat(rowe.typeChart().multiplier(DRAGON, FAIRY)).isZero();
+        assertThat(rowe.typeChart().multiplier(GHOST, STEEL)).isEqualTo(1);
+        assertThat(rowe.findSpecies(24)).map(Species::types).contains(List.of(POISON, DARK));   // Arbok, changed by the hack
+        assertThat(rowe.findSpecies(986)).map(s -> s.name(Language.EN)).contains("BruteBonnet"); // in-game name
+        assertThat(rowe.findSpecies(1)).map(Species::abilities).contains(List.of("overgrow", "solar-power", "chlorophyll"));
+        assertThat(rowe.findSpecies(19)).map(Species::sprite).contains("rattata/anim_front");
+        assertThat(rowe.findSpecies(19).orElseThrow().form(1).sprite()).isEqualTo("rattata/alola/front");
+        assertThat(rowe.findMove(15)).map(Move::type).contains(STEEL);  // Cut
+        assertThat(rowe.findMove(141)).map(Move::power).contains(80);   // Leech Life (B_UPDATED_MOVE_DATA GEN_8)
+        assertThat(rowe.findMove(185)).map(Move::type).contains(DARK);  // "Faint Attack" = Feint Attack
+        assertThat(rowe.findMove(20824)).map(Move::name).map(name -> name.get(Language.EN)).contains("Neutral Pulse"); // the hack's own
+        assertThat(rowe.findMove(20825)).isEmpty(); // Seasonal Beam: type and category change
+        assertThat(rowe.findSpecies(898).orElseThrow().form(1).abilities()).containsExactly("as-one-glastrier");
+    }
+
+    @Test
+    void loadsTheEmeraldRogueRulesetFromTheExpansionsSpeciesInfo() {
+        Ruleset rogue = RulesetLoader.load("emerald-rogue");
+
+        assertThat(rogue.species()).hasSize(1025);
+        assertThat(rogue.generation()).isEqualTo(9);
+        assertThat(rogue.typeChart().multiplier(GHOST, STEEL)).isEqualTo(1);
+        assertThat(rogue.findSpecies(941)).map(s -> s.name(Language.EN)).contains("Kilowatrel"); // in-game name, 10 letters
+        assertThat(rogue.findSpecies(15)).map(Species::stats).contains(List.of(65, 90, 40, 45, 80, 75)); // BEEDRILL_ATTACK Gen 6+
+        assertThat(rogue.findSpecies(280)).map(Species::types).contains(List.of(PSYCHIC, FAIRY)); // RALTS_FAMILY_TYPE2 (P_UPDATED_TYPES)
+        assertThat(rogue.findSpecies(479).orElseThrow().form(1).stats()).containsExactly(50, 65, 107, 105, 107, 86); // ROTOM_APPLIANCE_INFO
+        assertThat(rogue.findSpecies(706).orElseThrow().form(1).types()).containsExactly(DRAGON, STEEL); // the hack's order
+        assertThat(rogue.findSpecies(898).orElseThrow().form(1).abilities()).containsExactly("as-one-glastrier");
+        assertThat(rogue.findSpecies(1018)).map(Species::sprite).contains("archaludon/front"); // written-out .frontPic
+        assertThat(rogue.findSpecies(19)).map(Species::sprite).contains("rattata/anim_front");
+        assertThat(rogue.findMove(295)).map(Move::power).contains(95); // Luster Purge: B_UPDATED_MOVE_DATA >= GEN_9 ? 95 : 70
+        assertThat(rogue.findMove(237)).isEmpty();                     // Hidden Power: variable type
+    }
+
+    @Test
+    void loadsTheUnboundRulesetWithItsChangedPokemonAndMoves() {
+        Ruleset unbound = RulesetLoader.load("unbound");
+
+        assertThat(unbound.species()).hasSize(905); // up to Gen 8
+        assertThat(unbound.generation()).isEqualTo(8);
+        assertThat(unbound.typeChart().multiplier(DRAGON, FAIRY)).isZero();
+        assertThat(unbound.findSpecies(823)).map(s -> s.name(Language.EN)).contains("Corvknight"); // in-game name
+        assertThat(unbound.findSpecies(669)).map(s -> s.name(Language.EN)).contains("Flabébé");
+        assertThat(unbound.findSpecies(19)).map(Species::abilities).contains(List.of("strong-jaw", "guts", "hustle")); // changed
+        assertThat(unbound.findSpecies(898).orElseThrow().form(1).abilities()).containsExactly("as-one-glastrier");
+        assertThat(unbound.findSpecies(19)).map(Species::sprite).contains("frontspr/gFrontSprite019Rattata");
+        assertThat(unbound.findSpecies(19).orElseThrow().form(1).sprite()).isEqualTo("frontspr/gFrontSprite1020RattataA");
+        assertThat(unbound.findMove(19)).map(Move::power).contains(100);  // Fly: CFRU's #ifdef UNBOUND
+        assertThat(unbound.findMove(173)).map(Move::power).contains(80);  // Snore
+        assertThat(unbound.findMove(20355)).map(Move::name).map(name -> name.get(Language.EN)).contains("Leech Fang"); // the hack's own
+        assertThat(unbound.findMove(827)).isEmpty(); // Gen 9 moves are not in the hack
+    }
+
+    @Test
+    void loadsTheLazarusRulesetWithTheExpansionsDefaultData() {
+        Ruleset lazarus = RulesetLoader.load("lazarus");
+        Ruleset gen9 = RulesetLoader.load("gen9");
+
+        assertThat(lazarus.species()).hasSize(1025);
+        assertThat(lazarus.generation()).isEqualTo(9);
+        assertThat(lazarus.findSpecies(740)).map(s -> s.name(Language.EN)).contains("Crabominable"); // 12 letters
+        assertThat(lazarus.findSpecies(740).orElseThrow().name(Language.DE)).isNull(); // English only
+        assertThat(lazarus.findSpecies(134)).map(Species::abilities).isEqualTo(gen9.findSpecies(134).map(Species::abilities));
+        assertThat(lazarus.findMove(64)).map(Move::power).isEqualTo(gen9.findMove(64).map(Move::power)); // Slam: priority only
+        assertThat(lazarus.typeChart().multiplier(FAIRY, DRAGON)).isEqualTo(2);
+    }
+
+    @Test
+    void loadsTheGlazedRulesetFromItsDocumentation() {
+        Ruleset glazed = RulesetLoader.load("glazed");
+
+        assertThat(glazed.species()).hasSize(411); // the wiki's slots: Gen 1-6 Pokémon replacing Emerald ones
+        assertThat(glazed.generation()).isEqualTo(3); // Emerald's ability engine
+        assertThat(glazed.typeChart().multiplier(DRAGON, FAIRY)).isZero();
+        assertThat(glazed.typeChart().multiplier(GHOST, STEEL)).isEqualTo(1); // "Steel no longer resists Dark and Ghost"
+        assertThat(glazed.findSpecies(43)).isEmpty();                         // Oddish's slot holds Deino
+        assertThat(glazed.findSpecies(633)).map(Species::types).contains(List.of(DARK, DRAGON));
+        assertThat(glazed.findSpecies(571)).map(Species::stats).contains(List.of(60, 120, 60, 120, 60, 105)); // Zoroark +15 Atk
+        assertThat(glazed.findSpecies(94)).map(Species::abilities).contains(List.of("levitate")); // Emerald's Gengar
+        assertThat(glazed.findSpecies(453)).map(Species::abilities).contains(List.of()); // Croagunk: no Gen 3 ability
+        assertThat(glazed.findSpecies(5269)).map(Species::sprite).contains("10033");     // Mega Venusaur's own slot
+        assertThat(glazed.findMove(229)).map(Move::power).contains(50);  // Rapid Spin (Beta 8.6.2)
+        assertThat(glazed.findMove(585)).map(Move::type).contains(FAIRY); // Moonblast, listed in the move document
+        assertThat(glazed.findMove(394)).isPresent();                    // Flare Blitz: listed
+        assertThat(glazed.findMove(412)).isEmpty();                      // Energy Ball: a later move not in the game
+    }
+
+    @Test
     void usesGen1Rules() {
         Ruleset gen1 = RulesetLoader.load("gen1");
         assertThat(gen1.typeChart().types()).doesNotContain(DARK, STEEL, FAIRY);

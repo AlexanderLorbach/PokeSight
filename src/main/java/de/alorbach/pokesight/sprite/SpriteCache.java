@@ -2,7 +2,14 @@ package de.alorbach.pokesight.sprite;
 
 import de.alorbach.pokesight.game.GameDefinition;
 import de.alorbach.pokesight.ruleset.Ruleset;
+import de.alorbach.pokesight.ruleset.Species;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.awt.image.IndexColorModel;
+import java.awt.image.Raster;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,7 +34,8 @@ import java.util.regex.Pattern;
 /**
  * A game's Pokémon sprites, downloaded on first use into a local folder ({@code <root>/<game id>/<name>.png}).
  * The sprites are © Nintendo / Game Freak / The Pokémon Company, so neither the repository nor the release contains
- * them. A base form's sprite is its dex number; alternate forms name their sprite in the ruleset.
+ * them. A base form's sprite is its dex number unless the ruleset names it; alternate forms name their sprite in the
+ * ruleset.
  */
 public final class SpriteCache {
 
@@ -35,7 +43,9 @@ public final class SpriteCache {
     public static final String NAME_PLACEHOLDER = "{name}";
 
     private static final System.Logger LOG = System.getLogger(SpriteCache.class.getName());
-    private static final Pattern VALID_NAME = Pattern.compile("[a-z0-9-]+");
+    // PokeAPI "10004", hg-engine "rattata_alolan", pokeemerald "rattata/alola/front" (a path below the URL's folder),
+    // DPE "frontspr/gFrontSprite019Rattata"
+    private static final Pattern VALID_NAME = Pattern.compile("[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*");
     private static final byte[] PNG_SIGNATURE = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'};
     private static final int PARALLEL_DOWNLOADS = 6;
 
@@ -48,14 +58,21 @@ public final class SpriteCache {
     private final Path directory;
     private final String urlTemplate;
     private final Fetcher fetcher;
+    private final boolean sheets;
 
     public SpriteCache(Path directory, String urlTemplate, Fetcher fetcher) {
+        this(directory, urlTemplate, fetcher, false);
+    }
+
+    /** @param sheets the downloads are sprite sheets: only their first frame is stored (see {@link #firstFrame}) */
+    public SpriteCache(Path directory, String urlTemplate, Fetcher fetcher, boolean sheets) {
         this.directory = Objects.requireNonNull(directory, "directory");
         if (urlTemplate == null || !urlTemplate.contains(NAME_PLACEHOLDER)) {
             throw new IllegalArgumentException("Sprite URL must contain " + NAME_PLACEHOLDER + ": " + urlTemplate);
         }
         this.urlTemplate = urlTemplate;
         this.fetcher = Objects.requireNonNull(fetcher, "fetcher");
+        this.sheets = sheets;
     }
 
     /** The game's sprite cache under {@code %LOCALAPPDATA%\PokeSight\sprites}; empty if the game has no sprites. */
@@ -63,7 +80,7 @@ public final class SpriteCache {
         if (game.spriteUrl() == null) {
             return Optional.empty();
         }
-        return Optional.of(new SpriteCache(defaultRoot().resolve(game.id()), game.spriteUrl(), httpFetcher()));
+        return Optional.of(new SpriteCache(defaultRoot().resolve(game.id()), game.spriteUrl(), httpFetcher(), game.spriteSheets()));
     }
 
     static Path defaultRoot() {
@@ -73,17 +90,21 @@ public final class SpriteCache {
                 : Path.of(System.getProperty("user.home"), ".pokesight", "sprites");
     }
 
-    /** Names of all sprites the ruleset needs: every species' dex number plus the sprites of alternate forms. */
+    /**
+     * Names of all sprites the ruleset needs: every species' dex number (or its own sprite name) plus the sprites of
+     * alternate forms; species without a sprite ({@link Species#NO_SPRITE}) need none.
+     */
     public static List<String> spriteNames(Ruleset ruleset) {
         Set<String> names = new LinkedHashSet<>();
         ruleset.species().forEach((id, species) -> {
-            names.add(String.valueOf(id));
+            names.add(species.sprite() != null ? species.sprite() : String.valueOf(id));
             species.forms().values().forEach(form -> {
                 if (form.sprite() != null) {
                     names.add(form.sprite());
                 }
             });
         });
+        names.remove(Species.NO_SPRITE);
         return List.copyOf(names);
     }
 
@@ -92,8 +113,13 @@ public final class SpriteCache {
         if (!VALID_NAME.matcher(name).matches()) {
             return Optional.empty();
         }
-        Path file = directory.resolve(name + ".png");
+        Path file = target(name);
         return Files.isRegularFile(file) ? Optional.of(file) : Optional.empty();
+    }
+
+    /** The cache file of a valid name: one folder, "/" becomes "." (not allowed in names, so names stay unique). */
+    private Path target(String name) {
+        return directory.resolve(name.replace('/', '.') + ".png");
     }
 
     /**
@@ -148,14 +174,40 @@ public final class SpriteCache {
         if (!isPng(bytes)) {
             throw new IOException("Sprite " + name + " is not a PNG image");
         }
-        Path target = directory.resolve(name + ".png");
-        Path temp = Files.createTempFile(directory, name, ".tmp");
+        if (sheets) {
+            bytes = firstFrame(bytes);
+        }
+        Path target = target(name);
+        Path temp = Files.createTempFile(directory, target.getFileName().toString(), ".tmp");
         try {
             Files.write(temp, bytes);
             Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } finally {
             Files.deleteIfExists(temp);
         }
+    }
+
+    /**
+     * The first frame of a sprite sheet as a PNG: the sheet holds square frames side by side (hg-engine: 160x80 = two
+     * 80x80 frames) or stacked (pokeemerald: 64x128, or a single 64x64 frame) in a palette whose colour 0 is the
+     * background, which becomes transparent.
+     */
+    static byte[] firstFrame(byte[] sheetPng) throws IOException {
+        BufferedImage sheet = ImageIO.read(new ByteArrayInputStream(sheetPng));
+        if (sheet == null || !(sheet.getColorModel() instanceof IndexColorModel)) {
+            throw new IOException("Not an indexed-colour sprite sheet");
+        }
+        int size = Math.min(sheet.getWidth(), sheet.getHeight()); // the top left frame
+        Raster palette = sheet.getRaster();
+        BufferedImage frame = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                frame.setRGB(x, y, palette.getSample(x, y, 0) == 0 ? 0 : sheet.getRGB(x, y) | 0xFF000000);
+            }
+        }
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(frame, "png", png);
+        return png.toByteArray();
     }
 
     private static boolean isPng(byte[] bytes) {

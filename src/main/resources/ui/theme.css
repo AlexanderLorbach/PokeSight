@@ -36,6 +36,7 @@
     type-dragon: #5060e1;
     type-dark: #50413f;
     type-fairy: #ef70ef;
+    type-aether: #d8d3b4;    /* Pokémon Odyssey's custom type: pale like its in-game icon */
 
     -fx-base: ps-surface-3;
     -fx-background: ps-surface-0;
@@ -137,6 +138,58 @@
     -fx-text-fill: white;
 }
 
+/* ROM hacks in the game list: a badge on each, a heading above the first one */
+.rom-hack-badge {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: ps-pokemon-yellow;
+    -fx-background-color: ps-surface-3;
+    -fx-background-radius: 6;
+    -fx-padding: 1 6;
+}
+
+/* Direct child: the badge of a plain cell, not the one in the first ROM hack's row (highlighted with the row) */
+.combo-box-popup .list-cell:filled:hover > .rom-hack-badge, .combo-box-popup .list-cell:filled:selected > .rom-hack-badge {
+    -fx-text-fill: white;
+    -fx-background-color: rgba(0, 0, 0, 0.25);
+}
+
+/* The first ROM hack: only its row is highlighted, not the heading above it */
+.combo-box-popup .list-cell.section-start {
+    -fx-padding: 0;
+}
+
+.combo-box-popup .list-cell.section-start:filled:hover, .combo-box-popup .list-cell.section-start:filled:selected {
+    -fx-background-color: transparent;
+}
+
+.combo-section {
+    -fx-padding: 8 5 4 5;
+    -fx-border-color: ps-surface-3 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.game-row {
+    -fx-padding: 3 5; /* lines up with the plain cells */
+}
+
+.game-name {
+    -fx-text-fill: ps-text;
+}
+
+.game-row:hover, .combo-box-popup .list-cell.section-start:filled:selected .game-row {
+    -fx-background-color: ps-pokedex-red;
+}
+
+.game-row:hover .game-name, .combo-box-popup .list-cell.section-start:filled:selected .game-name {
+    -fx-text-fill: white;
+}
+
+.game-row:hover .rom-hack-badge, .combo-box-popup .list-cell.section-start:filled:selected .rom-hack-badge {
+    -fx-text-fill: white;
+    -fx-background-color: rgba(0, 0, 0, 0.25);
+}
+
 .action-bar .search-field {
     -fx-background-radius: 20;
     -fx-border-radius: 20;
@@ -194,6 +247,12 @@
 
 .form .combo-box {
     -fx-pref-width: 260;
+}
+
+/* As wide as its widest game, so the drop-down list lines up with it (the language box follows its width) */
+.form .combo-box.game-combo {
+    -fx-pref-width: -1;
+    -fx-min-width: 260;
 }
 
 .area-row {
@@ -414,6 +473,7 @@
 .type-dragon   { -fx-background-color: type-dragon;   -fx-text-fill: white; }
 .type-dark     { -fx-background-color: type-dark;     -fx-text-fill: white; }
 .type-fairy    { -fx-background-color: type-fairy; }
+.type-aether   { -fx-background-color: type-aether; }
 
 .matchup-section {
     -fx-spacing: 6;
@@ -636,4 +696,5 @@
 .move-type-dragon { -fx-border-color: transparent transparent transparent type-dragon; -fx-border-width: 0 0 0 5; }
 .move-type-dark { -fx-border-color: transparent transparent transparent type-dark; -fx-border-width: 0 0 0 5; }
 .move-type-fairy { -fx-border-color: transparent transparent transparent type-fairy; -fx-border-width: 0 0 0 5; }
+.move-type-aether { -fx-border-color: transparent transparent transparent type-aether; -fx-border-width: 0 0 0 5; }
 .best-move-name { -fx-padding: 0 0 0 7; }

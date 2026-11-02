@@ -1,0 +1,10 @@
+# Pokémon Glazed (GBA): ROM hack of Emerald (US) by Lucbui/redriders180 and TrainerX493 (v9.1); Gen 1-6 Pokémon in
+# 411 slots, Fairy, Gen VII stats, physical/special split. Binary-only hack: data from its changelog and fan wiki.
+# English only. https://www.gamebrew.org/wiki/Pokemon_Glazed_GBA - https://fanmadepokemonglazed.fandom.com
+name: Pokémon Glazed
+ruleset: glazed          # generated from the documentation (tools/GenerateGlazedRuleset.java)
+languages: [EN]
+# Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
+# Glazed's own sprites are not published: the default PokeAPI sprites (as for Gen 7+ games, all 1025 + forms).
+spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69afd48dc1273da9033ede9c/sprites/pokemon/{name}.png"
+capitalNames: true       # battle boxes show "PALKIA" (Beta 8.0: "All NAMES and POKéMON are capitalized")

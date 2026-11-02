@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "de.alorbach"
-version = "1.3.0"
+version = "1.4.0"
 
 java {
     toolchain {
@@ -44,6 +44,8 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.assertj:assertj-core:3.27.7")
+    // WebP for ImageIO: some ROM hack test screenshots only exist as WebP (tests only, not shipped)
+    testRuntimeOnly("com.twelvemonkeys.imageio:imageio-webp:3.15.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

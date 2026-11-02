@@ -1,9 +1,14 @@
 package de.alorbach.pokesight.sprite;
 
 import de.alorbach.pokesight.ruleset.RulesetLoader;
+import de.alorbach.pokesight.ruleset.Species;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.awt.image.IndexColorModel;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -29,6 +34,71 @@ class SpriteCacheTest {
         List<String> names = SpriteCache.spriteNames(RulesetLoader.load("gen4"));
 
         assertThat(names).hasSize(512).doesNotHaveDuplicates().contains("1", "493", "10004"); // 10004 = Sandy Wormadam
+    }
+
+    @Test
+    void namesUseTheSpeciesOwnSpriteAndSkipSpeciesWithout() {
+        List<String> names = SpriteCache.spriteNames(RulesetLoader.load("odyssey"));
+
+        assertThat(names).doesNotHaveDuplicates().contains("20", "352", "10166") // B.B. Kecleon shares Kecleon's sprite
+                .doesNotContain("5150", "5201", Species.NO_SPRITE);
+    }
+
+    @Test
+    void keepsTheFirstFrameOfSpriteSheetsWithATransparentBackground() throws IOException {
+        // A 4x2 sheet of two 2x2 frames; palette colour 0 (white) is the background
+        IndexColorModel palette = new IndexColorModel(4, 3, new byte[]{-1, -1, 0}, new byte[]{-1, 0, 0}, new byte[]{-1, 0, -1});
+        BufferedImage sheet = new BufferedImage(4, 2, BufferedImage.TYPE_BYTE_BINARY, palette);
+        sheet.getRaster().setPixels(0, 0, 4, 2, new int[]{0, 1, 2, 2, 2, 0, 2, 2});
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(sheet, "png", png);
+        SpriteCache cache = new SpriteCache(directory, URL, uri -> png.toByteArray(), true);
+
+        assertThat(cache.downloadMissing(List.of("rattata_alolan"))).isEqualTo(1);
+
+        BufferedImage frame = ImageIO.read(cache.file("rattata_alolan").orElseThrow().toFile());
+        assertThat(frame.getWidth()).isEqualTo(2);
+        assertThat(frame.getHeight()).isEqualTo(2);
+        assertThat(frame.getRGB(0, 0) >>> 24).isZero();             // background: transparent
+        assertThat(frame.getRGB(1, 0)).isEqualTo(0xFFFF0000);       // red
+        assertThat(frame.getRGB(0, 1)).isEqualTo(0xFF0000FF);       // blue
+        assertThat(frame.getRGB(1, 1) >>> 24).isZero();
+    }
+
+    @Test
+    void keepsTheFirstOfStackedFramesAndStoresNamesWithFolders() throws IOException {
+        // pokeemerald: a 2x4 sheet of two 2x2 frames, one above the other, named by its path below the URL's folder
+        IndexColorModel palette = new IndexColorModel(4, 3, new byte[]{-1, -1, 0}, new byte[]{-1, 0, 0}, new byte[]{-1, 0, -1});
+        BufferedImage sheet = new BufferedImage(2, 4, BufferedImage.TYPE_BYTE_BINARY, palette);
+        sheet.getRaster().setPixels(0, 0, 2, 4, new int[]{1, 0, 0, 2, 2, 2, 2, 2});
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(sheet, "png", png);
+        SpriteCache cache = new SpriteCache(directory, URL, uri -> {
+            requested.add(uri);
+            return png.toByteArray();
+        }, true);
+
+        assertThat(cache.downloadMissing(List.of("rattata/alola/front", "frontspr/gFrontSprite019Rattata"))).isEqualTo(2);
+
+        assertThat(requested).containsExactlyInAnyOrder(URI.create("https://example.org/sprites/rattata/alola/front.png"),
+                URI.create("https://example.org/sprites/frontspr/gFrontSprite019Rattata.png")); // DPE: mixed case
+        assertThat(cache.file("frontspr/gFrontSprite019Rattata")).isPresent();
+        Path file = cache.file("rattata/alola/front").orElseThrow();
+        assertThat(file.getParent()).isEqualTo(directory);
+        BufferedImage frame = ImageIO.read(file.toFile());
+        assertThat(frame.getWidth()).isEqualTo(2);
+        assertThat(frame.getHeight()).isEqualTo(2);
+        assertThat(frame.getRGB(0, 0)).isEqualTo(0xFFFF0000);
+        assertThat(frame.getRGB(1, 0) >>> 24).isZero();
+        assertThat(frame.getRGB(1, 1)).isEqualTo(0xFF0000FF);
+    }
+
+    @Test
+    void rejectsSpriteSheetsWithoutAPalette() {
+        SpriteCache cache = new SpriteCache(directory, URL, uri -> PNG, true);
+
+        assertThat(cache.downloadMissing(List.of("25"))).isZero();
+        assertThat(cache.file("25")).isEmpty();
     }
 
     @Test
@@ -72,7 +142,7 @@ class SpriteCacheTest {
             return PNG;
         });
 
-        assertThat(cache.downloadMissing(List.of("../evil", "a/b"))).isZero();
+        assertThat(cache.downloadMissing(List.of("../evil", "a/../b", "/abs", "a.b", "a//b"))).isZero();
         assertThat(cache.file("../evil")).isEmpty();
         assertThat(requested).isEmpty();
     }

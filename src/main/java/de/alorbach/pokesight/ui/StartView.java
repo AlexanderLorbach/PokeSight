@@ -12,8 +12,11 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -66,6 +69,10 @@ public final class StartView extends BorderPane {
             }
         });
         game.getItems().setAll(games);
+        game.setCellFactory(list -> new GameCell(true));
+        game.setButtonCell(new GameCell(false));
+        game.getStyleClass().add("game-combo");
+        language.prefWidthProperty().bind(game.widthProperty());
         game.valueProperty().addListener((obs, old, selected) -> gameChanged(selected, saved.language()));
         game.setValue(games.stream()
                 .filter(g -> g.id().equals(saved.game()))
@@ -187,6 +194,69 @@ public final class StartView extends BorderPane {
             regions.add(new CaptureRegion((int) screen.getMinX(), (int) screen.getMinY(), (int) screen.getWidth(), (int) screen.getHeight()));
         }
         onStart.accept(new SessionSettings(selectedGame, language.getValue(), regions, description, ownArea.region().orElse(null)));
+    }
+
+    /**
+     * A game in the combo box. ROM hacks carry a "ROM hack" badge; in the drop-down list the first one also has a
+     * "ROM hacks" heading above it, which is no part of the selectable row: it is never highlighted and ignores clicks.
+     */
+    private static final class GameCell extends ListCell<GameDefinition> {
+
+        private static final String SECTION_START = "section-start";
+
+        private final boolean headings;
+        private final Label badge = romHackBadge();
+        // Graphic of the first ROM hack in the list: heading, then the row that is highlighted instead of the cell
+        private final Label rowName = new Label();
+        private final VBox sectionStart;
+
+        GameCell(boolean headings) {
+            this.headings = headings;
+            Label heading = new Label("ROM hacks");
+            heading.getStyleClass().addAll("section-title", "combo-section");
+            heading.setMaxWidth(Double.MAX_VALUE);
+            heading.addEventFilter(MouseEvent.MOUSE_PRESSED, MouseEvent::consume);
+            heading.addEventFilter(MouseEvent.MOUSE_RELEASED, MouseEvent::consume);
+            heading.addEventFilter(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
+            rowName.getStyleClass().add("game-name");
+            HBox row = new HBox(6, rowName, romHackBadge());
+            row.getStyleClass().add("game-row");
+            row.setAlignment(Pos.CENTER_LEFT);
+            sectionStart = new VBox(heading, row);
+            sectionStart.prefWidthProperty().bind(widthProperty()); // the highlighted row spans the whole list
+        }
+
+        @Override
+        protected void updateItem(GameDefinition item, boolean empty) {
+            super.updateItem(item, empty);
+            getStyleClass().remove(SECTION_START);
+            if (empty || item == null) {
+                setText(null);
+                setGraphic(null);
+            } else if (headings && isFirstRomHack(item)) {
+                getStyleClass().add(SECTION_START);
+                rowName.setText(item.name());
+                setText(null);
+                setGraphic(sectionStart);
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            } else {
+                setText(item.name());
+                setGraphic(item.romHack() ? badge : null);
+                setContentDisplay(ContentDisplay.RIGHT);
+            }
+        }
+
+        private boolean isFirstRomHack(GameDefinition item) {
+            return item.romHack() && getListView() != null
+                    && getListView().getItems().stream().filter(GameDefinition::romHack).findFirst().orElse(null) == item;
+        }
+
+        private static Label romHackBadge() {
+            Label badge = new Label("ROM hack");
+            badge.getStyleClass().add("rom-hack-badge");
+            badge.setMinWidth(Region.USE_PREF_SIZE);
+            return badge;
+        }
     }
 
     /** One optional screen area: shows the selection and offers Select / Clear. Saved per game. */

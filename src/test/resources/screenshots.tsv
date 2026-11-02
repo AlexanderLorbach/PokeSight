@@ -1,6 +1,7 @@
 # OCR test screenshots, downloaded at build time (task downloadTestScreenshots), pinned by SHA-256.
 # Columns: file, url, sha256, game id (games/<id>.yaml), language, expected opponents top to bottom ("+"-separated,
-# empty = no name may be found; "moves:..." = the damaging moves of a move list, see MoveReaderTest).
+# empty = no name may be found; "moves:..." = the damaging moves of a move list, see MoveReaderTest), optionally
+# where the game screen is in a collage (x,y,width,height in pixels; one row per screen, each with its own file name).
 # Screenshots of fan wikis (© Nintendo / Game Freak / The Pokémon Company) are only downloaded, never committed.
 # Wiki files are labelled by generation, not version: where the version is unknown the screenshot is filed under a
 # game of that generation with the same battle screen.
@@ -260,3 +261,32 @@ legends-za-de-bibor-4.png	https://www.pokewiki.de/images/2/2b/PLZA_Anvisieren_Sc
 legends-za-de-taubsi-5.png	https://www.pokewiki.de/images/1/1e/Spielmechanik_Anvisieren_PLZA.png	f57abcd95633272fe4764da2f79b403e08850395fffd290d87a6b052ee4e2c79	legends-za	DE	Taubsi
 bdsp-en-moves-bite-acid-spray.png	https://archives.bulbagarden.net/media/upload/1/10/BDSP_battle_move.png	b2a8cf744ffafbe8c1019b0ba4520e0fc243b949a400c27ec02cea037d2fd887	brilliant-diamond-shining-pearl	EN	moves:Bite+Acid Spray
 sv-en-moves-trop-kick-high-jump-kick-rapid-spin.png	https://archives.bulbagarden.net/media/upload/5/59/SV_battle_move.png	7a9c0bffa9bbba11d849dfe0620933c9d1fcf74d088cbdd6940792181ef66c8d	scarlet-violet	EN	moves:Trop Kick+High Jump Kick+Rapid Spin
+# ROM hacks (games/index.yaml romHacks). Few screenshots exist: Heartfelt Gold from pokehackdex.com (video frames, WebP:
+# read with the test-only TwelveMonkeys WebP plugin) and the hack's repository; Odyssey from its page on eeveeexpo.com.
+hfg-en-single-ironbolder.webp	https://pokehackdex.com/games/pokemon-heartfelt-gold/pokemon-heartfelt-gold-wild-ironboldor-battle.webp	475db753eedbc98156e8dd70ced3c206211b7fe4978ba6434da3fdd31158f318	heartfelt-gold	EN	IronBolder
+hfg-en-single-miraidon.webp	https://pokehackdex.com/games/pokemon-heartfelt-gold/pokemon-heartfelt-gold-wild-miraldon-battle.webp	85d5aee196ea9b464f18f822aca471ba60cd146c2cb93d3659dc0dc353e024d2	heartfelt-gold	EN	Miraidon
+hfg-en-single-ragingbolt.webp	https://pokehackdex.com/games/pokemon-heartfelt-gold/pokemon-heartfelt-gold-wild-ragingbolt-battle.webp	31aedff1c83df8252e19d628eedd6a575d4b202b6f72fd7d11dc9daf73f6d69a	heartfelt-gold	EN	RagingBolt
+hfg-en-overworld.png	https://raw.githubusercontent.com/Trinsic64/Heart-Gold-Retiled/79d28acd8b5ffe7444d5a0f6fed99a55944e0c88/Pictures/Screenshot%202026-08-12%20210204.png	3d377faa5b01bd9e39063ca71630647f50c73b610ed94fecdfe50cadceab454f	heartfelt-gold	EN	
+odyssey-en-double-dustox-beautifly.png	https://i.imgur.com/5kXNSY2.png	759f9abbd2d148173dddd2fb8fa8d8168b582f11f599a397f490e983a98e5513	odyssey	EN	Dustox+Beautifly
+odyssey-en-single-gardevoir.png	https://i.imgur.com/k3grlSk.png	3002c851d6a825b99ccac392487e8043a9db45820a7e9409d761b8ee79b7eb10	odyssey	EN	Gardevoir
+odyssey-en-overworld-dialogue.png	https://i.imgur.com/5a1g5fW.png	d36d4d1e2031aa1f312bda16d4d6c4c967e812d2763fa5a98cbb7f0b4f929458	odyssey	EN	
+rowe-en-single-silicobra.jpg	https://pub-1b99d33bb732408c9a5d067b266eb8ef.r2.dev/pokemon-r-o-w-e/screenshot-1.jpg	657d691e004e911a8ca599738289d6c79addf35d8f8c6fe247fc1eaf1f7b401e	rowe	EN	Silicobra
+rowe-en-trainer-own-box.jpg	https://images.launchbox-app.com/b1e28268-38e7-4cad-ac45-1fafdfebc62e.jpg	9c0b51e707290898e5720e022d52aad45e4b8c15180f504ae73a6e5818080512	rowe	EN	
+rowe-en-overworld-item.jpg	https://pub-1b99d33bb732408c9a5d067b266eb8ef.r2.dev/pokemon-r-o-w-e/screenshot-3.jpg	e7a233371b97e29a34157980d70c209157d15bcfed64b9692bbd31cedc8e46a2	rowe	EN	
+unbound-en-single-giratina.png	https://pub-1b99d33bb732408c9a5d067b266eb8ef.r2.dev/pokemon-unbound/screenshot-5.png	4ae5a23018961f1f4d442af5b1bc1f0633aab3f9a44fac48148ae8993665ec4c	unbound	EN	Giratina
+unbound-en-single-tyrogue.gif	https://dlhb.gamebrew.org/gbahomebrews/pokemonunbound22.gif	4d7892d8db0e35021e5f98a006f44950f74ac59da1c7c5d2204b0b0e9bf7ced2	unbound	EN	Tyrogue
+unbound-en-own-box.gif	https://dlhb.gamebrew.org/gbahomebrews/pokemonunbound21.gif	c3489c5a02c98d03adfb5d70a344d092c95371822083a591d47187c5e09af48e	unbound	EN	
+unbound-en-overworld-dialogue.png	https://pub-1b99d33bb732408c9a5d067b266eb8ef.r2.dev/pokemon-unbound/screenshot-2.png	6ae80878d3adbfbf1516db376475a39c974f5e403b59ab4f5ff0c251ad164a1a	unbound	EN	
+glazed-en-wild-pikachu.jpg	https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgb1XXgFGeSPf1Hr3aavMKiUoD__4_qcG7o2vwnKGmmPvMls1L0g1OUKaJ3E3s4rIb1wqk5VdSnQ5XmZFfCPWBUE13sTmc7VuhgHaQnYwhS04mI2W4R-e7mZKvUMNCKcDhpnmZjDDZL_Knv/s0/image_part_008.jpg	016ac7413bd15e1a212bdc29373887f30b67029ad34d392ef6167bfe919dd834	glazed	EN	Pikachu
+glazed-en-caught-mudkip.jpg	https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgzo06K8kkBDZBuJmQik7iTbKQhxd-gBUxcW68iE0iJTTJKChfkkQxx-ndmqx92UuaWGRtEsql9Wj1OKMjeG1LDBYWp68nDmjVvt-jyAZsvxke4pdWG4e7tAyod_x2lQldYMddJGkR3BilP/s0/image_part_016.jpg	4ddc220fb4eb6a8aea8cd9b2a7fc8b1d48683fba6f38c3dc11a5275756dd741b	glazed	EN	Mudkip
+glazed-en-single-manaphy.jpg	https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi6Skc7qQ7p8XAH9uNpvPO_URgaw4k86Lg50fJs7x8ULbzHr6hT5Wnan3_g2t6ghxrignsGcFQD8en0JTnUc1-GV7_2Z7WuvQMj7PTGpCTSst3EKT0cpvVIGgjuo45KpP9WVYGa35l7pAEF/s0/image_part_022.jpg	ec788c9679b9fbf7f4f1560222463f92d8a7bf5eab06dd4f5c2753300cae445c	glazed	EN	Manaphy
+glazed-en-single-palkia.png	https://dlhb.gamebrew.org/gbahomebrews/pokemonglazed11.png	d39ba67fb4501286b97f4fc711e1035dc4ad65b0ae71441268ad2db4d1e631cc	glazed	EN	Palkia
+glazed-en-overworld-dialogue.png	https://dlhb.gamebrew.org/gbahomebrews/pokemonglazed3.png	e092a95ea7a24cbcf490a4b428ed842ea161f367dc66ac7e116d03cebc8721f1	glazed	EN	
+emerald-rogue-en-single-raikou.png	https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiEfh96YXdpFkmIRN6HmhG2iIcgbLZFgU03nrAi2K_0bme7JJ2QQFFQxzA0bEnt2SRiSyRZ8ARdzo5rnJ9Az-eMpsYasC2Gh_Ow-Nl4MYO49OUpQ-e1NJK0OHFZz1q4obVJXhu5K7IctjqKpleFZH-5ptenunFePualodQCUshz6kS7IxSmItKT6UcueQ/s0/03%20Pokemon%20Emerald%20Rogue.png	220c0f8ae846eb7bc47df940f7bcdeb9a28d39fbc8a12e21517029f4fa1e1771	emerald-rogue	EN	Raikou
+emerald-rogue-en-single-mewtwo.png	https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgZfnT0HBJ_4mPMwKTbZYjf9CL_qmuHr1mTrSNZwlwFaghA-aDc2DxjqTjGO3NwbVNCE4IE0dtsLMxVLjYMSIKfzm9-DswwZDvqfNFPJAXHU_RpBmqXyWV-sQLiaoQ7zjwXJcrVEasvGo6hmtwoutwlPSKbkdi9QszPWkgVRa1XBt2xqwpL8oRznxBzdQ/s0/04%20Pokemon%20Emerald%20Rogue.png	9fde640dac30fee455208ade29007e5b0e355215c084d429e4a84169789da727	emerald-rogue	EN	Mewtwo
+emerald-rogue-en-gym-dialogue.png	https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi2zJjGJJjYisLAt_S0AguPl_dUe-oBazr1f3mh8RfhmpAREeoFAxlaHjyLbqj1qpZVpsosc92NPV671tvIxD8Ja_6b0f5R6QARy2zTS3e2pkM8VvJ2HaqXi6pZLODCzO5XWTG79RD39M_2Na1JtwWEQnX03s7YtZCtAJPUU03Hp3x9aIqtqLXlMo22mA/s0/00%20Pokemon%20Emerald%20Rogue.png	331bc8ddf3bb03067d4d453109c237fe0d16093182cb9943c6f1e8c3353900a1	emerald-rogue	EN	
+emerald-rogue-en-challenger-dialogue.png	https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEitQ4SMh7zz6N4vvhCJ7PxonhTGCfU3yFKn5XYRnlA0y-ChrQpTtB-r7YENiDzWAP0uyP01RC0OqrWhjYbY7nuOmniaZHWpUpIYgDt7siY0c4kCFK56Nw_S3vh7ol6498aCUfgtisPx8DYfqx2JhQlGrCzgqV4TPjzHyAPvWs06eZiMOAiETBONZKnhBg/s0/05%20Pokemon%20Emerald%20Rogue.png	3c1c9a769295b83103db370b55515c46515f070c5cbfb3789c8ea2b0ad4b6725	emerald-rogue	EN	
+lazarus-en-wild-tentacool.webp	https://pokemonlazarus.net/wp-content/uploads/2025/11/Pokemon-Lazarus-1.webp	b5af4ac520a625e46fbe707962c11d9e86a4f1b32e5e05e1e176f06867b0e98a	lazarus	EN	Tentacool	0,480,360,240
+lazarus-en-mega-falinks.webp	https://pokemonlazarus.net/wp-content/uploads/2025/11/Pokemon-Lazarus-1.webp	b5af4ac520a625e46fbe707962c11d9e86a4f1b32e5e05e1e176f06867b0e98a	lazarus	EN	Falinks	720,480,360,240
+lazarus-en-overworld-dialogue.webp	https://pokemonlazarus.net/wp-content/uploads/2025/11/Pokemon-Lazarus-1.webp	b5af4ac520a625e46fbe707962c11d9e86a4f1b32e5e05e1e176f06867b0e98a	lazarus	EN		720,0,360,240
+lazarus-en-crabrawler-dialogue.jpg	https://storage.ghost.io/c/58/fd/58fdc82a-ad84-44e2-ad58-166d1b419bc4/content/images/2025/11/lazarus-gameplay.jpg	9fdd9f134a25ee56455a00acf7825581efaa3f3018294fbe05887f623eb3eaa7	lazarus	EN	
