@@ -29,16 +29,31 @@ class GameCatalogTest {
     }
 
     @Test
-    void everyGameHasAnExistingRulesetAndBothLanguages() {
+    void everyGameHasAnExistingRulesetAndPinnedSprites() {
         List<GameDefinition> games = GameCatalog.load();
 
-        assertThat(games).hasSize(22);
         assertThat(games).extracting(GameDefinition::id).doesNotHaveDuplicates();
         assertThat(games).allSatisfy(game -> {
             assertThat(RulesetLoader.load(game.ruleset()).species()).isNotEmpty();
-            assertThat(game.languages()).containsExactly(Language.EN, Language.DE);
+            assertThat(game.languages()).contains(Language.EN);
             assertThat(game.spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/").endsWith("{name}.png");
         });
+        assertThat(games).filteredOn(game -> !game.romHack()).hasSize(22)
+                .allSatisfy(game -> assertThat(game.languages()).containsExactly(Language.EN, Language.DE));
+    }
+
+    @Test
+    void listsRomHacksBelowTheOfficialGames() {
+        List<GameDefinition> games = GameCatalog.load();
+        GameDefinition heartfeltGold = game("heartfelt-gold");
+
+        assertThat(games.getLast()).isEqualTo(heartfeltGold);
+        assertThat(games.stream().dropWhile(game -> !game.romHack())).allSatisfy(game -> assertThat(game.romHack()).isTrue());
+        assertThat(heartfeltGold.romHack()).isTrue();
+        assertThat(heartfeltGold.ruleset()).isEqualTo("heartfelt-gold");
+        assertThat(heartfeltGold.languages()).containsExactly(Language.EN); // hg-engine works on the US ROM only
+        assertThat(heartfeltGold.capitalNames()).isFalse();
+        assertThat(game("heartgold-soulsilver").romHack()).isFalse();
     }
 
     @Test

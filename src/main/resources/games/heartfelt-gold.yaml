@@ -1,0 +1,9 @@
+# Pokémon Heartfelt Gold (NDS): ROM hack of HeartGold (US) by Trinsic64, built with hg-engine; English only.
+# https://pokehackdex.com/romhacks/pokemon-heartfelt-gold/ - https://github.com/Trinsic64/Heart-Gold-Retiled
+name: Pokémon Heartfelt Gold
+ruleset: heartfelt-gold  # generated from the hack's sources (tools/GenerateHgEngineRuleset.java): Gen 9 + Fairy
+languages: [EN]
+# Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
+# Pokémon of all generations: the HeartGold sprites stop at Arceus, so the default sprites are used.
+spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69afd48dc1273da9033ede9c/sprites/pokemon/{name}.png"
+capitalNames: false      # the hack's Species.c has mixed-case names ("Bulbasaur", cut to 10 letters: "ScreamTail")
