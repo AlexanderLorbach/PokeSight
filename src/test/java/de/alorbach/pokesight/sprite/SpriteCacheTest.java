@@ -78,9 +78,11 @@ class SpriteCacheTest {
             return png.toByteArray();
         }, true);
 
-        assertThat(cache.downloadMissing(List.of("rattata/alola/front"))).isEqualTo(1);
+        assertThat(cache.downloadMissing(List.of("rattata/alola/front", "frontspr/gFrontSprite019Rattata"))).isEqualTo(2);
 
-        assertThat(requested).containsExactly(URI.create("https://example.org/sprites/rattata/alola/front.png"));
+        assertThat(requested).containsExactlyInAnyOrder(URI.create("https://example.org/sprites/rattata/alola/front.png"),
+                URI.create("https://example.org/sprites/frontspr/gFrontSprite019Rattata.png")); // DPE: mixed case
+        assertThat(cache.file("frontspr/gFrontSprite019Rattata")).isPresent();
         Path file = cache.file("rattata/alola/front").orElseThrow();
         assertThat(file.getParent()).isEqualTo(directory);
         BufferedImage frame = ImageIO.read(file.toFile());

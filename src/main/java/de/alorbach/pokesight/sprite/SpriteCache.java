@@ -43,8 +43,9 @@ public final class SpriteCache {
     public static final String NAME_PLACEHOLDER = "{name}";
 
     private static final System.Logger LOG = System.getLogger(SpriteCache.class.getName());
-    // PokeAPI "10004", hg-engine "rattata_alolan", pokeemerald "rattata/alola/front" (a path below the URL's folder)
-    private static final Pattern VALID_NAME = Pattern.compile("[a-z0-9_-]+(/[a-z0-9_-]+)*");
+    // PokeAPI "10004", hg-engine "rattata_alolan", pokeemerald "rattata/alola/front" (a path below the URL's folder),
+    // DPE "frontspr/gFrontSprite019Rattata"
+    private static final Pattern VALID_NAME = Pattern.compile("[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*");
     private static final byte[] PNG_SIGNATURE = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'};
     private static final int PARALLEL_DOWNLOADS = 6;
 

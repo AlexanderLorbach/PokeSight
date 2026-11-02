@@ -154,6 +154,25 @@ class RulesetLoaderTest {
     }
 
     @Test
+    void loadsTheUnboundRulesetWithItsChangedPokemonAndMoves() {
+        Ruleset unbound = RulesetLoader.load("unbound");
+
+        assertThat(unbound.species()).hasSize(905); // up to Gen 8
+        assertThat(unbound.generation()).isEqualTo(8);
+        assertThat(unbound.typeChart().multiplier(DRAGON, FAIRY)).isZero();
+        assertThat(unbound.findSpecies(823)).map(s -> s.name(Language.EN)).contains("Corvknight"); // in-game name
+        assertThat(unbound.findSpecies(669)).map(s -> s.name(Language.EN)).contains("Flabébé");
+        assertThat(unbound.findSpecies(19)).map(Species::abilities).contains(List.of("strong-jaw", "guts", "hustle")); // changed
+        assertThat(unbound.findSpecies(898).orElseThrow().form(1).abilities()).containsExactly("as-one-glastrier");
+        assertThat(unbound.findSpecies(19)).map(Species::sprite).contains("frontspr/gFrontSprite019Rattata");
+        assertThat(unbound.findSpecies(19).orElseThrow().form(1).sprite()).isEqualTo("frontspr/gFrontSprite1020RattataA");
+        assertThat(unbound.findMove(19)).map(Move::power).contains(100);  // Fly: CFRU's #ifdef UNBOUND
+        assertThat(unbound.findMove(173)).map(Move::power).contains(80);  // Snore
+        assertThat(unbound.findMove(20355)).map(Move::name).map(name -> name.get(Language.EN)).contains("Leech Fang"); // the hack's own
+        assertThat(unbound.findMove(827)).isEmpty(); // Gen 9 moves are not in the hack
+    }
+
+    @Test
     void usesGen1Rules() {
         Ruleset gen1 = RulesetLoader.load("gen1");
         assertThat(gen1.typeChart().types()).doesNotContain(DARK, STEEL, FAIRY);
