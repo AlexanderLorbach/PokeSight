@@ -32,6 +32,12 @@ or memory access.
 the rules of its own generation (type chart, types, move power); remakes are separate games with their own rules and
 screens, e.g. Red/Blue (Gen 1, Game Boy font) and FireRed/LeafGreen (Gen 3, GBA font).
 
+**ROM hacks** are listed below the official games, with rules taken from the hack's own sources. The first one is
+[Pokémon Heartfelt Gold](https://pokehackdex.com/romhacks/pokemon-heartfelt-gold/) (HeartGold hack built with
+hg-engine, English only): Pokémon of all generations with their Gen 9 types, the Gen 9 type chart with Fairy, the
+hack's move changes (e.g. Snap Trap is Steel, Slash has 80 power) and the in-game names, which the hack cuts to 10
+letters ("ScreamTail"). It reads the same battle screens as HeartGold, but there are no test screenshots of it yet.
+
 The name reading is checked on 254 real battle screenshots, at least five per game, at emulator window sizes 1×, 2×
 (smoothed) and 3× (Full HD screenshots of the Switch games at their size). Correctly read views:
 
@@ -225,7 +231,8 @@ src/main/java/de/alorbach/pokesight/
 
 src/main/resources/      games/*.yaml, rulesets/<id>/*.yaml (generated), ui/ (theme, font, icons)
 packaging/               PokeSight.ico, install.ps1 (installLocal)
-tools/                   GenerateRuleset.java (PokeAPI → YAML), GenerateIcon.java (app icon)
+tools/                   GenerateRuleset.java (PokeAPI → YAML), GenerateHgEngineRuleset.java (hg-engine hack → YAML),
+                         GenerateIcon.java (app icon)
 .github/workflows/       release.yml: builds the portable zip for every pushed v* tag
 licenses/                license texts of the bundled third-party software (THIRD-PARTY-NOTICES.md)
 ```
@@ -242,7 +249,7 @@ licenses/                license texts of the bundled third-party software (THIR
 - **Release:** push an annotated tag such as `v1.0.0`; the workflow runs both test tasks, builds the portable zip and
   attaches it to a release titled with the tag message's first line.
 - **Add a game:** create `games/<id>.yaml` (copy an existing game of the same generation) and list `<id>` in
-  `games/index.yaml`. `region` (alola, galar, hisui, paldea) makes recognized Pokémon show in their regional form,
+  `games/index.yaml` (ROM hacks under `romHacks`, they are listed below the official games). `region` (alola, galar, hisui, paldea) makes recognized Pokémon show in their regional form,
   `floatingNames` reads the labels above HP bars instead of fixed name boxes, `withoutAbilities` ignores abilities
   (Let's Go, Legends), `terastal` offers the Tera type picker.
 - **OCR tests:** `src/test/resources/screenshots.tsv` lists the battle screenshots (URL, SHA-256, game, language and
@@ -263,6 +270,11 @@ licenses/                license texts of the bundled third-party software (THIR
   | gen3 | firered-leafgreen | | lets-go | lets-go-pikachu-lets-go-eevee |
   | gen4 | heartgold-soulsilver | | gen8 | legends-arceus |
   | gen5 | black-2-white-2 | | gen9 | the-indigo-disk |
+- **Regenerate a ROM hack ruleset** (hacks built with [hg-engine](https://github.com/BluRosie/hg-engine)):
+  `java tools/GenerateHgEngineRuleset.java <hack's HG-Engine folder> <hg-engine> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id>`,
+  with pinned raw GitHub URLs or local folders (the exact command for Heartfelt Gold is in the tool's Javadoc). It reads
+  the hack's `config.h`, `Species.c`, `HiddenAbilityTable.c` and `Moves.c` and hg-engine's type chart; the gen9 ruleset
+  only supplies dex numbers (checked against PokeAPI), form names and sprites, ability and type names and move ids.
 - **Data checked** against Pokémon Showdown's per-generation data (base data plus the gen1–gen8 and gen7letsgo mods)
   for every ruleset: type chart, types of all species and their alternate forms, base stats and abilities of all
   species, power, type and category of all moves (until Gen 3 the category follows the type). Gaps in PokeAPI found

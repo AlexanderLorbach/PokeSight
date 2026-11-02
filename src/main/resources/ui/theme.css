@@ -137,6 +137,58 @@
     -fx-text-fill: white;
 }
 
+/* ROM hacks in the game list: a badge on each, a heading above the first one */
+.rom-hack-badge {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: ps-pokemon-yellow;
+    -fx-background-color: ps-surface-3;
+    -fx-background-radius: 6;
+    -fx-padding: 1 6;
+}
+
+/* Direct child: the badge of a plain cell, not the one in the first ROM hack's row (highlighted with the row) */
+.combo-box-popup .list-cell:filled:hover > .rom-hack-badge, .combo-box-popup .list-cell:filled:selected > .rom-hack-badge {
+    -fx-text-fill: white;
+    -fx-background-color: rgba(0, 0, 0, 0.25);
+}
+
+/* The first ROM hack: only its row is highlighted, not the heading above it */
+.combo-box-popup .list-cell.section-start {
+    -fx-padding: 0;
+}
+
+.combo-box-popup .list-cell.section-start:filled:hover, .combo-box-popup .list-cell.section-start:filled:selected {
+    -fx-background-color: transparent;
+}
+
+.combo-section {
+    -fx-padding: 8 5 4 5;
+    -fx-border-color: ps-surface-3 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.game-row {
+    -fx-padding: 3 5; /* lines up with the plain cells */
+}
+
+.game-name {
+    -fx-text-fill: ps-text;
+}
+
+.game-row:hover, .combo-box-popup .list-cell.section-start:filled:selected .game-row {
+    -fx-background-color: ps-pokedex-red;
+}
+
+.game-row:hover .game-name, .combo-box-popup .list-cell.section-start:filled:selected .game-name {
+    -fx-text-fill: white;
+}
+
+.game-row:hover .rom-hack-badge, .combo-box-popup .list-cell.section-start:filled:selected .rom-hack-badge {
+    -fx-text-fill: white;
+    -fx-background-color: rgba(0, 0, 0, 0.25);
+}
+
 .action-bar .search-field {
     -fx-background-radius: 20;
     -fx-border-radius: 20;

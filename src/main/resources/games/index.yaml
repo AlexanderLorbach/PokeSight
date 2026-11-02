@@ -22,3 +22,6 @@ games:
   - legends-arceus
   - scarlet-violet
   - legends-za
+# Fan-made ROM hacks, shown below the official games.
+romHacks:
+  - heartfelt-gold

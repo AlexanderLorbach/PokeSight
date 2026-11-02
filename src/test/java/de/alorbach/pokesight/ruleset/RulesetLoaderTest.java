@@ -97,6 +97,25 @@ class RulesetLoaderTest {
     }
 
     @Test
+    void loadsTheRomHackRulesetFromTheHacksSources() {
+        Ruleset heartfeltGold = RulesetLoader.load("heartfelt-gold");
+
+        assertThat(heartfeltGold.species()).hasSize(1025);
+        assertThat(heartfeltGold.generation()).isEqualTo(9);
+        assertThat(heartfeltGold.typeChart().multiplier(DRAGON, FAIRY)).isZero();
+        assertThat(heartfeltGold.typeChart().multiplier(GHOST, STEEL)).isEqualTo(1);
+        assertThat(heartfeltGold.findSpecies(35)).map(Species::types).contains(List.of(FAIRY)); // Clefairy
+        assertThat(heartfeltGold.findSpecies(985)).map(s -> s.name(Language.EN)).contains("ScreamTail"); // in-game name
+        assertThat(heartfeltGold.findSpecies(122).orElseThrow().form(1).types()).containsExactly(ICE, PSYCHIC); // Galarian Mr. Mime
+        assertThat(heartfeltGold.findSpecies(658)).map(Species::abilities).contains(List.of("torrent", "battle-bond", "protean"));
+        // The hack's "Champions" move changes and its own move data
+        assertThat(heartfeltGold.findMove(779)).map(Move::type).contains(STEEL);                       // Snap Trap
+        assertThat(heartfeltGold.findMove(163)).map(Move::power).contains(80);                         // Slash
+        assertThat(heartfeltGold.findMove(550)).map(Move::category).contains(Move.Category.SPECIAL);  // Bolt Strike
+        assertThat(heartfeltGold.findMove(757)).isEmpty(); // Max Flare
+    }
+
+    @Test
     void usesGen1Rules() {
         Ruleset gen1 = RulesetLoader.load("gen1");
         assertThat(gen1.typeChart().types()).doesNotContain(DARK, STEEL, FAIRY);
