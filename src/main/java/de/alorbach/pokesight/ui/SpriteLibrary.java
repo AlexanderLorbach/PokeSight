@@ -2,6 +2,7 @@ package de.alorbach.pokesight.ui;
 
 import de.alorbach.pokesight.battle.PokemonId;
 import de.alorbach.pokesight.ruleset.Ruleset;
+import de.alorbach.pokesight.ruleset.Species;
 import de.alorbach.pokesight.sprite.SpriteCache;
 import javafx.application.Platform;
 import javafx.scene.image.Image;
@@ -43,6 +44,9 @@ final class SpriteLibrary {
         String name = ruleset.findSpecies(pokemon.speciesId())
                 .map(species -> species.form(pokemon.form()).sprite())
                 .orElse(String.valueOf(pokemon.speciesId()));
+        if (name.equals(Species.NO_SPRITE)) {
+            return Optional.empty();
+        }
         Image image = images.get(name);
         if (image == null) {
             image = cache.file(name).map(SpriteLibrary::load).orElse(null);

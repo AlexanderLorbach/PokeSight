@@ -9,9 +9,14 @@ import java.util.Objects;
  *
  * @param stats     base stats in the order of {@link Stat}; Gen 1's Special counts as both special stats
  * @param abilities identifiers of the abilities it can have in this generation (none before Gen 3)
+ * @param sprite    sprite file name of the base form; null if it is the dex number, {@link #NO_SPRITE} if there is
+ *                  none (species a ROM hack made up)
  */
 public record Species(Map<Language, String> name, List<PokemonType> types, List<Integer> stats, List<String> abilities,
-                      Map<Integer, Form> forms) {
+                      Map<Integer, Form> forms, String sprite) {
+
+    /** {@link #sprite()} of a species without any sprite to download. */
+    public static final String NO_SPRITE = "none";
 
     /** Base stats in the order they are stored. */
     public enum Stat { HP, ATTACK, DEFENSE, SPECIAL_ATTACK, SPECIAL_DEFENSE, SPEED }
@@ -30,7 +35,7 @@ public record Species(Map<Language, String> name, List<PokemonType> types, List<
 
     /** The given form; forms that are not listed are identical to the base form. */
     public Form form(int formIndex) {
-        return forms.getOrDefault(formIndex, new Form(name, types, null, null, stats, abilities));
+        return forms.getOrDefault(formIndex, new Form(name, types, sprite, null, stats, abilities));
     }
 
     /**
@@ -46,7 +51,7 @@ public record Species(Map<Language, String> name, List<PokemonType> types, List<
     }
 
     /**
-     * @param sprite sprite file name of an alternate form; null for the base form, whose sprite is its dex number
+     * @param sprite sprite file name of an alternate form; for the base form {@link Species#sprite()}
      * @param region the region of a regional form ("alola", "galar", "hisui", "paldea"); null for other forms
      */
     public record Form(Map<Language, String> name, List<PokemonType> types, String sprite, String region,
