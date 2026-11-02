@@ -35,7 +35,19 @@ import java.util.regex.Pattern;
  *   https://raw.githubusercontent.com/BelialClover/RoweSource/292eab691310e8b0cdb91a3905c34105261e24e1 \
  *   src/main/resources/rulesets/gen9 src/main/resources/rulesets/rowe
  * </pre>
+ * Pokémon Emerald Rogue, EX edition v2.1 (tag EX-v2.1; newer expansion layout, type chart in the same source):
+ * <pre>
+ * java tools/GeneratePokeemeraldRuleset.java \
+ *   https://raw.githubusercontent.com/Pokabbie/pokeemerald-rogue/559792325f500d480b892799218ee015962f93a2 \
+ *   https://raw.githubusercontent.com/Pokabbie/pokeemerald-rogue/559792325f500d480b892799218ee015962f93a2 \
+ *   src/main/resources/rulesets/gen9 src/main/resources/rulesets/emerald-rogue
+ * </pre>
  * Sources are base URLs or local directories.
+ *
+ * <p>Newer expansions (1.7+) are detected by {@code src/data/pokemon/species_info.h}: configuration in
+ * {@code include/config.h} and {@code include/config/*.h}, one entry per species and form in
+ * {@code species_info/gen_N.h} (types, stats, abilities, name, dex number, {@code FRONT_PIC}). Their shared-field
+ * macros (also with parameters, {@code ROTOM_APPLIANCE_INFO(form)}) are expanded and conditional values evaluated.
  *
  * <p>From the hack: {@code include/constants/*.h} (types, species, configuration), {@code src/data/pokemon/base_stats.h}
  * (types, base stats, abilities), {@code src/data/battle_moves.h} (power, type, category), the in-game names in
@@ -63,23 +75,43 @@ public class GeneratePokeemeraldRuleset {
     private static final Map<String, String> BUILD_DEFINES = Map.of(
             "BATTLE_ENGINE", "1", "ITEM_EXPANSION", "1", "LANGUAGE_ENGLISH", "2", "LANGUAGE_SPANISH", "7", "GAME_LANGUAGE", "LANGUAGE_ENGLISH");
     private static final List<String> CONFIG_FILES = List.of("include/constants/pokemon_config.h", "include/constants/battle_config.h");
+    /** Configuration of newer expansions (1.7+), whose Pokémon data is in {@link #SPECIES_INFO} instead of base_stats.h. */
+    private static final List<String> EXPANSION_CONFIG_FILES = List.of(
+            "include/config.h", "include/config/battle.h", "include/config/pokemon.h", "include/config/species_enabled.h");
+    private static final String SPECIES_INFO = "src/data/pokemon/species_info.h";
+    /** Newer expansions name regional forms SPECIES_RATTATA_ALOLAN; PokeAPI says rattata-alola. */
+    private static final Map<String, String> REGION_TOKENS = Map.of("alolan", "alola", "galarian", "galar", "hisuian", "hisui", "paldean", "paldea");
     /** The type no Pokémon has (Curse in Gen 2-4). */
     private static final String MYSTERY_TYPE = "MYSTERY";
+    /** Types no Pokémon has: MYSTERY and the Terastal-only Stellar type (left out like in the reference). */
+    private static final Set<String> HIDDEN_TYPES = Set.of(MYSTERY_TYPE, "STELLAR");
+    /** Ability constants whose PokeAPI identifier is neither their name nor unique by English name ("As One" twice). */
+    private static final Map<String, String> ABILITY_ALIASES = Map.of(
+            "ABILITY_AS_ONE_ICE_RIDER", "as-one-glastrier", "ABILITY_AS_ONE_SHADOW_RIDER", "as-one-spectrier");
     /** Move constants with an English name from before Gen 6 that PokeAPI no longer knows. */
     private static final Map<String, String> OLD_MOVE_IDENTIFIERS = Map.of("faint-attack", "feint-attack");
     private static final Map<String, String> CATEGORIES = Map.of("SPLIT_PHYSICAL", "PHYSICAL", "SPLIT_SPECIAL", "SPECIAL");
     /** Battle-only forms the reference leaves out as well. */
-    private static final Pattern BATTLE_ONLY_FORM = Pattern.compile("_(MEGA|GMAX|PRIMAL)(_|$)");
+    private static final Pattern BATTLE_ONLY_FORM = Pattern.compile("_(MEGA|GMAX|GIGANTAMAX|PRIMAL)(_|$)");
     private static final String NO_SPRITE_SYMBOL = "gMonFrontPic_CircledQuestionMark";
     private static final String SPRITE_PATH = "graphics/pokemon/{name}.png";
     private static final List<String> STATS = List.of("baseHP", "baseAttack", "baseDefense", "baseSpAttack", "baseSpDefense", "baseSpeed");
 
     private static final Pattern DEFINE = Pattern.compile("#define\\s+(\\w+)\\s+([^/\\n]+?)\\s*(?://.*)?$");
-    private static final Pattern CONDITION = Pattern.compile("(\\w+)\\s*(==|!=|<=|>=|<|>)\\s*(\\w+)");
     private static final Pattern ENTRY = Pattern.compile("\\n\\s*\\[(\\w+)]\\s*=\\s*");
     private static final Pattern NAME_ENTRY = Pattern.compile("\\[(\\w+)]\\s*=\\s*_\\(\"([^\"]*)\"\\)");
-    private static final Pattern TYPE_ROW = Pattern.compile("\\{((?:\\s*X\\([0-9.]+\\),?)+)\\s*}");
-    private static final Pattern MULTIPLIER = Pattern.compile("X\\(([0-9.]+)\\)");
+    /** A row of the type table; newer expansions write 1x as {@code ______}. */
+    private static final Pattern TYPE_ROW = Pattern.compile("\\{((?:\\s*(?:X\\([0-9.]+\\)|_{6}),?)+)\\s*}");
+    private static final Pattern MULTIPLIER = Pattern.compile("X\\(([0-9.]+)\\)|_{6}");
+    private static final Pattern INCLUDE = Pattern.compile("(?m)^\\s*#include \"(species_info/\\w+\\.h)\"\\s*$");
+    private static final Pattern SPECIES_NAME = Pattern.compile("\\.speciesName\\s*=\\s*_\\(\"([^\"]*)\"\\)");
+    /** {@code FRONT_PIC(Bulbasaur, 40, 40)} or written out: {@code .frontPic = gMonFrontPic_Archaludon}. */
+    private static final Pattern SPECIES_FRONT_PIC = Pattern.compile("\\bFRONT_PIC\\((\\w+),|\\.frontPic\\s*=\\s*gMonFrontPic_(\\w+)");
+    private static final Pattern DEX_NUMBER = Pattern.compile("\\.natDexNum\\s*=\\s*(\\w+)");
+    private static final Pattern MACRO_NAME = Pattern.compile("\\b[A-Z][A-Z0-9_]*\\b");
+    private static final Pattern FUNCTION_DEFINE = Pattern.compile("#define\\s+(\\w+)\\(([^)]*)\\)\\s+(.+)$");
+    /** Function-like macros worth expanding: those that carry species data (not FRONT_PIC, ICON, ...). */
+    private static final Pattern SPECIES_DATA = Pattern.compile("\\.(base\\w+|types|abilities|speciesName|natDexNum)\\s*=|FRONT_PIC\\(");
     private static final Pattern FRONT_PIC = Pattern.compile("SPECIES_SPRITE\\((\\w+),\\s*(\\w+)\\)");
     private static final Pattern PIC_FILE = Pattern.compile("const u32 (\\w+)\\[]\\s*=\\s*INCBIN_U32\\(\"graphics/pokemon/([a-z0-9_/]+)\\.4bpp\\.lz\"\\)");
     // Reference ruleset lines (see GenerateRuleset's output)
@@ -98,6 +130,12 @@ public class GeneratePokeemeraldRuleset {
     private final String rulesetId;
     /** Name -> value as written (a number or another name): resolved when used, like the C preprocessor does. */
     private final Map<String, String> defines = new HashMap<>(BUILD_DEFINES);
+    /** Other object-like macros (shared species fields such as {@code MR_MIME_MISC_INFO}, expressions): expanded in the text. */
+    private final Map<String, String> macros = new HashMap<>();
+    /** Function-like macros with species data ({@code ROTOM_APPLIANCE_INFO(form)}): name -> parameters and body. */
+    private final Map<String, FunctionMacro> functionMacros = new HashMap<>();
+    /** Newer expansion (1.7+): Pokémon data in species_info.h, configuration in include/config/. */
+    private final boolean speciesInfoLayout;
 
     private GeneratePokeemeraldRuleset(String hackSource, String typeChartSource, Path reference, String rulesetId)
             throws IOException, InterruptedException {
@@ -105,7 +143,8 @@ public class GeneratePokeemeraldRuleset {
         this.typeChartSource = typeChartSource;
         this.reference = reference;
         this.rulesetId = rulesetId;
-        for (String file : CONFIG_FILES) {
+        this.speciesInfoLayout = exists(hackSource, SPECIES_INFO);
+        for (String file : speciesInfoLayout ? EXPANSION_CONFIG_FILES : CONFIG_FILES) {
             preprocess(read(hackSource, file)); // collects the #defines
         }
     }
@@ -163,7 +202,7 @@ public class GeneratePokeemeraldRuleset {
         }
         List<String> types = List.copyOf(byId.values());
         Map<String, String> names = referenceTypeNames();
-        List<String> unknown = types.stream().filter(type -> !type.equals(MYSTERY_TYPE) && !names.containsKey(type)).toList();
+        List<String> unknown = types.stream().filter(type -> !HIDDEN_TYPES.contains(type) && !names.containsKey(type)).toList();
         if (!unknown.isEmpty()) {
             throw new IllegalStateException("New types (add them to PokemonType and theme.css, name them here): " + unknown);
         }
@@ -183,7 +222,7 @@ public class GeneratePokeemeraldRuleset {
             List<String> values = new ArrayList<>();
             Matcher multiplier = MULTIPLIER.matcher(row.group(1));
             while (multiplier.find()) {
-                values.add(multiplier.group(1));
+                values.add(multiplier.group(1) != null ? multiplier.group(1) : "1.0");
             }
             rows.add(values);
         }
@@ -191,7 +230,7 @@ public class GeneratePokeemeraldRuleset {
             throw new IllegalStateException("The type table is not " + types.size() + "x" + types.size());
         }
         Map<String, String> names = referenceTypeNames();
-        List<String> used = types.stream().filter(type -> !type.equals(MYSTERY_TYPE)).toList();
+        List<String> used = types.stream().filter(type -> !HIDDEN_TYPES.contains(type)).toList();
 
         StringBuilder yaml = new StringBuilder(header);
         yaml.append("# effectiveness: attacking type -> defending type -> multiplier. Pairs not listed are 1x.\n");
@@ -233,26 +272,14 @@ public class GeneratePokeemeraldRuleset {
 
     private String pokemonYaml(String header, Set<String> types, Map<String, String> abilityNames) throws IOException, InterruptedException {
         Map<String, Integer> speciesIds = speciesIds();
-        int formsStart = speciesIds.get("FORMS_START");
-        Map<String, String> names = names(preprocess(read(hackSource, "src/data/text/species_names.h")));
-        Map<String, String> sprites = sprites();
         Map<String, String> hackAbilityNames = abilityNames();
         Map<String, String> pokeApiAbilities = pokeApiAbilities();
-
         Map<Integer, HackSpecies> base = new TreeMap<>();
         Map<String, HackSpecies> forms = new LinkedHashMap<>();
-        for (Map.Entry<String, String> entry : entries(preprocess(read(hackSource, "src/data/pokemon/base_stats.h"))).entrySet()) {
-            String constant = entry.getKey();
-            Integer id = speciesIds.get(constant);
-            if (id == null || id == 0 || constant.equals("SPECIES_EGG") || BATTLE_ONLY_FORM.matcher(constant).find()) {
-                continue;
-            }
-            HackSpecies species = hackSpecies(constant, entry.getValue(), names, sprites, types);
-            if (id < formsStart) {
-                base.put(id, species);
-            } else {
-                forms.put(constant, species);
-            }
+        if (speciesInfoLayout) {
+            readSpeciesInfo(speciesIds, types, base, forms);
+        } else {
+            readBaseStats(speciesIds, types, base, forms);
         }
         Map<Integer, ReferenceSpecies> referenceSpecies = referenceSpecies();
         Map<String, String> speciesIdentifiers = pokeApiColumns("pokemon_species", "id", "identifier");
@@ -271,7 +298,10 @@ public class GeneratePokeemeraldRuleset {
                 throw new IllegalStateException("The hack has no species #" + dex + " " + entry.getValue().name());
             }
             String identifier = speciesIdentifiers.get(String.valueOf(dex));
-            if (!identifier.equals(identifierOf(species.constant()))) {
+            String hackIdentifier = identifierOf(species.constant());
+            if (!hackIdentifier.equals(identifier) && speciesInfoLayout && hackIdentifier.startsWith(identifier + "-")) {
+                System.out.println("  #" + dex + " " + identifier + " = " + species.constant()); // the first form is the species
+            } else if (!hackIdentifier.equals(identifier)) {
                 throw new IllegalStateException("Species #" + dex + " is " + species.constant() + " in the hack, " + identifier + " in PokeAPI");
             }
             if (!species.name().equals(entry.getValue().name())) {
@@ -322,15 +352,93 @@ public class GeneratePokeemeraldRuleset {
         spriteNames.add(species.sprite());
     }
 
+    /** pokeemerald layout: base_stats.h, species_names.h and front_pic_table.h; forms are the ids from FORMS_START on. */
+    private void readBaseStats(Map<String, Integer> speciesIds, Set<String> types, Map<Integer, HackSpecies> base,
+                               Map<String, HackSpecies> forms) throws IOException, InterruptedException {
+        int formsStart = speciesIds.get("FORMS_START");
+        Map<String, String> names = names(preprocess(read(hackSource, "src/data/text/species_names.h")));
+        Map<String, String> sprites = sprites();
+        for (Map.Entry<String, String> entry : entries(preprocess(read(hackSource, "src/data/pokemon/base_stats.h"))).entrySet()) {
+            String constant = entry.getKey();
+            Integer id = speciesIds.get(constant);
+            if (id == null || id == 0 || constant.equals("SPECIES_EGG") || BATTLE_ONLY_FORM.matcher(constant).find()) {
+                continue;
+            }
+            HackSpecies species = hackSpecies(constant, entry.getValue(), names, sprites, types);
+            if (id < formsStart) {
+                base.put(id, species);
+            } else {
+                forms.put(constant, species);
+            }
+        }
+    }
+
+    /**
+     * Newer expansion layout: one species_info.h entry per species and form with types, stats, abilities, name and
+     * front picture. The species of a dex number is its entry with the lowest id (Gen 9 ids follow the older forms);
+     * all others are forms.
+     */
+    private void readSpeciesInfo(Map<String, Integer> speciesIds, Set<String> types, Map<Integer, HackSpecies> base,
+                                 Map<String, HackSpecies> forms) throws IOException, InterruptedException {
+        Map<String, Integer> dexNumbers = enumValues(read(hackSource, "include/constants/pokedex.h"), "NATIONAL_DEX_");
+        Map<String, String> pictures = new HashMap<>();
+        Matcher file = PIC_FILE.matcher(read(hackSource, "src/data/graphics/pokemon.h"));
+        while (file.find()) {
+            pictures.put(file.group(1), file.group(2));
+        }
+        String source = read(hackSource, SPECIES_INFO);
+        StringBuilder inlined = new StringBuilder();
+        Matcher include = INCLUDE.matcher(source);
+        while (include.find()) {
+            include.appendReplacement(inlined, Matcher.quoteReplacement(read(hackSource, "src/data/pokemon/" + include.group(1))));
+        }
+        include.appendTail(inlined);
+
+        Map<Integer, Integer> baseIds = new HashMap<>();
+        for (Map.Entry<String, String> entry : entries(preprocess(inlined.toString())).entrySet()) {
+            String constant = entry.getKey();
+            String body = entry.getValue();
+            Integer id = speciesIds.get(constant);
+            Matcher dexNumber = DEX_NUMBER.matcher(body);
+            if (id == null || id == 0 || !dexNumber.find() || BATTLE_ONLY_FORM.matcher(constant).find()) {
+                continue;
+            }
+            Integer dex = dexNumbers.get(dexNumber.group(1));
+            Matcher name = SPECIES_NAME.matcher(body);
+            Matcher picture = SPECIES_FRONT_PIC.matcher(body);
+            if (dex == null || !name.find()) {
+                throw new IllegalStateException(constant + ": no dex number or name");
+            }
+            String sprite = null;
+            if (picture.find()) {
+                String symbol = "gMonFrontPic_" + (picture.group(1) != null ? picture.group(1) : picture.group(2));
+                sprite = symbol.equals(NO_SPRITE_SYMBOL) ? "none" : pictures.get(symbol);
+                if (sprite == null) {
+                    throw new IllegalStateException("No file for " + symbol);
+                }
+            }
+            HackSpecies species = hackSpecies(constant, body, Map.of(constant, name.group(1)), sprite == null ? Map.of() : Map.of(constant, sprite), types);
+            forms.put(constant, species);
+            if (!baseIds.containsKey(dex) || id < baseIds.get(dex)) {
+                baseIds.put(dex, id);
+                base.put(dex, species);
+            }
+        }
+        base.values().forEach(species -> forms.remove(species.constant()));
+    }
+
     private HackSpecies hackSpecies(String constant, String body, Map<String, String> names, Map<String, String> sprites, Set<String> types) {
         List<Integer> stats = new ArrayList<>();
         for (String stat : STATS) {
-            stats.add(Integer.parseInt(field(body, stat, constant)));
+            stats.add(number(field(body, stat, constant)));
         }
         List<String> speciesTypes = new ArrayList<>();
-        for (String field : List.of("type1", "type2")) {
-            String type = field(body, field, constant).replaceFirst("^TYPE_", "");
-            if (!types.contains(type) || type.equals(MYSTERY_TYPE)) {
+        Matcher typePair = Pattern.compile("\\.types\\s*=\\s*\\{([^}]*)}").matcher(body);
+        List<String> typeConstants = typePair.find() ? Arrays.stream(typePair.group(1).split(",")).map(this::select).toList()
+                : List.of(field(body, "type1", constant), field(body, "type2", constant));
+        for (String typeConstant : typeConstants) {
+            String type = typeConstant.replaceFirst("^TYPE_", "");
+            if (!types.contains(type) || HIDDEN_TYPES.contains(type)) {
                 throw new IllegalStateException(constant + ": unknown type " + type);
             }
             if (!speciesTypes.contains(type)) {
@@ -340,7 +448,7 @@ public class GeneratePokeemeraldRuleset {
         List<String> abilities = new ArrayList<>();
         Matcher slots = Pattern.compile("\\.abilities\\s*=\\s*\\{([^}]*)}").matcher(body);
         Matcher hidden = Pattern.compile("\\.abilityHidden\\s*=\\s*(\\w+)").matcher(body);
-        List<String> constants = new ArrayList<>(slots.find() ? Arrays.stream(slots.group(1).split(",")).map(String::trim).toList() : List.of());
+        List<String> constants = new ArrayList<>(slots.find() ? Arrays.stream(slots.group(1).split(",")).map(this::select).toList() : List.of());
         if (hidden.find()) {
             constants.add(hidden.group(1));
         }
@@ -365,7 +473,7 @@ public class GeneratePokeemeraldRuleset {
                                       Map<String, String> pokeApiAbilities) {
         List<String> slugs = new ArrayList<>();
         for (String constant : species.abilities()) {
-            String slug = constant.substring("ABILITY_".length()).toLowerCase().replace('_', '-');
+            String slug = ABILITY_ALIASES.getOrDefault(constant, constant.substring("ABILITY_".length()).toLowerCase().replace('_', '-'));
             String name = hackAbilityNames.get(constant);
             if (name == null) {
                 throw new IllegalStateException(species.constant() + ": ability " + constant + " has no name");
@@ -417,7 +525,8 @@ public class GeneratePokeemeraldRuleset {
         List<String> wanted = List.of(identifier.split("-"));
         HackSpecies best = null;
         for (HackSpecies candidate : forms.values()) {
-            List<String> tokens = List.of(identifierOf(candidate.constant()).split("-"));
+            List<String> tokens = Arrays.stream(identifierOf(candidate.constant()).split("-"))
+                    .map(token -> REGION_TOKENS.getOrDefault(token, token)).toList();
             if (tokens.equals(wanted)) {
                 return candidate;
             }
@@ -553,8 +662,8 @@ public class GeneratePokeemeraldRuleset {
             if (!body.contains(".power")) {
                 continue;
             }
-            String split = field(body, "split", constant);
-            int power = Integer.parseInt(field(body, "power", constant));
+            String split = select(field(body, "split", constant));
+            int power = number(field(body, "power", constant));
             String name = names.getOrDefault(constant, "");
             String identifier = constant.substring("MOVE_".length()).toLowerCase().replace('_', '-');
             identifier = OLD_MOVE_IDENTIFIERS.getOrDefault(identifier, identifier);
@@ -572,16 +681,16 @@ public class GeneratePokeemeraldRuleset {
                 System.out.println("  " + name + ": left out (" + split + ", the category follows the user's stats)");
                 continue;
             }
-            String type = field(body, "type", constant).replaceFirst("^TYPE_", "");
+            if (official && id != null && !referenceMoves.containsKey(id) || !official && !hackIds.containsKey(constant)) {
+                continue; // Z-Move, Max Move (ids after MOVES_COUNT) or variable power in the reference
+            }
+            String type = select(field(body, "type", constant)).replaceFirst("^TYPE_", "");
             if (!types.contains(type) || category == null || name.isEmpty()) {
                 throw new IllegalStateException(constant + ": type " + type + ", category " + split + ", name '" + name + "'");
             }
             if (official) {
                 if (id == null) {
                     throw new IllegalStateException(constant + " (" + name + ") is official but matches no move id");
-                }
-                if (!referenceMoves.containsKey(id)) {
-                    continue; // Z-Move, Max Move or variable power in the reference
                 }
             } else {
                 id = NEW_MOVE_KEY_BASE + hackIds.get(constant);
@@ -707,7 +816,7 @@ public class GeneratePokeemeraldRuleset {
     private String preprocess(String source) {
         StringBuilder result = new StringBuilder();
         Deque<Branch> branches = new ArrayDeque<>();
-        String text = source.replaceAll("(?s)/\\*.*?\\*/", "");
+        String text = source.replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("\\\\[ \\t]*\\R", " ");
         for (String raw : text.lines().toList()) {
             String line = raw.replaceAll("//.*", "").stripTrailing();
             String directive = line.trim();
@@ -731,19 +840,98 @@ public class GeneratePokeemeraldRuleset {
                 branches.pop();
             } else if (directive.startsWith("#define ")) {
                 Matcher define = DEFINE.matcher(directive);
-                if (enabled && define.matches()) {
+                Matcher function = FUNCTION_DEFINE.matcher(directive);
+                if (enabled && function.matches()) {
+                    if (SPECIES_DATA.matcher(function.group(3)).find()) {
+                        List<String> parameters = Arrays.stream(function.group(2).split(",")).map(String::trim).toList();
+                        functionMacros.put(function.group(1), new FunctionMacro(parameters, function.group(3)));
+                    }
+                } else if (enabled && define.matches()) {
                     String value = define.group(2).trim();
                     if (value.matches("-?\\w+")) {
                         defines.put(define.group(1), value);
+                    } else {
+                        macros.put(define.group(1), value); // shared species fields, expressions such as (A ? 90 : 80)
                     }
                 }
             } else if (directive.startsWith("#") && !directive.startsWith("#include") && !directive.startsWith("#undef")) {
                 throw new IllegalStateException("Unsupported directive: " + directive);
             } else if (enabled) {
-                result.append(line).append('\n');
+                result.append(expandMacros(line)).append('\n');
             }
         }
         return result.toString();
+    }
+
+    private record FunctionMacro(List<String> parameters, String body) {
+
+        /** The body with the arguments in place of the parameters and {@code ##} pasted. */
+        String expand(List<String> arguments) {
+            if (arguments.size() != parameters.size()) {
+                throw new IllegalStateException("Macro expects " + parameters + ", got " + arguments);
+            }
+            String text = body;
+            for (int i = 0; i < parameters.size(); i++) {
+                text = text.replaceAll("\\b" + Pattern.quote(parameters.get(i)) + "\\b", Matcher.quoteReplacement(arguments.get(i)));
+            }
+            return text.replaceAll("\\s*##\\s*", "");
+        }
+    }
+
+    /** Replaces macros, also those inside macro bodies (GARDEVOIR_MISC_INFO uses RALTS_FAMILY_TYPE2). */
+    private String expandMacros(String line) {
+        String text = line;
+        for (int depth = 0; depth < 10 && !(macros.isEmpty() && functionMacros.isEmpty()); depth++) {
+            Matcher name = MACRO_NAME.matcher(text);
+            StringBuilder expanded = new StringBuilder();
+            int copied = 0;
+            boolean changed = false;
+            while (name.find(copied)) {
+                String body = macros.get(name.group());
+                FunctionMacro function = functionMacros.get(name.group());
+                int open = name.end();
+                if (function != null && open < text.length() && text.charAt(open) == '(') {
+                    int length = topLevel(text.substring(open), ')');
+                    if (length < 0) {
+                        throw new IllegalStateException("Macro call over several lines: " + text);
+                    }
+                    int close = open + length;
+                    List<String> arguments = splitArguments(text.substring(open + 1, close));
+                    expanded.append(text, copied, name.start()).append(function.expand(arguments));
+                    copied = close + 1;
+                    changed = true;
+                } else {
+                    expanded.append(text, copied, name.start()).append(body != null ? body : name.group());
+                    copied = name.end();
+                    changed |= body != null;
+                }
+                if (copied >= text.length()) {
+                    break;
+                }
+            }
+            if (!changed) {
+                return text;
+            }
+            text = expanded.append(text.substring(Math.min(copied, text.length()))).toString();
+        }
+        return text;
+    }
+
+    /** Macro arguments: split at commas outside parentheses and braces. */
+    private static List<String> splitArguments(String text) {
+        List<String> arguments = new ArrayList<>();
+        int depth = 0;
+        int start = 0;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            depth += c == '(' || c == '{' ? 1 : c == ')' || c == '}' ? -1 : 0;
+            if (c == ',' && depth == 0) {
+                arguments.add(text.substring(start, i).trim());
+                start = i + 1;
+            }
+        }
+        arguments.add(text.substring(start).trim());
+        return arguments;
     }
 
     /** One {@code #if} level: whether its current branch is active and whether one of its branches was. */
@@ -754,25 +942,193 @@ public class GeneratePokeemeraldRuleset {
         }
     }
 
+    /** Names that are not defined count as 0, as in C. */
     private boolean condition(String expression) {
-        Matcher comparison = CONDITION.matcher(expression);
-        if (comparison.matches()) {
-            int left = value(comparison.group(1));
-            int right = value(comparison.group(3));
-            return switch (comparison.group(2)) {
+        return new Expression(expression).evaluate() != 0;
+    }
+
+    /** A field value that may be a conditional ({@code B_UPDATED_MOVE_DATA >= GEN_9 ? 95 : 70}): the chosen branch. */
+    private String select(String value) {
+        String text = value.trim();
+        if (text.startsWith("(") && topLevel(text, ')') == text.length() - 1) {
+            return select(text.substring(1, text.length() - 1));
+        }
+        int question = topLevel(text, '?');
+        if (question < 0) {
+            // a name defined as another name (RALTS_FAMILY_TYPE2 -> TYPE_FAIRY), but not as a number (TYPE_FAIRY -> 18)
+            while (defines.containsKey(text) && defines.get(text).matches("[A-Za-z_]\\w*")) {
+                text = defines.get(text);
+            }
+            return text;
+        }
+        int colon = topLevel(text.substring(question + 1), ':');
+        if (colon < 0) {
+            throw new IllegalStateException("Unsupported conditional: " + value);
+        }
+        boolean chosen = new Expression(expandMacros(text.substring(0, question)), true).evaluate() != 0;
+        return select(chosen ? text.substring(question + 1, question + 1 + colon) : text.substring(question + 2 + colon));
+    }
+
+    /** A numeric field: a number, a conditional or a name defined as one ({@code BEEDRILL_ATTACK}). */
+    private int number(String value) {
+        return new Expression(expandMacros(value), true).evaluate();
+    }
+
+    private static int topLevel(String text, char wanted) {
+        int depth = 0;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            depth += c == '(' ? 1 : c == ')' ? -1 : 0;
+            if (c == wanted && depth == 0) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * A preprocessor expression with {@code defined}, {@code !}, {@code &&}, {@code ||}, comparisons, {@code + -},
+     * {@code ?:} and parentheses; names that are not defined count as 0, as in C, unless the expression is strict.
+     */
+    private final class Expression {
+
+        private final List<String> tokens = new ArrayList<>();
+        private final boolean strict;
+        private int position;
+
+        Expression(String text) {
+            this(text, false);
+        }
+
+        Expression(String text, boolean strict) {
+            this.strict = strict;
+            Matcher token = Pattern.compile("\\s*(\\d+|\\w+|&&|\\|\\||==|!=|<=|>=|[<>()!+?:-])").matcher(text);
+            int end = 0;
+            while (token.find() && token.start() == end) {
+                tokens.add(token.group(1));
+                end = token.end();
+            }
+            if (!text.substring(end).isBlank()) {
+                throw new IllegalStateException("Unsupported condition: " + text);
+            }
+        }
+
+        int evaluate() {
+            int result = conditional();
+            if (position != tokens.size()) {
+                throw new IllegalStateException("Unsupported condition: " + tokens);
+            }
+            return result;
+        }
+
+        private int conditional() {
+            int condition = or();
+            if (!accept("?")) {
+                return condition;
+            }
+            int whenTrue = conditional();
+            expect(":");
+            int whenFalse = conditional();
+            return condition != 0 ? whenTrue : whenFalse;
+        }
+
+        private int or() {
+            int left = and();
+            while (accept("||")) {
+                int right = and();
+                left = left != 0 || right != 0 ? 1 : 0;
+            }
+            return left;
+        }
+
+        private int and() {
+            int left = comparison();
+            while (accept("&&")) {
+                int right = comparison();
+                left = left != 0 && right != 0 ? 1 : 0;
+            }
+            return left;
+        }
+
+        private int comparison() {
+            int left = sum();
+            String operator = position < tokens.size() ? tokens.get(position) : "";
+            if (!List.of("==", "!=", "<", "<=", ">", ">=").contains(operator)) {
+                return left;
+            }
+            position++;
+            int right = sum();
+            boolean result = switch (operator) {
                 case "==" -> left == right;
                 case "!=" -> left != right;
                 case "<" -> left < right;
                 case "<=" -> left <= right;
                 case ">" -> left > right;
-                case ">=" -> left >= right;
-                default -> throw new IllegalStateException(expression);
+                default -> left >= right;
             };
+            return result ? 1 : 0;
         }
-        if (expression.matches("\\w+")) {
-            return value(expression) != 0;
+
+        private int sum() {
+            int value = unary();
+            while (true) {
+                if (accept("+")) {
+                    value += unary();
+                } else if (accept("-")) {
+                    value -= unary();
+                } else {
+                    return value;
+                }
+            }
         }
-        throw new IllegalStateException("Unsupported condition: " + expression);
+
+        private int unary() {
+            if (accept("!")) {
+                return unary() == 0 ? 1 : 0;
+            }
+            if (accept("-")) {
+                return -unary();
+            }
+            if (accept("(")) {
+                int value = conditional();
+                expect(")");
+                return value;
+            }
+            String token = next();
+            if (token.equals("defined")) {
+                boolean parenthesis = accept("(");
+                String name = next();
+                if (parenthesis) {
+                    expect(")");
+                }
+                return defines.containsKey(name) || macros.containsKey(name) ? 1 : 0;
+            }
+            if (token.matches("\\d+")) {
+                return Integer.parseInt(token);
+            }
+            return strict || defines.containsKey(token) || token.equals("TRUE") || token.equals("FALSE") ? value(token) : 0;
+        }
+
+        private boolean accept(String token) {
+            if (position < tokens.size() && tokens.get(position).equals(token)) {
+                position++;
+                return true;
+            }
+            return false;
+        }
+
+        private void expect(String token) {
+            if (!accept(token)) {
+                throw new IllegalStateException("Expected " + token + " in " + tokens);
+            }
+        }
+
+        private String next() {
+            if (position >= tokens.size()) {
+                throw new IllegalStateException("Incomplete condition: " + tokens);
+            }
+            return tokens.get(position++);
+        }
     }
 
     private int value(String token) {
@@ -810,6 +1166,25 @@ public class GeneratePokeemeraldRuleset {
             }
         }
         return constants;
+    }
+
+    /** The members of {@code enum { ... }} blocks whose names start with the prefix: name -> value (0, 1, 2, ...). */
+    private static Map<String, Integer> enumValues(String source, String prefix) {
+        Map<String, Integer> values = new HashMap<>();
+        Matcher block = Pattern.compile("(?s)enum\\s*\\{(.*?)}").matcher(source.replaceAll("//.*", ""));
+        while (block.find()) {
+            int next = 0;
+            for (String member : block.group(1).split(",")) {
+                String name = member.replaceAll("(?m)^\\s*#.*$", "").trim();
+                if (name.matches("\\w+")) {
+                    if (name.startsWith(prefix)) {
+                        values.put(name, next);
+                    }
+                    next++;
+                }
+            }
+        }
+        return values;
     }
 
     /** Designated initializers {@code [CONSTANT] = ...} in source order: constant -> body up to the next one. */

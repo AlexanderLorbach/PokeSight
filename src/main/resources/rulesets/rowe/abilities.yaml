@@ -13,6 +13,8 @@ abilities:
   arena-trap: { EN: "Arena Trap" }
   armor-tail: { EN: "Armor Tail" }
   aroma-veil: { EN: "Aroma Veil" }
+  as-one-glastrier: { EN: "As One" }
+  as-one-spectrier: { EN: "As One" }
   aura-break: { EN: "Aura Break" }
   bad-dreams: { EN: "Bad Dreams" }
   ball-fetch: { EN: "Ball Fetch" }
@@ -195,8 +197,6 @@ abilities:
   rocky-payload: { EN: "Rocky Payload" }
   rough-skin: { EN: "Rough Skin" }
   rowe-air-current: { EN: "Air Current" }
-  rowe-as-one-ice-rider: { EN: "As One" }
-  rowe-as-one-shadow-rider: { EN: "As One" }
   rowe-aurora-body: { EN: "Aurora Body" }
   rowe-auto-heal: { EN: "Self-Heal" }
   rowe-bugged-out: { EN: "Bugged Out" }

@@ -151,6 +151,26 @@ class RulesetLoaderTest {
         assertThat(rowe.findMove(185)).map(Move::type).contains(DARK);  // "Faint Attack" = Feint Attack
         assertThat(rowe.findMove(20824)).map(Move::name).map(name -> name.get(Language.EN)).contains("Neutral Pulse"); // the hack's own
         assertThat(rowe.findMove(20825)).isEmpty(); // Seasonal Beam: type and category change
+        assertThat(rowe.findSpecies(898).orElseThrow().form(1).abilities()).containsExactly("as-one-glastrier");
+    }
+
+    @Test
+    void loadsTheEmeraldRogueRulesetFromTheExpansionsSpeciesInfo() {
+        Ruleset rogue = RulesetLoader.load("emerald-rogue");
+
+        assertThat(rogue.species()).hasSize(1025);
+        assertThat(rogue.generation()).isEqualTo(9);
+        assertThat(rogue.typeChart().multiplier(GHOST, STEEL)).isEqualTo(1);
+        assertThat(rogue.findSpecies(941)).map(s -> s.name(Language.EN)).contains("Kilowatrel"); // in-game name, 10 letters
+        assertThat(rogue.findSpecies(15)).map(Species::stats).contains(List.of(65, 90, 40, 45, 80, 75)); // BEEDRILL_ATTACK Gen 6+
+        assertThat(rogue.findSpecies(280)).map(Species::types).contains(List.of(PSYCHIC, FAIRY)); // RALTS_FAMILY_TYPE2 (P_UPDATED_TYPES)
+        assertThat(rogue.findSpecies(479).orElseThrow().form(1).stats()).containsExactly(50, 65, 107, 105, 107, 86); // ROTOM_APPLIANCE_INFO
+        assertThat(rogue.findSpecies(706).orElseThrow().form(1).types()).containsExactly(DRAGON, STEEL); // the hack's order
+        assertThat(rogue.findSpecies(898).orElseThrow().form(1).abilities()).containsExactly("as-one-glastrier");
+        assertThat(rogue.findSpecies(1018)).map(Species::sprite).contains("archaludon/front"); // written-out .frontPic
+        assertThat(rogue.findSpecies(19)).map(Species::sprite).contains("rattata/anim_front");
+        assertThat(rogue.findMove(295)).map(Move::power).contains(95); // Luster Purge: B_UPDATED_MOVE_DATA >= GEN_9 ? 95 : 70
+        assertThat(rogue.findMove(237)).isEmpty();                     // Hidden Power: variable type
     }
 
     @Test
