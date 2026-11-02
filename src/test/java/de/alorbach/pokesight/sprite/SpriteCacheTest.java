@@ -5,6 +5,10 @@ import de.alorbach.pokesight.ruleset.Species;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.awt.image.IndexColorModel;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -38,6 +42,35 @@ class SpriteCacheTest {
 
         assertThat(names).doesNotHaveDuplicates().contains("20", "352", "10166") // B.B. Kecleon shares Kecleon's sprite
                 .doesNotContain("5150", "5201", Species.NO_SPRITE);
+    }
+
+    @Test
+    void keepsTheFirstFrameOfSpriteSheetsWithATransparentBackground() throws IOException {
+        // A 4x2 sheet of two 2x2 frames; palette colour 0 (white) is the background
+        IndexColorModel palette = new IndexColorModel(4, 3, new byte[]{-1, -1, 0}, new byte[]{-1, 0, 0}, new byte[]{-1, 0, -1});
+        BufferedImage sheet = new BufferedImage(4, 2, BufferedImage.TYPE_BYTE_BINARY, palette);
+        sheet.getRaster().setPixels(0, 0, 4, 2, new int[]{0, 1, 2, 2, 2, 0, 2, 2});
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(sheet, "png", png);
+        SpriteCache cache = new SpriteCache(directory, URL, uri -> png.toByteArray(), true);
+
+        assertThat(cache.downloadMissing(List.of("rattata_alolan"))).isEqualTo(1);
+
+        BufferedImage frame = ImageIO.read(cache.file("rattata_alolan").orElseThrow().toFile());
+        assertThat(frame.getWidth()).isEqualTo(2);
+        assertThat(frame.getHeight()).isEqualTo(2);
+        assertThat(frame.getRGB(0, 0) >>> 24).isZero();             // background: transparent
+        assertThat(frame.getRGB(1, 0)).isEqualTo(0xFFFF0000);       // red
+        assertThat(frame.getRGB(0, 1)).isEqualTo(0xFF0000FF);       // blue
+        assertThat(frame.getRGB(1, 1) >>> 24).isZero();
+    }
+
+    @Test
+    void rejectsSpriteSheetsWithoutAPalette() {
+        SpriteCache cache = new SpriteCache(directory, URL, uri -> PNG, true);
+
+        assertThat(cache.downloadMissing(List.of("25"))).isZero();
+        assertThat(cache.file("25")).isEmpty();
     }
 
     @Test

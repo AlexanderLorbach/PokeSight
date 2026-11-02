@@ -19,11 +19,13 @@ import java.util.Objects;
  * @param withoutAbilities the game has no abilities although its ruleset's generation has (Let's Go and the Legends
  *                     games); matchups then ignore them
  * @param terastal     opponents can terastallize into another type (Scarlet/Violet)
+ * @param spriteSheets the sprite files are hg-engine sprite sheets (frames side by side, palette colour 0 is the
+ *                     background); only the first frame is kept, with a transparent background
  * @param romHack      a fan-made ROM hack; listed below the official games. Set by {@link GameCatalog}
  */
 public record GameDefinition(String id, String name, String ruleset, List<Language> languages, String spriteUrl,
                              boolean capitalNames, String region, boolean floatingNames, boolean withoutAbilities,
-                             boolean terastal, boolean romHack) {
+                             boolean terastal, boolean spriteSheets, boolean romHack) {
 
     public GameDefinition {
         Objects.requireNonNull(name, "name");
@@ -36,7 +38,7 @@ public record GameDefinition(String id, String name, String ruleset, List<Langua
 
     GameDefinition withId(String newId, boolean asRomHack) {
         return new GameDefinition(newId, name, ruleset, languages, spriteUrl, capitalNames, region, floatingNames,
-                withoutAbilities, terastal, asRomHack);
+                withoutAbilities, terastal, spriteSheets, asRomHack);
     }
 
     @Override
