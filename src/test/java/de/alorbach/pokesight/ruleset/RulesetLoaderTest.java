@@ -116,6 +116,24 @@ class RulesetLoaderTest {
     }
 
     @Test
+    void loadsTheOdysseyRulesetWithItsOwnTypeAndPokemon() {
+        Ruleset odyssey = RulesetLoader.load("odyssey");
+
+        assertThat(odyssey.species()).hasSize(404);
+        assertThat(odyssey.typeChart().types()).contains(AETHER).doesNotContain(FAIRY);
+        assertThat(odyssey.typeChart().multiplier(POISON, WATER)).isEqualTo(2);   // the hack's own chart
+        assertThat(odyssey.typeChart().multiplier(DARK, AETHER)).isEqualTo(2);
+        assertThat(odyssey.typeChart().multiplier(WATER, AETHER)).isEqualTo(0.5);
+        assertThat(odyssey.findSpecies(35)).map(Species::types).contains(List.of(AETHER)); // Clefairy
+        assertThat(odyssey.findSpecies(20)).map(s -> s.name(Language.EN)).contains("Ratreecate"); // Etrian Raticate
+        assertThat(odyssey.findSpecies(5201)).map(Species::sprite).contains(Species.NO_SPRITE);    // Gorochu, the hack's own
+        assertThat(odyssey.findSpecies(5150)).map(Species::sprite).contains("352");                // B.B. Kecleon
+        assertThat(odyssey.findMove(129)).map(Move::type).contains(AETHER);                         // Swift
+        assertThat(odyssey.findMove(246)).map(Move::name).map(name -> name.get(Language.EN)).contains("Ancientpower");
+        assertThat(odyssey.findMove(585)).isEmpty(); // Moonblast: no Fairy type
+    }
+
+    @Test
     void usesGen1Rules() {
         Ruleset gen1 = RulesetLoader.load("gen1");
         assertThat(gen1.typeChart().types()).doesNotContain(DARK, STEEL, FAIRY);

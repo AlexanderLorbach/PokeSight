@@ -2,6 +2,7 @@ package de.alorbach.pokesight.sprite;
 
 import de.alorbach.pokesight.game.GameDefinition;
 import de.alorbach.pokesight.ruleset.Ruleset;
+import de.alorbach.pokesight.ruleset.Species;
 
 import java.io.IOException;
 import java.net.URI;
@@ -73,17 +74,21 @@ public final class SpriteCache {
                 : Path.of(System.getProperty("user.home"), ".pokesight", "sprites");
     }
 
-    /** Names of all sprites the ruleset needs: every species' dex number plus the sprites of alternate forms. */
+    /**
+     * Names of all sprites the ruleset needs: every species' dex number (or its own sprite name) plus the sprites of
+     * alternate forms; species without a sprite ({@link Species#NO_SPRITE}) need none.
+     */
     public static List<String> spriteNames(Ruleset ruleset) {
         Set<String> names = new LinkedHashSet<>();
         ruleset.species().forEach((id, species) -> {
-            names.add(String.valueOf(id));
+            names.add(species.sprite() != null ? species.sprite() : String.valueOf(id));
             species.forms().values().forEach(form -> {
                 if (form.sprite() != null) {
                     names.add(form.sprite());
                 }
             });
         });
+        names.remove(Species.NO_SPRITE);
         return List.copyOf(names);
     }
 

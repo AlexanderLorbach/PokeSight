@@ -1,6 +1,7 @@
 package de.alorbach.pokesight.sprite;
 
 import de.alorbach.pokesight.ruleset.RulesetLoader;
+import de.alorbach.pokesight.ruleset.Species;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -29,6 +30,14 @@ class SpriteCacheTest {
         List<String> names = SpriteCache.spriteNames(RulesetLoader.load("gen4"));
 
         assertThat(names).hasSize(512).doesNotHaveDuplicates().contains("1", "493", "10004"); // 10004 = Sandy Wormadam
+    }
+
+    @Test
+    void namesUseTheSpeciesOwnSpriteAndSkipSpeciesWithout() {
+        List<String> names = SpriteCache.spriteNames(RulesetLoader.load("odyssey"));
+
+        assertThat(names).doesNotHaveDuplicates().contains("20", "352", "10166") // B.B. Kecleon shares Kecleon's sprite
+                .doesNotContain("5150", "5201", Species.NO_SPRITE);
     }
 
     @Test

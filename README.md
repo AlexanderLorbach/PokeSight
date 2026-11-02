@@ -37,6 +37,10 @@ screens, e.g. Red/Blue (Gen 1, Game Boy font) and FireRed/LeafGreen (Gen 3, GBA 
 hg-engine, English only): Pokémon of all generations with their Gen 9 types, the Gen 9 type chart with Fairy, the
 hack's move changes (e.g. Snap Trap is Steel, Slash has 80 power) and the in-game names, which the hack cuts to 10
 letters ("ScreamTail"). It reads the same battle screens as HeartGold, but there are no test screenshots of it yet.
+[Pokémon Odyssey](https://eeveeexpo.com/odyssey/) (FireRed hack by PacoScarso, English only) brings its own type
+chart with the new Aether type instead of Fairy, Etrian Variants that replace their species (Ratreecate, Grass/Rock
+Corsola), its own Pokémon (Gorochu, Yggdreon, Reefsola: shown without a sprite) and new or changed moves, all from the
+developer's data workbook. Moves the workbook doesn't list keep their Gen 9 values; Fairy moves are left out.
 
 The name reading is checked on 254 real battle screenshots, at least five per game, at emulator window sizes 1×, 2×
 (smoothed) and 3× (Full HD screenshots of the Switch games at their size). Correctly read views:
@@ -232,7 +236,7 @@ src/main/java/de/alorbach/pokesight/
 src/main/resources/      games/*.yaml, rulesets/<id>/*.yaml (generated), ui/ (theme, font, icons)
 packaging/               PokeSight.ico, install.ps1 (installLocal)
 tools/                   GenerateRuleset.java (PokeAPI → YAML), GenerateHgEngineRuleset.java (hg-engine hack → YAML),
-                         GenerateIcon.java (app icon)
+                         GenerateOdysseyRuleset.java (Odyssey workbook → YAML), GenerateIcon.java (app icon)
 .github/workflows/       release.yml: builds the portable zip for every pushed v* tag
 licenses/                license texts of the bundled third-party software (THIRD-PARTY-NOTICES.md)
 ```
@@ -275,6 +279,10 @@ licenses/                license texts of the bundled third-party software (THIR
   with pinned raw GitHub URLs or local folders (the exact command for Heartfelt Gold is in the tool's Javadoc). It reads
   the hack's `config.h`, `Species.c`, `HiddenAbilityTable.c` and `Moves.c` and hg-engine's type chart; the gen9 ruleset
   only supplies dex numbers (checked against PokeAPI), form names and sprites, ability and type names and move ids.
+  Pokémon Odyssey: `java tools/GenerateOdysseyRuleset.java <workbook .xlsx or its export URL> src/main/resources/rulesets/gen9 src/main/resources/rulesets/odyssey`
+  (URL in the tool's Javadoc). It reads the type chart from the cell colours, types, abilities and base stats of every
+  species, the Pokédex slot names and the new moves (type and category icons recognized by their hash); the workbook's
+  SHA-256 is written into the generated files, since the developer can update it.
 - **Data checked** against Pokémon Showdown's per-generation data (base data plus the gen1–gen8 and gen7letsgo mods)
   for every ruleset: type chart, types of all species and their alternate forms, base stats and abilities of all
   species, power, type and category of all moves (until Gen 3 the category follows the type). Gaps in PokeAPI found

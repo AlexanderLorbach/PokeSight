@@ -36,6 +36,7 @@
     type-dragon: #5060e1;
     type-dark: #50413f;
     type-fairy: #ef70ef;
+    type-aether: #d8d3b4;    /* Pokémon Odyssey's custom type: pale like its in-game icon */
 
     -fx-base: ps-surface-3;
     -fx-background: ps-surface-0;
@@ -466,6 +467,7 @@
 .type-dragon   { -fx-background-color: type-dragon;   -fx-text-fill: white; }
 .type-dark     { -fx-background-color: type-dark;     -fx-text-fill: white; }
 .type-fairy    { -fx-background-color: type-fairy; }
+.type-aether   { -fx-background-color: type-aether; }
 
 .matchup-section {
     -fx-spacing: 6;
@@ -688,4 +690,5 @@
 .move-type-dragon { -fx-border-color: transparent transparent transparent type-dragon; -fx-border-width: 0 0 0 5; }
 .move-type-dark { -fx-border-color: transparent transparent transparent type-dark; -fx-border-width: 0 0 0 5; }
 .move-type-fairy { -fx-border-color: transparent transparent transparent type-fairy; -fx-border-width: 0 0 0 5; }
+.move-type-aether { -fx-border-color: transparent transparent transparent type-aether; -fx-border-width: 0 0 0 5; }
 .best-move-name { -fx-padding: 0 0 0 7; }

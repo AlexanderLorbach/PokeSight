@@ -47,12 +47,15 @@ class GameCatalogTest {
         List<GameDefinition> games = GameCatalog.load();
         GameDefinition heartfeltGold = game("heartfelt-gold");
 
-        assertThat(games.getLast()).isEqualTo(heartfeltGold);
-        assertThat(games.stream().dropWhile(game -> !game.romHack())).allSatisfy(game -> assertThat(game.romHack()).isTrue());
-        assertThat(heartfeltGold.romHack()).isTrue();
+        GameDefinition odyssey = game("odyssey");
+
+        assertThat(games.stream().dropWhile(game -> !game.romHack())).containsExactly(heartfeltGold, odyssey);
         assertThat(heartfeltGold.ruleset()).isEqualTo("heartfelt-gold");
         assertThat(heartfeltGold.languages()).containsExactly(Language.EN); // hg-engine works on the US ROM only
         assertThat(heartfeltGold.capitalNames()).isFalse();
+        assertThat(odyssey.ruleset()).isEqualTo("odyssey");
+        assertThat(odyssey.languages()).containsExactly(Language.EN);
+        assertThat(odyssey.capitalNames()).isFalse();
         assertThat(game("heartgold-soulsilver").romHack()).isFalse();
     }
 

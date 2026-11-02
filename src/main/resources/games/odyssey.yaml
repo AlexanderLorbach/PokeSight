@@ -1,0 +1,9 @@
+# Pokémon Odyssey (GBA): ROM hack of FireRed (US) by PacoScarso; English only. Own Aether type instead of Fairy,
+# Etrian Variants that replace their species. https://eeveeexpo.com/odyssey/ - fan site https://pokemonodyssey.net/
+name: Pokémon Odyssey
+ruleset: odyssey        # generated from the developer's data workbook (tools/GenerateOdysseyRuleset.java)
+languages: [EN]
+# Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
+# Pokémon up to Gen 9, so the default sprites; Etrian Variants show the standard sprite, the hack's own Pokémon none.
+spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69afd48dc1273da9033ede9c/sprites/pokemon/{name}.png"
+capitalNames: false     # battle boxes show "Dustox", "Xatu"
