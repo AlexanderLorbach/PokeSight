@@ -84,6 +84,11 @@ and its own sprites, from its source code (default game options). Names read: 7 
 the hack's changed abilities, stats and move powers, its own moves, in-game names and GBA-style sprites, from Skeli's
 public source code. Names read: 12 / 12.
 
+**[Pokémon Glazed](https://www.gamebrew.org/wiki/Pokemon_Glazed_GBA)** (Emerald, v9.1): Gen 1-6 Pokémon in Emerald's
+411 slots, Fairy, Gen VII stats and moves, Mega Evolutions as own slots. No source code exists: built from the
+changelog, the fan wiki's slot table and the developers' move document; abilities are assumed (Emerald's Gen 3 set),
+sprites are the official ones. Names read: 14 / 15.
+
 ## Getting started
 
 ### Option 1: Download a release (no Java needed)
@@ -249,7 +254,7 @@ packaging/               PokeSight.ico, install.ps1 (installLocal)
 tools/                   GenerateRuleset.java (PokeAPI → YAML), GenerateHgEngineRuleset.java (hg-engine hack → YAML),
                          GenerateOdysseyRuleset.java (Odyssey workbook → YAML), GeneratePokeemeraldRuleset.java
                          (pokeemerald hack → YAML), GenerateCfruRuleset.java (CFRU + DPE hack → YAML),
-                         GenerateIcon.java (app icon)
+                         GenerateGlazedRuleset.java (Glazed documentation → YAML), GenerateIcon.java (app icon)
 .github/workflows/       release.yml: builds the portable zip for every pushed v* tag
 licenses/                license texts of the bundled third-party software (THIRD-PARTY-NOTICES.md)
 ```
@@ -309,6 +314,9 @@ licenses/                license texts of the bundled third-party software (THIR
   (exact command in the tool's Javadoc; Unbound: `UNBOUND`). It evaluates CFRU's `config.h` plus the given defines and
   reads DPE's `Base_Stats.c`, name tables and front sprites and CFRU's type chart and `battle_moves.c`; Z-Moves and
   Max Moves are left out, the hack's own moves get key 20000 + its move id.
+  Pokémon Glazed (binary hack, no source): `java tools/GenerateGlazedRuleset.java src/main/resources/rulesets/gen3 src/main/resources/rulesets/gen7 src/main/resources/rulesets/glazed`
+  reads the fan wiki's slot table (pinned revision) and the move document and applies the changelog to the gen3/gen7
+  rulesets (sources and assumptions in the tool's Javadoc).
 - **Data checked** against Pokémon Showdown's per-generation data (base data plus the gen1–gen8 and gen7letsgo mods)
   for every ruleset: type chart, types of all species and their alternate forms, base stats and abilities of all
   species, power, type and category of all moves (until Gen 3 the category follows the type). Gaps in PokeAPI found
