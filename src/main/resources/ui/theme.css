@@ -255,6 +255,29 @@
     -fx-min-width: 260;
 }
 
+/* Switches of a game that change its rules (Platinum Together's MODERN POKéMON) */
+.game-options {
+    -fx-hgap: 16;
+    -fx-vgap: 6;
+}
+
+.game-options .check-box {
+    -fx-text-fill: ps-text;
+}
+
+.game-options .check-box .box {
+    -fx-background-color: ps-surface-3;
+    -fx-background-radius: 3;
+}
+
+.game-options .check-box:selected .box {
+    -fx-background-color: ps-pokedex-red;
+}
+
+.game-options .check-box:selected .mark {
+    -fx-background-color: white;
+}
+
 .area-row {
     -fx-spacing: 8;
 }
@@ -436,6 +459,13 @@
     -fx-font-size: 24px;
 }
 
+/* Worth catching (legendary, top Smogon in-game tier or among the strongest of its type) */
+.catch-star {
+    -fx-text-fill: ps-pokemon-yellow;
+    -fx-font-size: 22px;
+    -fx-effect: dropshadow(gaussian, rgba(255, 203, 5, 0.45), 6, 0, 0, 0);
+}
+
 .read-text {
     -fx-text-fill: ps-text-muted;
     -fx-font-size: 12px;
@@ -563,17 +593,6 @@
 .active-hint.stay   { -fx-text-fill: ps-good; }
 .active-hint.switch { -fx-text-fill: ps-pokemon-yellow; }
 
-/* An ability that changes its matchups: surely (counted) or maybe (not counted). */
-.ability-note {
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-padding: 4 10;
-    -fx-background-radius: 8;
-}
-
-.ability-note.certain  { -fx-background-color: ps-surface-3; -fx-text-fill: ps-text; }
-.ability-note.possible { -fx-background-color: rgba(255, 203, 5, 0.12); -fx-text-fill: ps-pokemon-yellow; }
-
 .tera-badge {
     -fx-font-weight: bold;
     -fx-font-size: 12px;
@@ -655,6 +674,12 @@
 
 .team-grid .search-field.team-pokemon {
     -fx-pref-width: 150;
+}
+
+/* Under a team member: whether physical or special moves suit it */
+.attack-style {
+    -fx-font-size: 11px;
+    -fx-text-fill: ps-text-muted;
 }
 
 .team-sprite {

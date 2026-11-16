@@ -13,6 +13,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 
 class SettingsStoreTest {
 
@@ -46,11 +47,27 @@ class SettingsStoreTest {
     }
 
     @Test
+    void savesAndLoadsGameOptions() {
+        SettingsStore store = new SettingsStore(directory);
+        AppSettings settings = AppSettings.DEFAULT.withGame("platinum-together", Language.EN)
+                .withOption("platinum-together", "modern-pokemon", true);
+
+        store.saveApp(settings.withWindow(new AppSettings.WindowBounds(0, 0, 850, 680, false)));
+
+        AppSettings loaded = new SettingsStore(directory).app();
+        assertThat(loaded.options("platinum-together")).containsExactly(entry("modern-pokemon", true));
+        assertThat(loaded.options("platinum")).isEmpty();
+        assertThat(loaded.withOption("platinum-together", "modern-pokemon", false).options("platinum-together"))
+                .containsExactly(entry("modern-pokemon", false));
+    }
+
+    @Test
     void savesAndLoadsGameSettingsAsReadableYaml() throws Exception {
         SettingsStore store = new SettingsStore(directory);
         GameSettings settings = GameSettings.DEFAULT
                 .withSingleArea(new CaptureRegion(2, 210, 757, 211))
                 .withDoubleArea(null)
+                .withOwnDoubleArea(new CaptureRegion(500, 300, 420, 180))
                 .withTeam(TEAM);
 
         store.saveGame("platinum", settings);
@@ -58,7 +75,7 @@ class SettingsStoreTest {
         assertThat(new SettingsStore(directory).game("platinum")).isEqualTo(settings);
         assertThat(new SettingsStore(directory).game("platinum").toTeam()).isEqualTo(TEAM);
         String yaml = Files.readString(directory.resolve("games/platinum.yaml"));
-        assertThat(yaml).startsWith("# PokeSight settings").contains("singleArea:", "width: 757", "pokemon: 390");
+        assertThat(yaml).startsWith("# PokeSight settings").contains("singleArea:", "width: 757", "ownDoubleArea:", "pokemon: 390");
     }
 
     @Test

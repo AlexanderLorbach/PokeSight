@@ -1,6 +1,7 @@
 package de.alorbach.pokesight.ui;
 
 import de.alorbach.pokesight.battle.PokemonId;
+import de.alorbach.pokesight.catching.CatchAdvice;
 import de.alorbach.pokesight.matchup.EnemyAnalysis;
 import de.alorbach.pokesight.matchup.Matchup;
 import de.alorbach.pokesight.matchup.MoveOption;
@@ -31,21 +32,24 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.DoublePredicate;
 import java.util.function.Function;
 
 /**
- * One opposing Pokémon: sprite, name, types, abilities that change its matchups, the team's best moves against it,
+ * One opposing Pokémon: sprite, name, types, the team's best moves against it,
  * which team member takes its attacks best and which attack types are (not) effective. With the player's active
- * Pokémon known, its moves are marked and a hint says whether another team member hits harder. The compact variant
+ * Pokémon known (two in a double battle), their moves are marked and a hint says whether another team member hits
+ * harder. The compact variant
  * (borderless mode) drops the buttons, notes and switch-ins; {@link FitPane} scales it to fill.
  */
 final class PokemonCard extends VBox {
@@ -59,10 +63,21 @@ final class PokemonCard extends VBox {
      * What every card of a battle view shares.
      *
      * @param terastal opponents can terastallize (Scarlet/Violet): cards offer a Tera type picker
-     * @param active   the player's Pokémon on the field, if known and part of the team; null otherwise
+     * @param active   the player's Pokémon on the field that are known and part of the team (two in a double
+     *                 battle); empty if none
+     * @param catching which Pokémon get the catch star
      */
     record Context(Ruleset ruleset, Language language, List<SearchField.Option<PokemonId>> pokemonOptions, boolean teamSet,
-                   Function<PokemonId, Optional<Image>> sprites, boolean terastal, PokemonId active) {
+                   Function<PokemonId, Optional<Image>> sprites, boolean terastal, List<PokemonId> active,
+                   CatchAdvice catching) {
+        Context {
+            active = List.copyOf(active);
+            Objects.requireNonNull(catching, "catching");
+        }
+
+        boolean isOut(PokemonId pokemon) {
+            return active.contains(pokemon);
+        }
     }
 
     private final HBox header;
@@ -84,7 +99,13 @@ final class PokemonCard extends VBox {
         StackPane spriteFrame = new StackPane(sprite.<Node>map(PokemonCard::spriteView).orElseGet(() -> PokeBall.of(36)));
         spriteFrame.getStyleClass().add("sprite-frame");
         Label name = styled(new Label(analysis.map(EnemyAnalysis::name).orElse("Unknown Pokémon")), "pokemon-name");
-        VBox titles = new VBox(4, name);
+        name.setMinWidth(0);
+        HBox nameRow = new HBox(6, name);
+        nameRow.setAlignment(Pos.BASELINE_LEFT);
+        if (analysis.isPresent() && entry.pokemon() != null) {
+            context.catching().reason(entry.pokemon().speciesId()).ifPresent(reason -> nameRow.getChildren().add(catchStar(reason)));
+        }
+        VBox titles = new VBox(4, nameRow);
         analysis.ifPresent(enemy -> {
             FlowPane types = badges(enemy.types(), chart, language);
             if (enemy.tera()) {
@@ -109,9 +130,6 @@ final class PokemonCard extends VBox {
             getChildren().add(styled(new Label("Read: \"" + entry.readText() + "\"" + note), "read-text"));
         }
         analysis.ifPresent(enemy -> {
-            if (!compact) {
-                enemy.abilities().forEach(note -> getChildren().add(abilityNote(note, chart, language)));
-            }
             bestMoves(enemy.bestMoves(), context, compact).ifPresent(getChildren()::add);
             if (!compact) {
                 switchIns(enemy.switchIns(), context).ifPresent(getChildren()::add);
@@ -153,6 +171,16 @@ final class PokemonCard extends VBox {
         actions.getChildren().forEach(button -> ((Button) button).setMinWidth(Region.USE_PREF_SIZE)); // never "..."
         actions.setMinWidth(Region.USE_PREF_SIZE);
         return actions;
+    }
+
+    /** "★" next to the name of a Pokémon worth catching; hovering it tells why. */
+    private static Label catchStar(String reason) {
+        Label star = styled(new Label("★"), "catch-star");
+        star.setMinWidth(Region.USE_PREF_SIZE); // a long name is cut, never the star
+        Tooltip tooltip = new Tooltip("Worth catching\n" + reason);
+        tooltip.setShowDelay(Duration.millis(150));
+        star.setTooltip(tooltip);
+        return star;
     }
 
     private static ImageView spriteView(Image image) {
@@ -208,33 +236,16 @@ final class PokemonCard extends VBox {
         search.requestFocus();
     }
 
-    /** "Levitate: GROUND 0×", or "May have Levitate: ..." if the species has other abilities too. */
-    private static Label abilityNote(EnemyAnalysis.AbilityNote note, TypeChart chart, Language language) {
-        String effect = note.effect().wonderGuard()
-                ? "only super-effective moves hit"
-                : String.join(", ", note.effect().factors().entrySet().stream()
-                        .sorted(Map.Entry.comparingByKey())
-                        .map(entry -> chart.name(entry.getKey(), language).toUpperCase(Locale.ROOT) + " " + format(entry.getValue()))
-                        .toList());
-        Label label = styled(new Label((note.certain() ? "" : "May have ") + note.name() + ": " + effect),
-                "ability-note", note.certain() ? "certain" : "possible");
-        label.setWrapText(true);
-        label.setTooltip(new Tooltip(note.certain()
-                ? "Its only ability: already counted in the matchups below"
-                : "One of its possible abilities: not counted below, so these types may not work"));
-        return label;
-    }
-
     /**
-     * "YOUR BEST MOVES": the strongest moves of the team that deal damage at all. With the active Pokémon known, its
-     * best move is always listed and marked, and a hint says whether another team member hits harder.
+     * "YOUR BEST MOVES": the strongest moves of the team that deal damage at all. With the active Pokémon known, the
+     * best move of each is always listed and marked, and a hint per Pokémon says whether another team member hits harder.
      */
     private static Optional<VBox> bestMoves(List<MoveOption> options, Context context, boolean compact) {
         List<MoveOption> hitting = options.stream().filter(option -> option.score() > 0).toList();
         List<MoveOption> shown = new ArrayList<>(hitting.stream().limit(BEST_MOVES_SHOWN).toList());
-        Optional<MoveOption> activeBest = context.active() == null ? Optional.empty()
-                : hitting.stream().filter(option -> option.user().equals(context.active())).findFirst();
-        activeBest.filter(option -> !shown.contains(option)).ifPresent(shown::add);
+        for (PokemonId active : context.active()) {
+            bestOf(hitting, active).filter(option -> !shown.contains(option)).ifPresent(shown::add);
+        }
         if (shown.isEmpty()) {
             return Optional.empty();
         }
@@ -265,16 +276,12 @@ final class PokemonCard extends VBox {
             Move move = ruleset.findMove(option.moveId()).orElseThrow();
             String user = ruleset.findSpecies(option.user().speciesId())
                     .map(species -> species.form(option.user().form()).name(language)).orElse("?");
-            Label multiplier = styled(new Label(format(option.effectiveness()) + (option.caveat() != null ? " ?" : "")),
-                    "multiplier", multiplierStyle(option.effectiveness()));
-            if (option.caveat() != null) {
-                multiplier.setTooltip(new Tooltip("It may have " + option.caveat() + ": this move may not work as shown"));
-            }
+            Label multiplier = styled(new Label(format(option.effectiveness())), "multiplier", multiplierStyle(option.effectiveness()));
             multiplier.setMinWidth(Region.USE_PREF_SIZE);
             Label moveName = styled(new Label(move.name(language)), "best-move-name", SearchField.moveTypeStyle(move.type()));
             Label type = styled(new Label(ruleset.typeChart().name(move.type(), language).toUpperCase(Locale.ROOT)),
                     "type-badge", typeStyle(move.type()));
-            boolean active = option.user().equals(context.active());
+            boolean active = context.isOut(option.user());
             Label by = styled(new Label(user + (option.stab() ? "  ·  STAB" : "") + (active ? "  ·  OUT" : "")), "best-move-user");
             if (active) {
                 by.getStyleClass().add("active-user");
@@ -290,26 +297,31 @@ final class PokemonCard extends VBox {
             moves.addRow(rowIndex++, multiplier, moveName, type, by, score);
         }
         VBox section = new VBox(styled(new Label("YOUR BEST MOVES"), "section-title"));
-        activeHint(hitting, activeBest, context).ifPresent(section.getChildren()::add);
+        for (PokemonId active : context.active()) {
+            activeHint(hitting, active, context).ifPresent(section.getChildren()::add);
+        }
         section.getChildren().add(moves);
         section.getStyleClass().addAll("matchup-section", "best-moves");
         return Optional.of(section);
     }
 
     /**
-     * Whether the Pokémon on the field already has the best move: "Infernape is out: Close Combat is your best move."
+     * Whether a Pokémon on the field already has the best move: "Infernape is out: Close Combat is your best move."
      * or "Infernape is out: best Flamethrower (143). Garchomp hits harder: Earthquake (300)."
      */
-    private static Optional<Label> activeHint(List<MoveOption> hitting, Optional<MoveOption> activeBest, Context context) {
-        if (context.active() == null || hitting.isEmpty()) {
+    private static Optional<Label> activeHint(List<MoveOption> hitting, PokemonId active, Context context) {
+        if (hitting.isEmpty()) {
             return Optional.empty();
         }
+        Optional<MoveOption> activeBest = bestOf(hitting, active);
         Ruleset ruleset = context.ruleset();
         Language language = context.language();
-        String out = pokemonName(ruleset, context.active(), language) + " is out: ";
+        String out = pokemonName(ruleset, active, language) + " is out: ";
         MoveOption best = hitting.getFirst();
-        String bestText = pokemonName(ruleset, best.user(), language) + " hits harder: " + moveName(ruleset, best, language)
-                + " (" + Math.round(best.score()) + (best.caveat() != null ? ", if it has no " + best.caveat() : "") + ").";
+        // In a double battle the harder hitter may be the other Pokémon on the field: attack this one with it
+        String bestText = pokemonName(ruleset, best.user(), language) + (context.isOut(best.user()) ? " (also out)" : "")
+                + " hits harder: " + moveName(ruleset, best, language)
+                + " (" + Math.round(best.score()) + ").";
         String text;
         boolean better;
         if (activeBest.isEmpty()) {
@@ -328,6 +340,11 @@ final class PokemonCard extends VBox {
         return Optional.of(hint);
     }
 
+    /** The best move of this team member; the options are sorted best first. */
+    private static Optional<MoveOption> bestOf(List<MoveOption> hitting, PokemonId member) {
+        return hitting.stream().filter(option -> option.user().equals(member)).findFirst();
+    }
+
     private static String pokemonName(Ruleset ruleset, PokemonId pokemon, Language language) {
         return ruleset.findSpecies(pokemon.speciesId()).map(species -> species.form(pokemon.form()).name(language)).orElse("?");
     }
@@ -338,12 +355,12 @@ final class PokemonCard extends VBox {
 
     /**
      * "SAFEST SWITCH-INS": the team members that take the opponent's attacks of its own types best, with the
-     * multiplier per type; the active Pokémon is always listed.
+     * multiplier per type; the active Pokémon are always listed.
      */
     private static Optional<VBox> switchIns(List<EnemyAnalysis.SwitchIn> switchIns, Context context) {
         List<EnemyAnalysis.SwitchIn> shown = new ArrayList<>(switchIns.stream().limit(SWITCH_INS_SHOWN).toList());
-        switchIns.stream().filter(switchIn -> switchIn.member().equals(context.active()) && !shown.contains(switchIn))
-                .findFirst().ifPresent(shown::add);
+        switchIns.stream().filter(switchIn -> context.isOut(switchIn.member()) && !shown.contains(switchIn))
+                .forEach(shown::add);
         if (shown.isEmpty()) {
             return Optional.empty();
         }
@@ -355,7 +372,7 @@ final class PokemonCard extends VBox {
         rows.getColumnConstraints().add(nameColumn);
         int rowIndex = 0;
         for (EnemyAnalysis.SwitchIn switchIn : shown) {
-            boolean active = switchIn.member().equals(context.active());
+            boolean active = context.isOut(switchIn.member());
             Label name = styled(new Label(pokemonName(context.ruleset(), switchIn.member(), context.language())
                     + (active ? "  ·  OUT" : "")), "best-move-user");
             if (active) {

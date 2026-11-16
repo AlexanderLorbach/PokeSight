@@ -31,3 +31,6 @@ romHacks:
   - glazed
   - emerald-rogue
   - lazarus
+# Custom games: fan games that are no ROM hack (own launcher, per-world rules), shown below the ROM hacks.
+custom:
+  - platinum-together

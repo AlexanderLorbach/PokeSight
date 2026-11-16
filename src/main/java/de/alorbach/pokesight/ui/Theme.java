@@ -2,6 +2,7 @@ package de.alorbach.pokesight.ui;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Dialog;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -56,7 +57,6 @@ public final class Theme {
         }
     }
 
-    /** A dark error dialog without the light Windows title bar. */
     /**
      * Runs a settings save; a failure (e.g. a read-only settings folder) is shown instead of breaking the action
      * the user started: the choice still applies to this session.
@@ -70,15 +70,20 @@ public final class Theme {
         }
     }
 
+    /** A dark error dialog without the light Windows title bar. */
     public static void showError(Window owner, String header, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR, message);
         alert.setHeaderText(header);
-        if (owner != null) {
-            alert.initOwner(owner);
-        }
-        alert.initStyle(StageStyle.UNDECORATED);
-        alert.getDialogPane().getStylesheets().add(Objects.requireNonNull(Theme.class.getResource("/ui/theme.css")).toExternalForm());
+        style(alert, owner);
         alert.showAndWait();
+    }
+
+    private static void style(Dialog<?> dialog, Window owner) {
+        if (owner != null) {
+            dialog.initOwner(owner);
+        }
+        dialog.initStyle(StageStyle.UNDECORATED);
+        dialog.getDialogPane().getStylesheets().add(Objects.requireNonNull(Theme.class.getResource("/ui/theme.css")).toExternalForm());
     }
 
     static synchronized List<Image> icons() {

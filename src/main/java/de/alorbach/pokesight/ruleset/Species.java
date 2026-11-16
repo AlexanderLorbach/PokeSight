@@ -8,11 +8,10 @@ import java.util.Objects;
  * A species in its base form, plus the alternate forms whose types differ (keyed by the game's form index).
  *
  * @param stats     base stats in the order of {@link Stat}; Gen 1's Special counts as both special stats
- * @param abilities identifiers of the abilities it can have in this generation (none before Gen 3)
  * @param sprite    sprite file name of the base form; null if it is the dex number, {@link #NO_SPRITE} if there is
  *                  none (species a ROM hack made up)
  */
-public record Species(Map<Language, String> name, List<PokemonType> types, List<Integer> stats, List<String> abilities,
+public record Species(Map<Language, String> name, List<PokemonType> types, List<Integer> stats,
                       Map<Integer, Form> forms, String sprite) {
 
     /** {@link #sprite()} of a species without any sprite to download. */
@@ -25,7 +24,6 @@ public record Species(Map<Language, String> name, List<PokemonType> types, List<
         name = Map.copyOf(Objects.requireNonNull(name, "name"));
         types = requireOneOrTwo(types);
         stats = requireStats(stats);
-        abilities = abilities == null ? List.of() : List.copyOf(abilities);
         forms = forms == null ? Map.of() : Map.copyOf(forms);
     }
 
@@ -35,7 +33,7 @@ public record Species(Map<Language, String> name, List<PokemonType> types, List<
 
     /** The given form; forms that are not listed are identical to the base form. */
     public Form form(int formIndex) {
-        return forms.getOrDefault(formIndex, new Form(name, types, sprite, null, stats, abilities));
+        return forms.getOrDefault(formIndex, new Form(name, types, sprite, null, stats));
     }
 
     /**
@@ -55,13 +53,12 @@ public record Species(Map<Language, String> name, List<PokemonType> types, List<
      * @param region the region of a regional form ("alola", "galar", "hisui", "paldea"); null for other forms
      */
     public record Form(Map<Language, String> name, List<PokemonType> types, String sprite, String region,
-                       List<Integer> stats, List<String> abilities) {
+                       List<Integer> stats) {
 
         public Form {
             name = Map.copyOf(Objects.requireNonNull(name, "name"));
             types = requireOneOrTwo(types);
             stats = requireStats(stats);
-            abilities = abilities == null ? List.of() : List.copyOf(abilities);
         }
 
         public String name(Language language) {
