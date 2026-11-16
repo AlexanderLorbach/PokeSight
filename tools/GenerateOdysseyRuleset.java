@@ -24,7 +24,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -43,7 +42,7 @@ import java.util.zip.ZipInputStream;
  * </pre>
  *
  * <p>From the workbook: the type chart (sheet "Type Chart": multipliers are cell colours, explained by the legend
- * below the chart; Aether replaces Fairy), every species' types, abilities and Odyssey base stats (sheets "#1-151" to
+ * below the chart; Aether replaces Fairy), every species' types and Odyssey base stats (sheets "#1-151" to
  * "Paradox"), the names of the dex slots (sheet "Pokédex") and the new and changed moves (sheet "New Moves &amp;
  * Abilities"; type and category are icons, recognized by their image hash).
  *
@@ -57,8 +56,6 @@ public class GenerateOdysseyRuleset {
     private static final String POKEAPI_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/";
     private static final String POKEAPI_ENGLISH = "9";
     private static final String LANGUAGE = "EN";
-    /** Generation that decides how abilities work: the hack has modern mechanics (physical/special split, Gen 9 Pokémon). */
-    private static final int GENERATION = 9;
     /** Keys of species without an own national dex number: this + their dex slot. */
     private static final int CUSTOM_KEY_BASE = 5000;
     /** Keys of moves that only exist in the hack: this + their position in the workbook. */
@@ -97,7 +94,6 @@ public class GenerateOdysseyRuleset {
 
     private static final Pattern REF_MOVE = Pattern.compile(
             "^ {2}(\\d+): \\{ name: \\{.*?EN: \"([^\"]*)\" }, type: (\\w+), power: (\\d+), category: (\\w+) }");
-    private static final Pattern REF_ABILITY = Pattern.compile("^ {2}([a-z0-9-]+): \\{.*EN: \"([^\"]*)\"");
     private static final Pattern CELL_REF = Pattern.compile("([A-Z]+)(\\d+)");
 
     private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
@@ -123,10 +119,8 @@ public class GenerateOdysseyRuleset {
         GenerateOdysseyRuleset generator = new GenerateOdysseyRuleset(args[0], Path.of(args[1]));
         Map<String, String> typeNames = new LinkedHashMap<>();
         Files.writeString(outputDir.resolve("type-chart.yaml"), generator.typeChartYaml(typeNames), StandardCharsets.UTF_8);
-        Map<String, String> abilityNames = new TreeMap<>();
-        Files.writeString(outputDir.resolve("pokemon.yaml"), generator.pokemonYaml(typeNames.keySet(), abilityNames), StandardCharsets.UTF_8);
+        Files.writeString(outputDir.resolve("pokemon.yaml"), generator.pokemonYaml(typeNames.keySet()), StandardCharsets.UTF_8);
         Files.writeString(outputDir.resolve("moves.yaml"), generator.movesYaml(typeNames.keySet()), StandardCharsets.UTF_8);
-        Files.writeString(outputDir.resolve("abilities.yaml"), generator.abilitiesYaml(abilityNames), StandardCharsets.UTF_8);
         System.out.println("Ruleset written to " + outputDir.toAbsolutePath());
     }
 
@@ -183,15 +177,14 @@ public class GenerateOdysseyRuleset {
 
     // ---------------------------------------------------------------- Pokémon
 
-    private record Block(String name, List<String> types, List<String> abilities, List<Integer> stats) {
+    private record Block(String name, List<String> types, List<Integer> stats) {
     }
 
-    private String pokemonYaml(Set<String> types, Map<String, String> abilityNames) throws IOException, InterruptedException {
+    private String pokemonYaml(Set<String> types) throws IOException, InterruptedException {
         List<Block> blocks = new ArrayList<>();
         for (String sheetName : SPECIES_SHEETS) {
             blocks.addAll(blocks(workbook.sheet(sheetName), types));
         }
-        Map<String, String> referenceAbilities = referenceAbilitySlugs();
         Map<String, Integer> nationalByName = new HashMap<>();
         for (String line : csvLines("pokemon_species_names")) {
             String[] values = line.split(",", 4); // pokemon_species_id,local_language_id,name,genus
@@ -240,19 +233,12 @@ public class GenerateOdysseyRuleset {
             } else {
                 key = national;
             }
-            List<String> abilities = new ArrayList<>();
-            for (String ability : block.abilities()) {
-                String slug = referenceAbilities.getOrDefault(normalize(ability), ability.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-"));
-                abilityNames.putIfAbsent(slug, ability);
-                abilities.add(slug);
-            }
             String name = displayName(slotNames.get(slot), block.name());
             if (written.put(key, name) != null) {
                 throw new IllegalStateException("Two Pokémon with the key " + key + ": " + written.get(key) + ", " + name);
             }
             yaml.append("  ").append(key).append(": { name: ").append(nameMap(name))
-                    .append(", types: ").append(block.types()).append(", stats: ").append(block.stats())
-                    .append(", abilities: [").append(String.join(", ", abilities)).append(']');
+                    .append(", types: ").append(block.types()).append(", stats: ").append(block.stats());
             if (sprite != null) {
                 yaml.append(", sprite: ").append(quote(sprite));
             }
@@ -264,7 +250,7 @@ public class GenerateOdysseyRuleset {
         return yaml.toString();
     }
 
-    /** The species blocks of a sheet: name, "Type:", "Ability:" rows; stats in a separate table found by name. */
+    /** The species blocks of a sheet: name and "Type:" rows; stats in a separate table found by name. */
     private static List<Block> blocks(Sheet sheet, Set<String> types) {
         Map<String, List<List<Integer>>> stats = new HashMap<>();
         sheet.cells().forEach((position, cell) -> {
@@ -297,17 +283,11 @@ public class GenerateOdysseyRuleset {
                 }
                 blockTypes.add(key);
             }
-            List<String> abilities = new ArrayList<>();
-            for (String ability : sheet.text(row + 1, column + 1).split("/")) {
-                if (!ability.isBlank() && !abilities.contains(ability.trim())) {
-                    abilities.add(ability.trim());
-                }
-            }
             List<List<Integer>> candidates = stats.get(name);
             if (candidates == null || candidates.isEmpty()) {
                 throw new IllegalStateException("No stats for " + name + " in " + sheet.name());
             }
-            blocks.add(new Block(name, List.copyOf(blockTypes), List.copyOf(abilities), candidates.removeFirst()));
+            blocks.add(new Block(name, List.copyOf(blockTypes), candidates.removeFirst()));
         });
         return blocks;
     }
@@ -482,29 +462,6 @@ public class GenerateOdysseyRuleset {
             throw new IllegalStateException("Unknown type or category icons (look at them and extend the maps): " + unknownIcons);
         }
         return moves;
-    }
-
-    // ---------------------------------------------------------------- abilities
-
-    private Map<String, String> referenceAbilitySlugs() throws IOException {
-        Map<String, String> slugs = new HashMap<>();
-        for (String line : Files.readAllLines(reference.resolve("abilities.yaml"), StandardCharsets.UTF_8)) {
-            Matcher ability = REF_ABILITY.matcher(line);
-            if (ability.find()) {
-                slugs.put(normalize(ability.group(2)), ability.group(1));
-            }
-        }
-        return slugs;
-    }
-
-    private String abilitiesYaml(Map<String, String> names) {
-        StringBuilder yaml = new StringBuilder(header);
-        yaml.append("# The generation, which decides how abilities work, and the names of the abilities in pokemon.yaml.\n");
-        yaml.append("# Identifiers as in PokeAPI where the ability exists there; the hack's own abilities have none of the effects PokeSight knows.\n");
-        yaml.append("generation: ").append(GENERATION).append('\n');
-        yaml.append("abilities:\n");
-        names.forEach((slug, name) -> yaml.append("  ").append(slug).append(": ").append(nameMap(name)).append('\n'));
-        return yaml.toString();
     }
 
     // ---------------------------------------------------------------- helpers

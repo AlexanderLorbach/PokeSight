@@ -1,6 +1,7 @@
 package de.alorbach.pokesight.battle;
 
 import de.alorbach.pokesight.game.GameCatalog;
+import de.alorbach.pokesight.game.GameCategory;
 import de.alorbach.pokesight.game.GameDefinition;
 import de.alorbach.pokesight.ocr.GlyphFont;
 import de.alorbach.pokesight.ocr.TesseractTextRecognizer;
@@ -187,7 +188,7 @@ public class GameScreenshotOcrTest {
 
     @Test
     void officialGamesKeepTheirMinimums() {
-        List<String> official = GAMES.values().stream().filter(game -> !game.romHack()).map(GameDefinition::id).toList();
+        List<String> official = GAMES.values().stream().filter(game -> game.category() == GameCategory.OFFICIAL).map(GameDefinition::id).toList();
 
         assertThat(games()).as("every game with screenshots needs a minimum").allSatisfy(game -> {
             assertThat(MIN_CORRECT).containsKey(game);

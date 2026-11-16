@@ -20,6 +20,7 @@ module de.alorbach.pokesight {
     opens de.alorbach.pokesight.ruleset to tools.jackson.databind;
     opens de.alorbach.pokesight.settings to tools.jackson.databind;
     opens de.alorbach.pokesight.capture to tools.jackson.databind;
+    opens de.alorbach.pokesight.catching to tools.jackson.databind;
 
     exports de.alorbach.pokesight to javafx.graphics;
 }

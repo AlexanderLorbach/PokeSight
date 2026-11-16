@@ -1,7 +1,6 @@
 package de.alorbach.pokesight.matchup;
 
 import de.alorbach.pokesight.battle.PokemonId;
-import de.alorbach.pokesight.matchup.EnemyAnalysis.AbilityNote;
 import de.alorbach.pokesight.matchup.EnemyAnalysis.SwitchIn;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.ruleset.Ruleset;
@@ -27,7 +26,6 @@ class MatchupCalculatorTest {
     private static final int QUICK_ATTACK = 98; // Normal, 40, physical
     private static final int EMBER = 52;        // Fire, 40, special
     private static final int MACH_PUNCH = 183;  // Fighting, 40, physical
-    private static final int EARTHQUAKE = 89;   // Ground, 100, physical
     private static final Ruleset GEN4 = RulesetLoader.load("gen4");
 
     private final MatchupCalculator calculator = new MatchupCalculator(GEN4);
@@ -47,60 +45,15 @@ class MatchupCalculatorTest {
     }
 
     @Test
-    void countsAnAbilityItSurelyHas() {
-        EnemyAnalysis gengar = analyze(94, 0, Language.EN); // Gen 4 Gengar can only have Levitate
+    void abilitiesAreNotCounted() {
+        Matchup gengar = analyze(94, 0, Language.EN).matchup(); // Levitate in Gen 4: types alone count
 
-        assertThat(gengar.abilities()).extracting(AbilityNote::name, AbilityNote::certain).containsExactly(tuple("Levitate", true));
-        assertThat(gengar.matchup().typesWith(0)).containsExactlyInAnyOrder(NORMAL, FIGHTING, GROUND);
-        assertThat(gengar.matchup().typesWith(2)).containsExactlyInAnyOrder(GHOST, PSYCHIC, DARK);
-    }
+        assertThat(gengar.typesWith(2)).containsExactlyInAnyOrder(GROUND, GHOST, PSYCHIC, DARK);
+        assertThat(gengar.typesWith(0)).containsExactlyInAnyOrder(NORMAL, FIGHTING);
 
-    @Test
-    void namesAbilitiesInTheLanguage() {
-        assertThat(analyze(94, 0, Language.DE).abilities()).extracting(AbilityNote::name).containsExactly("Schwebe");
-    }
-
-    @Test
-    void ignoresAbilitiesInGamesWithoutThem() {
-        EnemyAnalysis gengar = new MatchupCalculator(GEN4, false).analyze(GENGAR, Language.EN, team).orElseThrow();
-
-        assertThat(gengar.abilities()).isEmpty();
-        assertThat(gengar.matchup().typesWith(2)).contains(GROUND);
-    }
-
-    @Test
-    void anAbilityItMayHaveIsOnlyAWarning() {
-        Team earthquake = new Team(List.of(new Team.Member(GARCHOMP, List.of(EARTHQUAKE))));
-        EnemyAnalysis bronzong = calculator.analyze(PokemonId.of(437), Language.EN, earthquake).orElseThrow(); // Levitate or Heatproof
-
-        assertThat(bronzong.abilities()).extracting(AbilityNote::name, AbilityNote::certain)
-                .containsExactly(tuple("Levitate", false), tuple("Heatproof", false));
-        assertThat(bronzong.matchup().typesWith(2)).containsExactlyInAnyOrder(GROUND, FIRE);
-        assertThat(bronzong.bestMoves()).singleElement().satisfies(move -> {
-            assertThat(move.effectiveness()).isEqualTo(2.0);
-            assertThat(move.caveat()).isEqualTo("Levitate");
-        });
-    }
-
-    @Test
-    void wonderGuardOnlyLetsSuperEffectiveMovesHit() {
-        Matchup shedinja = analyze(292, 0, Language.EN).matchup();
-
+        Matchup shedinja = analyze(292, 0, Language.EN).matchup(); // Wonder Guard
         assertThat(shedinja.typesWith(2)).containsExactlyInAnyOrder(FIRE, FLYING, ROCK, GHOST, DARK);
-        assertThat(shedinja.typesWith(0)).contains(NORMAL, FIGHTING, WATER, GRASS, ELECTRIC, GROUND);
-        assertThat(shedinja.typesWith(0.5)).isEmpty();
-    }
-
-    @Test
-    void abilitiesWorkAsInTheirGeneration() {
-        assertThat(AbilityEffect.of("lightning-rod", 4)).isEmpty(); // only redirected Electric moves until Gen 4
-        assertThat(AbilityEffect.of("lightning-rod", 5)).hasValueSatisfying(effect ->
-                assertThat(effect.apply(ELECTRIC, 2)).isZero());
-        assertThat(AbilityEffect.of("dry-skin", 4)).hasValueSatisfying(effect -> {
-            assertThat(effect.apply(FIRE, 2)).isEqualTo(2.5);
-            assertThat(effect.apply(WATER, 1)).isZero();
-        });
-        assertThat(AbilityEffect.of("intimidate", 9)).isEmpty(); // does not change type matchups
+        assertThat(shedinja.typesWith(0)).containsExactlyInAnyOrder(NORMAL, FIGHTING); // Water, Electric, ... hit normally
     }
 
     @Test
@@ -158,13 +111,13 @@ class MatchupCalculatorTest {
     }
 
     @Test
-    void aSwitchInsOwnSureAbilityCounts() {
-        Team withGengar = new Team(List.of(new Team.Member(GENGAR, List.of()), new Team.Member(PIKACHU, List.of())));
+    void aSwitchInIsRatedByItsTypesAlone() {
+        Team withGengar = new Team(List.of(new Team.Member(GENGAR, List.of())));
 
         List<SwitchIn> vsGarchomp = calculator.analyze(GARCHOMP, Language.EN, withGengar).orElseThrow().switchIns();
 
-        assertThat(vsGarchomp.getFirst().member()).isEqualTo(GENGAR); // Levitate: no Ground damage
-        assertThat(vsGarchomp.getFirst().taken()).containsEntry(GROUND, 0.0);
+        assertThat(vsGarchomp).singleElement().satisfies(gengar -> // Levitate is not counted
+                assertThat(gengar.taken()).containsEntry(GROUND, 2.0));
     }
 
     @Test

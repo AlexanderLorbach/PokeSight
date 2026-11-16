@@ -1,5 +1,5 @@
 # Pokémon R.O.W.E. (GBA): open-world ROM hack of Emerald (US) by Rioluwott, built on pokeemerald + battle engine
-# expansion; all 1025 Pokémon, Fairy, changed types, stats, abilities and moves. English only.
+# expansion; all 1025 Pokémon, Fairy, changed types, stats and moves. English only.
 # https://www.hackdex.app/hack/pokemon-rowe - https://github.com/BelialClover/RoweRepo
 name: Pokémon R.O.W.E.
 ruleset: rowe            # generated from the hack's sources (tools/GeneratePokeemeraldRuleset.java)

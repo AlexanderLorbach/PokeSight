@@ -1,7 +1,6 @@
 package de.alorbach.pokesight.matchup;
 
 import de.alorbach.pokesight.battle.PokemonId;
-import de.alorbach.pokesight.matchup.EnemyAnalysis.AbilityNote;
 import de.alorbach.pokesight.matchup.EnemyAnalysis.SwitchIn;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.ruleset.Move;
@@ -20,23 +19,16 @@ import java.util.TreeMap;
 
 /**
  * Works out which attack types hurt a defender, which of the team's moves hit it hardest and which team member takes
- * its attacks best.
+ * its attacks best. By types alone: abilities, items and stat changes are not known.
  */
 public final class MatchupCalculator {
 
     private static final double STAB = 1.5;
 
     private final Ruleset ruleset;
-    private final boolean abilities;
 
     public MatchupCalculator(Ruleset ruleset) {
-        this(ruleset, true);
-    }
-
-    /** @param abilities the game has abilities (not Let's Go and the Legends games, which share rulesets) */
-    public MatchupCalculator(Ruleset ruleset, boolean abilities) {
         this.ruleset = ruleset;
-        this.abilities = abilities;
     }
 
     public Ruleset ruleset() {
@@ -57,25 +49,20 @@ public final class MatchupCalculator {
         return ruleset.findSpecies(id.speciesId()).map(species -> {
             Species.Form form = species.form(id.form());
             List<PokemonType> types = tera == null ? form.types() : List.of(tera);
-            List<AbilityNote> notes = abilityNotes(form, language);
             List<PokemonType> threats = new ArrayList<>(form.types());
             if (tera != null && !threats.contains(tera)) {
                 threats.add(tera);
             }
-            return new EnemyAnalysis(form.name(language), types, tera != null, defensiveMatchup(types, notes),
-                    notes, rankMoves(team, form, types, notes), switchIns(team, threats));
+            return new EnemyAnalysis(form.name(language), types, tera != null, defensiveMatchup(types),
+                    rankMoves(team, form, types), switchIns(team, threats));
         });
     }
 
     /** Attack types grouped by the multiplier they deal to these defending types (1x left out). */
     public Matchup defensiveMatchup(List<PokemonType> defenderTypes) {
-        return defensiveMatchup(defenderTypes, List.of());
-    }
-
-    private Matchup defensiveMatchup(List<PokemonType> defenderTypes, List<AbilityNote> notes) {
         TreeMap<Double, List<PokemonType>> groups = new TreeMap<>();
         for (PokemonType attackType : ruleset.typeChart().types()) {
-            double multiplier = withCertainAbility(attackType, ruleset.typeChart().multiplier(attackType, defenderTypes), notes);
+            double multiplier = ruleset.typeChart().multiplier(attackType, defenderTypes);
             if (multiplier != 1) {
                 groups.computeIfAbsent(multiplier, k -> new ArrayList<>()).add(attackType);
             }
@@ -83,36 +70,12 @@ public final class MatchupCalculator {
         return new Matchup(groups);
     }
 
-    /** Abilities of the form that change type matchups; certain if it is its only ability. */
-    private List<AbilityNote> abilityNotes(Species.Form form, Language language) {
-        if (!abilities) {
-            return List.of();
-        }
-        boolean only = form.abilities().size() == 1;
-        List<AbilityNote> notes = new ArrayList<>();
-        for (String ability : form.abilities()) {
-            AbilityEffect.of(ability, ruleset.generation())
-                    .ifPresent(effect -> notes.add(new AbilityNote(ruleset.abilityName(ability, language), only, effect)));
-        }
-        return notes;
-    }
-
-    private static double withCertainAbility(PokemonType attackType, double multiplier, List<AbilityNote> notes) {
-        double result = multiplier;
-        for (AbilityNote note : notes) {
-            if (note.certain()) {
-                result = note.effect().apply(attackType, result);
-            }
-        }
-        return result;
-    }
-
     /**
      * The team's moves against a defender, strongest first: base power x type effectiveness x 1.5 if the move's type
      * matches its user (STAB) x the user's attacking base stat / the defender's defending base stat. Level, natures
      * and stat changes are not known; unknown Pokémon or moves are skipped.
      */
-    public List<MoveOption> rankMoves(Team team, Species.Form defender, List<PokemonType> defenderTypes, List<AbilityNote> notes) {
+    public List<MoveOption> rankMoves(Team team, Species.Form defender, List<PokemonType> defenderTypes) {
         List<MoveOption> options = new ArrayList<>();
         for (Team.Member member : team.members()) {
             Optional<Species.Form> user = form(member.pokemon());
@@ -125,29 +88,20 @@ public final class MatchupCalculator {
                     continue;
                 }
                 PokemonType type = move.get().type();
-                double chart = ruleset.typeChart().multiplier(type, defenderTypes);
-                double effectiveness = withCertainAbility(type, chart, notes);
+                double effectiveness = ruleset.typeChart().multiplier(type, defenderTypes);
                 boolean stab = user.get().types().contains(type);
                 boolean physical = move.get().category() == Move.Category.PHYSICAL;
                 double statRatio = (double) user.get().stat(physical ? Stat.ATTACK : Stat.SPECIAL_ATTACK)
                         / defender.stat(physical ? Stat.DEFENSE : Stat.SPECIAL_DEFENSE);
                 double score = move.get().power() * effectiveness * (stab ? STAB : 1) * statRatio;
-                String caveat = notes.stream()
-                        .filter(note -> !note.certain() && note.effect().apply(type, effectiveness) != effectiveness)
-                        .map(AbilityNote::name)
-                        .findFirst()
-                        .orElse(null);
-                options.add(new MoveOption(member.pokemon(), moveId, effectiveness, stab, score, caveat));
+                options.add(new MoveOption(member.pokemon(), moveId, effectiveness, stab, score));
             }
         }
         options.sort(Comparator.comparingDouble(MoveOption::score).reversed());
         return options;
     }
 
-    /**
-     * How each team member takes attacks of these types, safest first: by the worst multiplier, then by the sum.
-     * A member's own ability counts if it is the species' only one (a Levitate Gengar takes no Ground damage).
-     */
+    /** How each team member takes attacks of these types, safest first: by the worst multiplier, then by the sum. */
     public List<SwitchIn> switchIns(Team team, List<PokemonType> attackTypes) {
         List<SwitchIn> result = new ArrayList<>();
         for (Team.Member member : team.members()) {
@@ -155,10 +109,9 @@ public final class MatchupCalculator {
             if (form.isEmpty()) {
                 continue;
             }
-            List<AbilityNote> own = abilityNotes(form.get(), Language.EN);
             Map<PokemonType, Double> taken = new LinkedHashMap<>();
             for (PokemonType attackType : attackTypes) {
-                taken.put(attackType, withCertainAbility(attackType, ruleset.typeChart().multiplier(attackType, form.get().types()), own));
+                taken.put(attackType, ruleset.typeChart().multiplier(attackType, form.get().types()));
             }
             double worst = taken.values().stream().mapToDouble(Double::doubleValue).max().orElse(1);
             result.add(new SwitchIn(member.pokemon(), taken, worst));

@@ -1,9 +1,12 @@
 package de.alorbach.pokesight.ui;
 
 import de.alorbach.pokesight.battle.PokemonId;
+import de.alorbach.pokesight.matchup.AttackStyle;
 import de.alorbach.pokesight.matchup.Team;
 import de.alorbach.pokesight.ruleset.Language;
+import de.alorbach.pokesight.ruleset.Move;
 import de.alorbach.pokesight.ruleset.Ruleset;
+import de.alorbach.pokesight.ruleset.Species;
 import de.alorbach.pokesight.capture.CaptureRegion;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -27,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /** Window to enter the player's team: up to six Pokémon with up to four moves each. */
 final class TeamEditor {
@@ -65,9 +69,10 @@ final class TeamEditor {
         grid.addRow(0, new Label(), header("Pokémon"), header("Move 1"), header("Move 2"), header("Move 3"), header("Move 4"));
         for (int i = 0; i < Team.MAX_MEMBERS; i++) {
             Team.Member member = i < team.members().size() ? team.members().get(i) : null;
-            Row row = new Row(pokemonOptions, moveOptions, sprites, member);
+            Row row = new Row(pokemonOptions, moveOptions, sprites, ruleset, member);
             rows.add(row);
-            grid.addRow(i + 1, row.sprite, row.pokemon, row.moves.get(0), row.moves.get(1), row.moves.get(2), row.moves.get(3));
+            grid.addRow(i + 1, row.sprite, new VBox(2, row.pokemon, row.style), row.moves.get(0), row.moves.get(1),
+                    row.moves.get(2), row.moves.get(3));
             if (teamScan != null) {
                 grid.add(readButton(row, teamScan), 6, i + 1);
             }
@@ -76,7 +81,8 @@ final class TeamEditor {
 
         Label hint = new Label("Ranking per opponent: move power × type effectiveness × 1.5 if the move has its "
                 + "Pokémon's type (STAB) × your Pokémon's Attack (Sp. Atk) / the opponent's Defense (Sp. Def), base "
-                + "stats. Only damaging moves with a fixed power can be chosen. Read: open your Pokémon's move "
+ + "stats. Under each Pokémon: whether its physical moves (Attack) or special moves (Sp. Atk) hit harder; its "
+                + "move list shows the moves of that kind first. Only damaging moves with a fixed power can be chosen. Read: open your Pokémon's move "
                 + "selection or summary in the game and press Read in a row; the moves are read from the moves area and "
                 + "the Pokémon from the name area (both selected once per game; the name area is optional). Read again "
                 + "after moving the cursor if a move was missed: the highlighted one is often not read.");
@@ -179,14 +185,22 @@ final class TeamEditor {
         final SearchField<PokemonId> pokemon;
         final List<SearchField<Integer>> moves = new ArrayList<>();
         final Button clear = new Button("Clear");
+        /** Whether the Pokémon hits harder with physical or special moves: a hint for choosing its moves. */
+        final Label style = new Label();
         private final SpriteLibrary sprites;
+        private final Ruleset ruleset;
 
         Row(List<SearchField.Option<PokemonId>> pokemonOptions, List<SearchField.Option<Integer>> moveOptions,
-            SpriteLibrary sprites, Team.Member member) {
+            SpriteLibrary sprites, Ruleset ruleset, Team.Member member) {
             this.sprites = sprites;
+            this.ruleset = ruleset;
             sprite.getStyleClass().add("team-sprite");
             sprite.setMinSize(SPRITE_SIZE, SPRITE_SIZE);
-            pokemon = new SearchField<>(pokemonOptions, "Pokémon…", true, chosen -> showSprite(sprites, chosen));
+            style.getStyleClass().add("attack-style");
+            pokemon = new SearchField<>(pokemonOptions, "Pokémon…", true, chosen -> {
+                showSprite(sprites, chosen);
+                showStyle(chosen);
+            });
             pokemon.getStyleClass().add("team-pokemon");
             for (int i = 0; i < Team.MAX_MOVES; i++) {
                 moves.add(new SearchField<>(moveOptions, "Move…", true, chosen -> { }));
@@ -196,10 +210,12 @@ final class TeamEditor {
                 pokemon.select(null);
                 moves.forEach(move -> move.select(null));
                 sprite.getChildren().clear();
+                showStyle(null);
             });
             if (member != null) {
                 pokemon.select(member.pokemon());
                 showSprite(sprites, member.pokemon());
+                showStyle(member.pokemon());
                 for (int i = 0; i < member.moves().size(); i++) {
                     moves.get(i).select(member.moves().get(i));
                 }
@@ -217,6 +233,43 @@ final class TeamEditor {
         }
 
         /**
+         * "Physical: Atk 130 > SpA 60" for the chosen Pokémon (empty without one); its move fields then list the moves
+         * of that kind first.
+         */
+        private void showStyle(PokemonId chosen) {
+            Optional<Species.Form> form = Optional.ofNullable(chosen)
+                    .flatMap(id -> ruleset.findSpecies(id.speciesId()).map(species -> species.form(id.form())));
+            style.setText(form.map(Row::styleText).orElse(""));
+            Optional<Move.Category> suits = form.map(AttackStyle::of).flatMap(Row::category);
+            moves.forEach(field -> field.prefer(suits.<Predicate<Integer>>map(category -> moveId -> ruleset.findMove(moveId)
+                    .filter(move -> move.category() == category).isPresent()).orElse(null)));
+            style.setTooltip(form.map(found -> new Tooltip(switch (AttackStyle.of(found)) {
+                case PHYSICAL -> "Higher Attack: physical moves hit harder";
+                case SPECIAL -> "Higher Sp. Atk: special moves hit harder";
+                case MIXED -> "Attack and Sp. Atk are about the same: both kinds of moves work";
+            })).orElse(null));
+        }
+
+        /** The kind of move that suits this style; none for mixed attackers. */
+        private static Optional<Move.Category> category(AttackStyle style) {
+            return switch (style) {
+                case PHYSICAL -> Optional.of(Move.Category.PHYSICAL);
+                case SPECIAL -> Optional.of(Move.Category.SPECIAL);
+                case MIXED -> Optional.empty();
+            };
+        }
+
+        static String styleText(Species.Form form) {
+            int attack = form.stat(Species.Stat.ATTACK);
+            int specialAttack = form.stat(Species.Stat.SPECIAL_ATTACK);
+            return switch (AttackStyle.of(form)) {
+                case PHYSICAL -> "Physical: Atk " + attack + " > SpA " + specialAttack;
+                case SPECIAL -> "Special: SpA " + specialAttack + " > Atk " + attack;
+                case MIXED -> "Mixed: Atk " + attack + " ≈ SpA " + specialAttack;
+            };
+        }
+
+        /**
          * Puts a Pokémon read from the screen into the row. Another Pokémon than the row had replaces it and its
          * moves, which belong to the previous one; the same Pokémon keeps the moves.
          *
@@ -229,6 +282,7 @@ final class TeamEditor {
             pokemon.select(found);
             moves.forEach(move -> move.select(null));
             showSprite(sprites, found);
+            showStyle(found);
             return true;
         }
 
