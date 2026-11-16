@@ -36,26 +36,24 @@ import java.util.regex.Pattern;
  * Sources are base URLs or local directories.
  *
  * <p>From the hack: {@code include/config.h} (generation, Fairy type, "Champions" move changes),
- * {@code data/Species.c} (in-game names, types, base stats, abilities), {@code data/HiddenAbilityTable.c} and
+ * {@code data/Species.c} (in-game names, types, base stats) and
  * {@code data/Moves.c} (in-game names, power, type, category). From hg-engine: the type chart in
  * {@code src/battle/battle_pokemon.c} (hacks usually do not change it). The reference ruleset (generated from PokeAPI)
  * only supplies what the hack's sources lack: dex numbers are checked against PokeAPI identifiers, form keys, form
- * names and regions come from the reference, ability and type names too, and moves are keyed by the reference's move
+ * names and regions come from the reference, type names too, and moves are keyed by the reference's move
  * ids (which also excludes variable-power moves, Z-Moves and Max Moves as the reference does). Sprites are the game's
  * own: hg-engine's species folders ({@code data/graphics/sprites/<species>}), checked to exist.
  *
- * <p>Writes {@code type-chart.yaml}, {@code pokemon.yaml}, {@code moves.yaml} and {@code abilities.yaml}, English only
+ * <p>Writes {@code type-chart.yaml}, {@code pokemon.yaml} and {@code moves.yaml}, English only
  * (hg-engine works on the US ROM).
  */
 public class GenerateHgEngineRuleset {
 
     private static final String POKEAPI_CSV = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/";
-    private static final String POKEAPI_ENGLISH = "9";
     private static final String LANGUAGE = "EN";
     /** Entries in Species.c that are no Pokémon: unused slots and the eggs. */
     private static final String PLACEHOLDER_NAME = "-----";
     private static final Set<String> NON_POKEMON = Set.of("SPECIES_NONE", "SPECIES_EGG", "SPECIES_BAD_EGG");
-    private static final String NO_ABILITY = "ABILITY_NONE";
     /** hg-engine form constants use adjectives, PokeAPI identifiers the region ("RATTATA_ALOLAN" = "rattata-alola"). */
     private static final Map<String, String> REGION_TOKENS = Map.of(
             "alolan", "alola", "galarian", "galar", "hisuian", "hisui", "paldean", "paldea");
@@ -79,10 +77,8 @@ public class GenerateHgEngineRuleset {
     private static final Pattern DEFINE = Pattern.compile("#define\\s+(\\w+)(?:\\s+(\\S+))?");
     private static final Pattern CONDITION = Pattern.compile("(\\w+)\\s*(==|!=|<=|>=|<|>)\\s*(\\w+)");
     private static final Pattern TYPE_ROW = Pattern.compile("\\{\\s*(\\w+),\\s*(\\w+),\\s*(\\w+)\\s*}");
-    private static final Pattern HIDDEN_ABILITY = Pattern.compile("\\[(SPECIES_\\w+)\\s*]\\s*=\\s*(ABILITY_\\w+)");
     // Reference ruleset lines (see GenerateRuleset's output)
     private static final Pattern REF_TYPE = Pattern.compile("^ {2}([A-Z]+): \\{.*EN: \"([^\"]*)\"");
-    private static final Pattern REF_ABILITY = Pattern.compile("^ {2}([a-z0-9-]+): \\{.*EN: \"([^\"]*)\"");
     private static final Pattern REF_MOVE = Pattern.compile("^ {2}(\\d+): \\{ name: \\{.*?EN: \"([^\"]*)\"");
     private static final Pattern REF_SPECIES = Pattern.compile("^ {2}(\\d+):(?: \\{ name: \\{.*?EN: \"([^\"]*)\")?");
     private static final Pattern REF_SPECIES_NAME = Pattern.compile("^ {4}name: \\{.*?EN: \"([^\"]*)\"");
@@ -114,11 +110,9 @@ public class GenerateHgEngineRuleset {
                 + ") and hg-engine's type chart (" + args[1] + ") - do not edit by hand.\n";
 
         Map<String, String> typeNames = generator.referenceTypeNames();
-        Set<String> usedAbilities = new TreeSet<>();
         Files.writeString(outputDir.resolve("type-chart.yaml"), generator.typeChartYaml(header, typeNames), StandardCharsets.UTF_8);
-        Files.writeString(outputDir.resolve("pokemon.yaml"), generator.pokemonYaml(header, typeNames.keySet(), usedAbilities), StandardCharsets.UTF_8);
+        Files.writeString(outputDir.resolve("pokemon.yaml"), generator.pokemonYaml(header, typeNames.keySet()), StandardCharsets.UTF_8);
         Files.writeString(outputDir.resolve("moves.yaml"), generator.movesYaml(header, typeNames.keySet()), StandardCharsets.UTF_8);
-        Files.writeString(outputDir.resolve("abilities.yaml"), generator.abilitiesYaml(header, usedAbilities), StandardCharsets.UTF_8);
         System.out.println("Ruleset (generation " + generator.generation() + ") written to " + outputDir.toAbsolutePath());
     }
 
@@ -177,7 +171,7 @@ public class GenerateHgEngineRuleset {
 
     // ---------------------------------------------------------------- Pokémon
 
-    private record HackSpecies(String constant, String name, List<String> types, List<Integer> stats, List<String> abilities) {
+    private record HackSpecies(String constant, String name, List<String> types, List<Integer> stats) {
     }
 
     private record ReferenceForm(int key, String name, String sprite, String region) {
@@ -186,15 +180,10 @@ public class GenerateHgEngineRuleset {
     private record ReferenceSpecies(String name, List<ReferenceForm> forms) {
     }
 
-    private String pokemonYaml(String header, Set<String> types, Set<String> usedAbilities) throws IOException, InterruptedException {
-        Map<String, String> hiddenAbilities = new HashMap<>();
-        Matcher hidden = HIDDEN_ABILITY.matcher(read(hackSource, "data/HiddenAbilityTable.c"));
-        while (hidden.find()) {
-            hiddenAbilities.put(hidden.group(1), hidden.group(2));
-        }
+    private String pokemonYaml(String header, Set<String> types) throws IOException, InterruptedException {
         Map<String, HackSpecies> byConstant = new LinkedHashMap<>();
         for (Map.Entry<String, String> entry : entries(read(hackSource, "data/Species.c")).entrySet()) {
-            byConstant.put(entry.getKey(), hackSpecies(entry.getKey(), entry.getValue(), hiddenAbilities.get(entry.getKey()), types));
+            byConstant.put(entry.getKey(), hackSpecies(entry.getKey(), entry.getValue(), types));
         }
         // Base species come first, in national dex order (the dex check below verifies it); then the forms, named like
         // their base species (regional forms) or with the placeholder name.
@@ -216,8 +205,8 @@ public class GenerateHgEngineRuleset {
 
         StringBuilder yaml = new StringBuilder(header);
         yaml.append("# Key: national dex number. name: as shown in the game (hg-engine cuts names to 10 letters).\n");
-        yaml.append("# forms: keys, names, sprites and regions as in the reference ruleset; types, stats and abilities from the hack.\n");
-        yaml.append("# stats: HP, Attack, Defense, Sp. Atk, Sp. Def, Speed. abilities: both slots and the hidden one.\n");
+        yaml.append("# forms: keys, names, sprites and regions as in the reference ruleset; types and stats from the hack.\n");
+        yaml.append("# stats: HP, Attack, Defense, Sp. Atk, Sp. Def, Speed.\n");
         yaml.append("pokemon:\n");
         for (Map.Entry<Integer, ReferenceSpecies> entry : referenceSpecies.entrySet()) {
             int dex = entry.getKey();
@@ -232,21 +221,16 @@ public class GenerateHgEngineRuleset {
             if (!species.name().equals(entry.getValue().name())) {
                 System.out.println("  name #" + dex + ": " + species.name() + " (" + entry.getValue().name() + ")");
             }
-            usedAbilities.addAll(species.abilities());
             yaml.append("  ").append(dex).append(":\n");
             yaml.append("    name: ").append(nameMap(species.name())).append('\n');
             yaml.append("    types: ").append(species.types()).append('\n');
             yaml.append("    stats: ").append(species.stats()).append('\n');
-            if (!species.abilities().isEmpty()) {
-                yaml.append("    abilities: [").append(String.join(", ", species.abilities())).append("]\n");
-            }
             yaml.append("    sprite: ").append(quote(spriteName(species.constant()))).append('\n');
             sprites.add(spriteName(species.constant()));
             if (!entry.getValue().forms().isEmpty()) {
                 yaml.append("    forms:\n");
                 for (ReferenceForm form : entry.getValue().forms()) {
                     HackSpecies data = formData(dex, species, form, identifiers, byConstant, baseSet);
-                    usedAbilities.addAll(data.abilities());
                     sprites.add(spriteName(data.constant()));
                     yaml.append("      ").append(form.key()).append(": { name: ").append(nameMap(form.name()))
                             .append(", types: ").append(data.types())
@@ -255,9 +239,6 @@ public class GenerateHgEngineRuleset {
                         yaml.append(", region: ").append(form.region());
                     }
                     yaml.append(", stats: ").append(data.stats());
-                    if (!data.abilities().isEmpty()) {
-                        yaml.append(", abilities: [").append(String.join(", ", data.abilities())).append(']');
-                    }
                     yaml.append(" }\n");
                 }
             }
@@ -311,12 +292,11 @@ public class GenerateHgEngineRuleset {
         System.out.println("  " + sprites.size() + " sprites found in hg-engine (" + SPRITE_PATH + ")");
     }
 
-    private HackSpecies hackSpecies(String constant, String body, String hiddenAbility, Set<String> types) {
+    private HackSpecies hackSpecies(String constant, String body, Set<String> types) {
         String name = field(body, "name");
         Matcher typeMatch = Pattern.compile("\\.types = \\{ (\\w+), (\\w+) }").matcher(body);
-        Matcher abilityMatch = Pattern.compile("\\.abilities = \\{ (\\w+), (\\w+) }").matcher(body);
-        if (!typeMatch.find() || !abilityMatch.find()) {
-            throw new IllegalStateException(constant + ": types or abilities missing");
+        if (!typeMatch.find()) {
+            throw new IllegalStateException(constant + ": types missing");
         }
         List<String> speciesTypes = new ArrayList<>();
         for (String type : List.of(resolve(typeMatch.group(1)), resolve(typeMatch.group(2)))) {
@@ -329,16 +309,7 @@ public class GenerateHgEngineRuleset {
         for (String stat : List.of("hp", "attack", "defense", "spAttack", "spDefense", "speed")) {
             stats.add(Integer.parseInt(field(body, stat)));
         }
-        List<String> abilities = new ArrayList<>();
-        for (String ability : Arrays.asList(resolve(abilityMatch.group(1)), resolve(abilityMatch.group(2)), hiddenAbility)) {
-            if (ability != null && !ability.equals(NO_ABILITY)) {
-                String slug = ability.substring("ABILITY_".length()).toLowerCase().replace('_', '-');
-                if (!abilities.contains(slug)) {
-                    abilities.add(slug);
-                }
-            }
-        }
-        return new HackSpecies(constant, name, List.copyOf(speciesTypes), List.copyOf(stats), List.copyOf(abilities));
+        return new HackSpecies(constant, name, List.copyOf(speciesTypes), List.copyOf(stats));
     }
 
     /** The hack's data of a reference form, matched by the PokeAPI identifier of the form's sprite. */
@@ -351,7 +322,7 @@ public class GenerateHgEngineRuleset {
         }
         if (TYPE_BY_ITEM_SPECIES.contains(dex)) {
             String type = typeForm.group(2).toUpperCase();
-            return new HackSpecies(base.constant(), base.name(), List.of(type), base.stats(), base.abilities());
+            return new HackSpecies(base.constant(), base.name(), List.of(type), base.stats());
         }
         // Exact match, else the shortest form constant that contains the identifier's parts or is contained in them
         // ("necrozma-dusk" = NECROZMA_DUSK_MANE, not NECROZMA_ULTRA_DUSK_MANE; "tauros-paldea-combat-breed" = TAUROS_COMBAT).
@@ -421,31 +392,6 @@ public class GenerateHgEngineRuleset {
         return yaml.toString();
     }
 
-    // ---------------------------------------------------------------- abilities
-
-    private String abilitiesYaml(String header, Set<String> usedAbilities) throws IOException, InterruptedException {
-        Map<String, String> names = new HashMap<>();
-        for (String line : Files.readAllLines(reference.resolve("abilities.yaml"), StandardCharsets.UTF_8)) {
-            Matcher ability = REF_ABILITY.matcher(line);
-            if (ability.find()) {
-                names.put(ability.group(1), ability.group(2));
-            }
-        }
-        Set<String> unnamed = new TreeSet<>(usedAbilities);
-        unnamed.removeAll(names.keySet());
-        if (!unnamed.isEmpty()) {
-            // Abilities the reference's generation no longer gives anybody (Greninja's Battle Bond in Gen 9)
-            System.out.println("  abilities named from PokeAPI: " + unnamed);
-            names.putAll(pokeApiAbilityNames(unnamed));
-        }
-        StringBuilder yaml = new StringBuilder(header);
-        yaml.append("# The generation, which decides how abilities work, and the names of the abilities in pokemon.yaml.\n");
-        yaml.append("generation: ").append(generation()).append('\n');
-        yaml.append("abilities:\n");
-        usedAbilities.forEach(ability -> yaml.append("  ").append(ability).append(": ").append(nameMap(names.get(ability))).append('\n'));
-        return yaml.toString();
-    }
-
     // ---------------------------------------------------------------- reference ruleset and PokeAPI
 
     /** Type key -> English name, in the reference's order. */
@@ -498,27 +444,6 @@ public class GenerateHgEngineRuleset {
     /** PokeAPI pokemon id -> identifier ("10091" -> "rattata-alola"). */
     private Map<String, String> pokeApiIdentifiers() throws IOException, InterruptedException {
         return pokeApiColumns("pokemon", "id", "identifier");
-    }
-
-    /** English names of the given abilities (PokeAPI identifiers); fails if one is unknown. */
-    private Map<String, String> pokeApiAbilityNames(Set<String> abilities) throws IOException, InterruptedException {
-        Map<String, String> ids = pokeApiColumns("abilities", "identifier", "id");
-        Map<String, String> englishNames = new HashMap<>();
-        for (String line : csvLines("ability_names")) {
-            String[] values = line.split(",", 3); // ability_id,local_language_id,name
-            if (values.length == 3 && values[1].equals(POKEAPI_ENGLISH)) {
-                englishNames.put(values[0], values[2]);
-            }
-        }
-        Map<String, String> names = new HashMap<>();
-        for (String ability : abilities) {
-            String name = englishNames.get(ids.get(ability));
-            if (name == null) {
-                throw new IllegalStateException("Ability " + ability + " is unknown to PokeAPI");
-            }
-            names.put(ability, name);
-        }
-        return names;
     }
 
     /** Two columns of a PokeAPI CSV file (without quoted fields) as key -> value. */

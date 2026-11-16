@@ -14,11 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.LIST;
 
 class BattleMonitorTest {
 
     private static final CaptureRegion SINGLE = new CaptureRegion(0, 0, 256, 64);
     private static final CaptureRegion DOUBLE = new CaptureRegion(0, 0, 256, 128);
+    private static final CaptureRegion OWN_SINGLE = new CaptureRegion(0, 200, 256, 64);
+    private static final CaptureRegion OWN_DOUBLE = new CaptureRegion(0, 200, 256, 128);
     private static final NameMatcher MATCHER = new NameMatcher(RulesetLoader.load("gen4"), Language.EN);
 
     private final FakeRecognizer recognizer = new FakeRecognizer();
@@ -158,24 +161,62 @@ class BattleMonitorTest {
 
     @Test
     void readsTheActivePokemonFromTheOwnNameBox() {
-        CaptureRegion own = new CaptureRegion(0, 200, 256, 64);
-        BattleMonitor monitor = new BattleMonitor(region -> new BufferedImage(region.width(), region.height(), BufferedImage.TYPE_INT_RGB),
-                List.of(SINGLE), own, new BattleScanner(recognizer, MATCHER, false), updates::add);
+        BattleMonitor monitor = ownMonitor(OWN_SINGLE);
         for (int i = 0; i < 2; i++) {
             // Every area is read four times (dark/light text, with and without joined strokes): opponent, then own box.
-            for (int read = 0; read < 4; read++) {
-                recognizer.showOnceLines("ZUBAT Lv12");
-            }
-            for (int read = 0; read < 4; read++) {
-                recognizer.showOnceLines("GENGAR Lv30");
-            }
+            showForEveryRead("ZUBAT Lv12");
+            showForEveryRead("GENGAR Lv30");
             monitor.poll();
         }
 
         assertThat(updates).last().satisfies(update -> {
             assertThat(update.foes()).extracting(Sighting::pokemon).containsExactly(PokemonId.of(41));
-            assertThat(update.active()).isEqualTo(PokemonId.of(94));
+            assertThat(update.active()).containsExactly(PokemonId.of(94));
         });
+    }
+
+    @Test
+    void readsBothOwnPokemonInADoubleBattle() {
+        BattleMonitor monitor = ownMonitor(OWN_SINGLE, OWN_DOUBLE);
+        for (int i = 0; i < 2; i++) {
+            showForEveryRead("ZUBAT Lv12", "GOLBAT Lv22");  // opponents
+            showForEveryRead("GENGAR Lv30");                // own single-battle area: catches one of them
+            showForEveryRead("GENGAR Lv30", "MACHOKE Lv28"); // own double-battle area: both
+            monitor.poll();
+        }
+
+        assertThat(updates).last().extracting(Update::active).asInstanceOf(LIST)
+                .containsExactly(PokemonId.of(94), PokemonId.of(67));
+    }
+
+    @Test
+    void keepsTheActivePokemonUntilTwoReadingsAgree() {
+        BattleMonitor monitor = ownMonitor(OWN_SINGLE, OWN_DOUBLE);
+        for (int i = 0; i < 2; i++) {
+            showForEveryRead("ZUBAT Lv12", "GOLBAT Lv22");
+            showForEveryRead();
+            showForEveryRead("GENGAR Lv30", "MACHOKE Lv28");
+            monitor.poll();
+        }
+        showForEveryRead("ZUBAT Lv12", "GOLBAT Lv22");
+        showForEveryRead();
+        showForEveryRead("GENGAR Lv30", "BIDOOF Lv3"); // one misread: still Gengar and Machoke
+        monitor.poll();
+
+        assertThat(updates).last().extracting(Update::active).asInstanceOf(LIST)
+                .containsExactly(PokemonId.of(94), PokemonId.of(67));
+    }
+
+    private BattleMonitor ownMonitor(CaptureRegion... ownRegions) {
+        return new BattleMonitor(region -> new BufferedImage(region.width(), region.height(), BufferedImage.TYPE_INT_RGB),
+                List.of(DOUBLE), List.of(ownRegions), new BattleScanner(recognizer, MATCHER, false), updates::add);
+    }
+
+    /** The scanner reads every area four times (dark/light text, with and without joined strokes). */
+    private void showForEveryRead(String... lines) {
+        for (int read = 0; read < 4; read++) {
+            recognizer.showOnceLines(lines);
+        }
     }
 
     @Test

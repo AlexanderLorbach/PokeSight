@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 /**
  * Generates the ruleset of Pokémon Glazed (Emerald hack by Lucbui/redriders180 and TrainerX493, v9.1). The hack is
  * binary-only (no source code, no data sheet), so the ruleset is built from what its documentation states, on top of
- * the PokeAPI-generated reference rulesets:
+ * the PokeAPI-generated gen7 ruleset:
  *
  * <ul>
  *   <li>Roster and types: the fan wiki's table of all 411 Pokémon slots ("Pokemon Locations and Availability",
@@ -31,14 +31,11 @@ import java.util.regex.Pattern;
  *       and has fixed slots for Mega Evolutions, Kyurem-B/W and two event battle Pokémon (keys 5000 + wiki slot).</li>
  *   <li>Type chart: Gen 6+ with Fairy ("Steel no longer resists Dark and Ghost", "Fairy-type included").</li>
  *   <li>Stats: Gen VII standard (Beta 8.0), so the gen7 ruleset; Zorua/Zoroark +15 Attack (Beta 8.2).</li>
- *   <li>Abilities: Emerald's engine knows only the Gen 3 abilities and no hidden ones: Gen 1-3 Pokémon keep their
- *       Emerald abilities (gen3 ruleset), later ones get the non-hidden ones of their Gen 3 pool (an assumption,
- *       no source lists them; the hack's custom trade abilities are unknown).</li>
  *   <li>Moves: Gen 1-3 moves plus the later moves the v9.0 move document lists as in the game, with Gen VII
  *       power (Beta 8.0) and the physical/special split (Beta 5E); Rapid Spin 50 (Beta 8.6.2).</li>
  * </ul>
  *
- * <p>Usage: {@code java tools/GenerateGlazedRuleset.java src/main/resources/rulesets/gen3 src/main/resources/rulesets/gen7 src/main/resources/rulesets/glazed}
+ * <p>Usage: {@code java tools/GenerateGlazedRuleset.java src/main/resources/rulesets/gen7 src/main/resources/rulesets/glazed}
  */
 public final class GenerateGlazedRuleset {
 
@@ -50,7 +47,6 @@ public final class GenerateGlazedRuleset {
     private static final String USER_AGENT = "PokeSight ruleset generator (https://github.com/AlexanderLorbach/PokeSight)";
 
     private static final int OWN_KEY_BASE = 5000;
-    private static final int LAST_GEN3_SPECIES = 386;
     private static final int LAST_GEN3_MOVE = 354;
     private static final int NAME_LENGTH = 10;
 
@@ -59,7 +55,7 @@ public final class GenerateGlazedRuleset {
     /** The wiki row repeats the row above (Skorupi Poison/Bug): Drapion keeps Poison/Dark. */
     private static final Set<String> WIKI_TYPE_ERRORS = Set.of("Drapion");
 
-    /** Glazed's own slots: wiki name -> PokeAPI form (stats, types, abilities, sprite). */
+    /** Glazed's own slots: wiki name -> PokeAPI form (stats, types, sprite). */
     private static final Map<String, String> OWN_SLOTS = Map.ofEntries(
             Map.entry("Scarfed Pikachu", "pikachu"), Map.entry("Enraged Mew", "mew"),
             Map.entry("Kyurem-B", "kyurem-black"), Map.entry("Kyurem-W", "kyurem-white"),
@@ -71,48 +67,41 @@ public final class GenerateGlazedRuleset {
     private static final Map<String, List<Integer>> STATS = Map.of(
             "Scarfed Pikachu", List.of(80, 100, 80, 100, 80, 120), "Enraged Mew", List.of(205, 150, 65, 150, 80, 100));
     private static final Map<Integer, int[]> ATTACK = Map.of(570, new int[]{65, 80}, 571, new int[]{105, 120}); // dex -> {was, is}
-    /** "Kyurem has a second ability - a second copy of Pressure" (Beta 8.7); its fused forms have no Gen 3 ability. */
-    private static final List<String> KYUREM_ABILITIES = List.of("pressure");
     private static final Map<Integer, Integer> MOVE_POWER = Map.of(229, 50); // Rapid Spin, Beta 8.6.2
 
     private static final Pattern ROW_START = Pattern.compile("#(\\d{3})");
     private static final Pattern COLSPAN = Pattern.compile("\\s*colspan=\"(\\d)\"\\s*\\|(.*)");
     private static final Pattern SPECIES = Pattern.compile("^  (\\d+): \\{ name: \\{ (?:DE: \"[^\"]*\", )?EN: \"([^\"]*)\" }, "
-            + "types: \\[([^]]*)], stats: \\[([^]]*)], abilities: \\[([^]]*)]");
+            + "types: \\[([^]]*)], stats: \\[([^]]*)]");
     private static final Pattern MOVE = Pattern.compile("^  (\\d+): \\{ name: \\{ (?:DE: \"[^\"]*\", )?EN: \"([^\"]*)\" }, (type: .*)$");
-    private static final Pattern ABILITY = Pattern.compile("^  ([a-z0-9-]+): \\{ (?:DE: \"[^\"]*\", )?EN: \"([^\"]*)\" }");
     private static final Pattern TYPE_NAME = Pattern.compile("^  ([A-Z]+): \\{ (?:DE: \"[^\"]*\", )?EN: \"([^\"]*)\" }");
     private static final Pattern POWER = Pattern.compile("power: \\d+");
 
-    private record Reference(int key, String name, List<String> types, List<Integer> stats, List<String> abilities) {}
+    private record Reference(int key, String name, List<String> types, List<Integer> stats) {}
 
     private record Slot(int number, String name, List<String> types) {}
 
     private final HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
     private final Map<String, List<String[]>> csvCache = new HashMap<>();
-    private final Path gen3;
     private final Path gen7;
 
-    private GenerateGlazedRuleset(Path gen3, Path gen7) {
-        this.gen3 = gen3;
+    private GenerateGlazedRuleset(Path gen7) {
         this.gen7 = gen7;
     }
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 3) {
-            System.err.println("Usage: java tools/GenerateGlazedRuleset.java <gen3 ruleset> <gen7 ruleset> <output dir>");
+        if (args.length != 2) {
+            System.err.println("Usage: java tools/GenerateGlazedRuleset.java <gen7 ruleset> <output dir>");
             System.exit(1);
         }
-        GenerateGlazedRuleset generator = new GenerateGlazedRuleset(Path.of(args[0]), Path.of(args[1]));
-        Path output = Path.of(args[2]);
+        GenerateGlazedRuleset generator = new GenerateGlazedRuleset(Path.of(args[0]));
+        Path output = Path.of(args[1]);
         Files.createDirectories(output);
         String movesDoc = generator.download(MOVES_DOC);
         String header = "# Generated by tools/GenerateGlazedRuleset.java from the Pokémon Glazed fan wiki (" + WIKI_PAGE
                 + "), the v9.0 move document (" + MOVES_DOC + ", SHA-256 " + sha256(movesDoc) + "), the changelog and"
-                + " the gen3/gen7 rulesets (PokeAPI) - do not edit by hand.\n";
-        Map<String, String> abilityNames = new TreeMap<>();
-        Files.writeString(output.resolve("pokemon.yaml"), generator.pokemonYaml(header, abilityNames), StandardCharsets.UTF_8);
-        Files.writeString(output.resolve("abilities.yaml"), generator.abilitiesYaml(header, abilityNames), StandardCharsets.UTF_8);
+                + " the gen7 ruleset (PokeAPI) - do not edit by hand.\n";
+        Files.writeString(output.resolve("pokemon.yaml"), generator.pokemonYaml(header), StandardCharsets.UTF_8);
         Files.writeString(output.resolve("moves.yaml"), generator.movesYaml(header, movesDoc), StandardCharsets.UTF_8);
         Files.writeString(output.resolve("type-chart.yaml"), generator.typeChartYaml(header), StandardCharsets.UTF_8);
         System.out.println("Ruleset written to " + output.toAbsolutePath());
@@ -120,13 +109,10 @@ public final class GenerateGlazedRuleset {
 
     // ---------------------------------------------------------------- Pokémon
 
-    private String pokemonYaml(String header, Map<String, String> abilityNames) throws IOException, InterruptedException {
+    private String pokemonYaml(String header) throws IOException, InterruptedException {
         Map<Integer, Reference> gen7Species = references(gen7.resolve("pokemon.yaml"));
-        Map<Integer, Reference> gen3Species = references(gen3.resolve("pokemon.yaml"));
         Map<String, Reference> byName = new HashMap<>();
         gen7Species.values().forEach(species -> byName.put(species.name(), species));
-        Map<String, String> gen3Abilities = names(gen3.resolve("abilities.yaml"), ABILITY);
-        Map<String, String> gen7Abilities = names(gen7.resolve("abilities.yaml"), ABILITY);
 
         Map<Integer, String> lines = new TreeMap<>();
         for (Slot slot : slots()) {
@@ -136,18 +122,13 @@ public final class GenerateGlazedRuleset {
             String speciesName;
             List<String> types;
             List<Integer> stats;
-            List<String> abilities;
             String sprite = null;
             if (form != null) {
                 int pokemonId = Integer.parseInt(pokemonId(form));
-                Reference base = byName.get(baseName(form, byName));
                 key = OWN_KEY_BASE + slot.number();
                 speciesName = name; // the in-game name of these slots is unknown (10 letters at most)
                 types = formTypes(pokemonId);
                 stats = STATS.getOrDefault(name, formStats(pokemonId));
-                abilities = form.startsWith("kyurem") ? KYUREM_ABILITIES
-                        : pokemonId < 10000 ? gen3Species.get(base.key()).abilities()
-                        : gen3Pool(formAbilities(pokemonId), gen3Abilities);
                 sprite = String.valueOf(pokemonId);
             } else {
                 Reference reference = byName.get(name);
@@ -165,9 +146,6 @@ public final class GenerateGlazedRuleset {
                     }
                     stats.set(1, attack[1]);
                 }
-                Set<String> hidden = key <= LAST_GEN3_SPECIES ? Set.of() : hiddenAbilities(key);
-                abilities = key <= LAST_GEN3_SPECIES ? gen3Species.get(key).abilities()
-                        : gen3Pool(reference.abilities().stream().filter(a -> !hidden.contains(a)).toList(), gen3Abilities);
                 if (speciesName.length() > NAME_LENGTH) {
                     throw new IllegalStateException(speciesName + " is longer than " + NAME_LENGTH + " letters");
                 }
@@ -178,9 +156,8 @@ public final class GenerateGlazedRuleset {
             if (lines.containsKey(key)) {
                 throw new IllegalStateException("Two slots for " + name);
             }
-            abilities.forEach(slug -> abilityNames.put(slug, gen3Abilities.getOrDefault(slug, gen7Abilities.get(slug))));
             StringBuilder line = new StringBuilder("{ name: { EN: ").append(quote(speciesName)).append(" }, types: ")
-                    .append(types).append(", stats: ").append(stats).append(", abilities: ").append(abilities);
+                    .append(types).append(", stats: ").append(stats);
             if (sprite != null) {
                 line.append(", sprite: ").append(quote(sprite));
             }
@@ -192,8 +169,7 @@ public final class GenerateGlazedRuleset {
         StringBuilder yaml = new StringBuilder(header);
         yaml.append("# Key: national dex number; ").append(OWN_KEY_BASE).append(" + the wiki's slot number for Glazed's own slots")
                 .append(" (Mega Evolutions, Kyurem-B/W, event battle Pokémon; sprite: their PokeAPI sprite).\n");
-        yaml.append("# stats: Gen VII (Zorua/Zoroark Attack +15). abilities: Gen 3 engine - Gen 1-3 Pokémon as in Emerald,")
-                .append(" later ones their non-hidden Gen 3 abilities (assumed).\n");
+        yaml.append("# stats: Gen VII (Zorua/Zoroark Attack +15).\n");
         yaml.append("pokemon:\n");
         lines.forEach((key, line) -> yaml.append("  ").append(key).append(": ").append(line).append('\n'));
         return yaml.toString();
@@ -239,15 +215,6 @@ public final class GenerateGlazedRuleset {
         return slots;
     }
 
-    private static String baseName(String form, Map<String, Reference> byName) {
-        String base = form.split("-")[0];
-        return byName.keySet().stream().filter(name -> name.equalsIgnoreCase(base)).findFirst().orElseThrow();
-    }
-
-    private static List<String> gen3Pool(List<String> abilities, Map<String, String> gen3Abilities) {
-        return abilities.stream().filter(gen3Abilities::containsKey).distinct().toList();
-    }
-
     // ---------------------------------------------------------------- PokeAPI forms
 
     private String pokemonId(String identifier) throws IOException, InterruptedException {
@@ -277,28 +244,7 @@ public final class GenerateGlazedRuleset {
         return List.copyOf(types.values());
     }
 
-    /** Non-hidden abilities of a PokeAPI form, in slot order. */
-    private List<String> formAbilities(int pokemonId) throws IOException, InterruptedException {
-        return abilities(pokemonId, false);
-    }
-
-    private Set<String> hiddenAbilities(int speciesId) throws IOException, InterruptedException {
-        return Set.copyOf(abilities(speciesId, true));
-    }
-
-    private List<String> abilities(int pokemonId, boolean hidden) throws IOException, InterruptedException {
-        Map<String, String> identifiers = new HashMap<>();
-        csv("abilities").forEach(row -> identifiers.put(row[0], row[1]));
-        Map<Integer, String> abilities = new TreeMap<>();
-        for (String[] row : csv("pokemon_abilities")) { // pokemon_id,ability_id,is_hidden,slot
-            if (Integer.parseInt(row[0]) == pokemonId && row[2].equals("1") == hidden) {
-                abilities.put(Integer.parseInt(row[3]), identifiers.get(row[1]));
-            }
-        }
-        return List.copyOf(abilities.values());
-    }
-
-    // ---------------------------------------------------------------- moves, abilities, type chart
+    // ---------------------------------------------------------------- moves, type chart
 
     private String movesYaml(String header, String movesDoc) throws IOException {
         int start = movesDoc.indexOf("except for the following:");
@@ -337,15 +283,6 @@ public final class GenerateGlazedRuleset {
         return yaml.toString();
     }
 
-    private String abilitiesYaml(String header, Map<String, String> names) {
-        StringBuilder yaml = new StringBuilder(header);
-        yaml.append("# The generation, which decides how abilities work (Emerald's engine), and the names of the abilities in pokemon.yaml.\n");
-        yaml.append("generation: 3\n");
-        yaml.append("abilities:\n");
-        names.forEach((slug, name) -> yaml.append("  ").append(slug).append(": { EN: ").append(quote(name)).append(" }\n"));
-        return yaml.toString();
-    }
-
     /** The gen7 chart (Gen 6+ with Fairy), English type names only. */
     private String typeChartYaml(String header) throws IOException {
         StringBuilder yaml = new StringBuilder(header);
@@ -374,7 +311,7 @@ public final class GenerateGlazedRuleset {
             if (m.find()) {
                 int key = Integer.parseInt(m.group(1));
                 species.put(key, new Reference(key, m.group(2), split(m.group(3)),
-                        split(m.group(4)).stream().map(Integer::parseInt).toList(), split(m.group(5))));
+                        split(m.group(4)).stream().map(Integer::parseInt).toList()));
             }
         }
         return species;

@@ -46,18 +46,18 @@ import java.util.regex.Pattern;
  *
  * <p>Newer expansions (1.7+) are detected by {@code src/data/pokemon/species_info.h}: configuration in
  * {@code include/config.h} and {@code include/config/*.h}, one entry per species and form in
- * {@code species_info/gen_N.h} (types, stats, abilities, name, dex number, {@code FRONT_PIC}). Their shared-field
+ * {@code species_info/gen_N.h} (types, stats, name, dex number, {@code FRONT_PIC}). Their shared-field
  * macros (also with parameters, {@code ROTOM_APPLIANCE_INFO(form)}) are expanded and conditional values evaluated.
  *
  * <p>From the hack: {@code include/constants/*.h} (types, species, configuration), {@code src/data/pokemon/base_stats.h}
- * (types, base stats, abilities), {@code src/data/battle_moves.h} (power, type, category), the in-game names in
+ * (types, base stats), {@code src/data/battle_moves.h} (power, type, category), the in-game names in
  * {@code src/data/text/} and the battle sprites ({@code src/data/pokemon_graphics/front_pic_table.h} ->
  * {@code graphics/pokemon/...png}, checked to exist); the type chart from {@code src/battle_util.c} of the second
  * source. The reference ruleset (generated from PokeAPI) supplies form keys, names and regions, type names and the
  * move ids; dex numbers and moves are checked against PokeAPI identifiers. Moves that exist in PokeAPI but not in the
  * reference (Z-Moves, Max Moves, variable power) are left out; moves PokeAPI does not know are the hack's own.
  *
- * <p>Writes {@code type-chart.yaml}, {@code pokemon.yaml}, {@code moves.yaml} and {@code abilities.yaml}, English only
+ * <p>Writes {@code type-chart.yaml}, {@code pokemon.yaml} and {@code moves.yaml}, English only
  * (English build: {@code GAME_LANGUAGE} = {@code LANGUAGE_ENGLISH}).
  */
 public class GeneratePokeemeraldRuleset {
@@ -66,7 +66,6 @@ public class GeneratePokeemeraldRuleset {
     private static final String LANGUAGE = "EN";
     /** PokeAPI's local_language_id of English. */
     private static final String ENGLISH_ID = "9";
-    private static final String NAME_KEY = "name:";
     /** Keys of moves that only exist in the hack: this + the hack's move id. */
     private static final int NEW_MOVE_KEY_BASE = 20000;
     /** Variable powers are 0 or 1 (as in PokeAPI). */
@@ -85,9 +84,6 @@ public class GeneratePokeemeraldRuleset {
     private static final String MYSTERY_TYPE = "MYSTERY";
     /** Types no Pokémon has: MYSTERY and the Terastal-only Stellar type (left out like in the reference). */
     private static final Set<String> HIDDEN_TYPES = Set.of(MYSTERY_TYPE, "STELLAR");
-    /** Ability constants whose PokeAPI identifier is neither their name nor unique by English name ("As One" twice). */
-    private static final Map<String, String> ABILITY_ALIASES = Map.of(
-            "ABILITY_AS_ONE_ICE_RIDER", "as-one-glastrier", "ABILITY_AS_ONE_SHADOW_RIDER", "as-one-spectrier");
     /** Move constants with an English name from before Gen 6 that PokeAPI no longer knows. */
     private static final Map<String, String> OLD_MOVE_IDENTIFIERS = Map.of("faint-attack", "feint-attack");
     private static final Map<String, String> CATEGORIES = Map.of("SPLIT_PHYSICAL", "PHYSICAL", "SPLIT_SPECIAL", "SPECIAL");
@@ -126,8 +122,6 @@ public class GeneratePokeemeraldRuleset {
     private final String hackSource;
     private final String typeChartSource;
     private final Path reference;
-    /** The output folder's name: prefix of the hack's own abilities. */
-    private final String rulesetId;
     /** Name -> value as written (a number or another name): resolved when used, like the C preprocessor does. */
     private final Map<String, String> defines = new HashMap<>(BUILD_DEFINES);
     /** Other object-like macros (shared species fields such as {@code MR_MIME_MISC_INFO}, expressions): expanded in the text. */
@@ -137,12 +131,11 @@ public class GeneratePokeemeraldRuleset {
     /** Newer expansion (1.7+): Pokémon data in species_info.h, configuration in include/config/. */
     private final boolean speciesInfoLayout;
 
-    private GeneratePokeemeraldRuleset(String hackSource, String typeChartSource, Path reference, String rulesetId)
+    private GeneratePokeemeraldRuleset(String hackSource, String typeChartSource, Path reference)
             throws IOException, InterruptedException {
         this.hackSource = hackSource;
         this.typeChartSource = typeChartSource;
         this.reference = reference;
-        this.rulesetId = rulesetId;
         this.speciesInfoLayout = exists(hackSource, SPECIES_INFO);
         for (String file : speciesInfoLayout ? EXPANSION_CONFIG_FILES : CONFIG_FILES) {
             preprocess(read(hackSource, file)); // collects the #defines
@@ -156,16 +149,14 @@ public class GeneratePokeemeraldRuleset {
         }
         Path outputDir = Path.of(args[3]);
         Files.createDirectories(outputDir);
-        GeneratePokeemeraldRuleset generator = new GeneratePokeemeraldRuleset(args[0], args[1], Path.of(args[2]), outputDir.getFileName().toString());
+        GeneratePokeemeraldRuleset generator = new GeneratePokeemeraldRuleset(args[0], args[1], Path.of(args[2]));
         String header = "# Generated by tools/GeneratePokeemeraldRuleset.java from the hack's sources (" + args[0]
                 + ") and type chart (" + args[1] + ") - do not edit by hand.\n";
 
         List<String> types = generator.types();
-        Map<String, String> abilityNames = new TreeMap<>();
         Files.writeString(outputDir.resolve("type-chart.yaml"), generator.typeChartYaml(header, types), StandardCharsets.UTF_8);
-        Files.writeString(outputDir.resolve("pokemon.yaml"), generator.pokemonYaml(header, Set.copyOf(types), abilityNames), StandardCharsets.UTF_8);
+        Files.writeString(outputDir.resolve("pokemon.yaml"), generator.pokemonYaml(header, Set.copyOf(types)), StandardCharsets.UTF_8);
         Files.writeString(outputDir.resolve("moves.yaml"), generator.movesYaml(header, Set.copyOf(types)), StandardCharsets.UTF_8);
-        Files.writeString(outputDir.resolve("abilities.yaml"), generator.abilitiesYaml(header, abilityNames), StandardCharsets.UTF_8);
         System.out.println("Ruleset (generation " + generator.generation() + ") written to " + outputDir.toAbsolutePath());
     }
 
@@ -254,7 +245,7 @@ public class GeneratePokeemeraldRuleset {
 
     // ---------------------------------------------------------------- Pokémon
 
-    private record HackSpecies(String constant, String name, List<String> types, List<Integer> stats, List<String> abilities, String sprite) {
+    private record HackSpecies(String constant, String name, List<String> types, List<Integer> stats, String sprite) {
 
         String requireSprite() {
             if (sprite == null) {
@@ -270,10 +261,8 @@ public class GeneratePokeemeraldRuleset {
     private record ReferenceSpecies(String name, List<ReferenceForm> forms) {
     }
 
-    private String pokemonYaml(String header, Set<String> types, Map<String, String> abilityNames) throws IOException, InterruptedException {
+    private String pokemonYaml(String header, Set<String> types) throws IOException, InterruptedException {
         Map<String, Integer> speciesIds = speciesIds();
-        Map<String, String> hackAbilityNames = abilityNames();
-        Map<String, String> pokeApiAbilities = pokeApiAbilities();
         Map<Integer, HackSpecies> base = new TreeMap<>();
         Map<String, HackSpecies> forms = new LinkedHashMap<>();
         if (speciesInfoLayout) {
@@ -288,8 +277,8 @@ public class GeneratePokeemeraldRuleset {
 
         StringBuilder yaml = new StringBuilder(header);
         yaml.append("# Key: national dex number. name: as shown in the game. sprite: the hack's own sprite (graphics/pokemon/<sprite>.png).\n");
-        yaml.append("# forms: keys, names and regions as in the reference ruleset; types, stats, abilities and sprites from the hack.\n");
-        yaml.append("# stats: HP, Attack, Defense, Sp. Atk, Sp. Def, Speed. abilities: both slots and the hidden one.\n");
+        yaml.append("# forms: keys, names and regions as in the reference ruleset; types, stats and sprites from the hack.\n");
+        yaml.append("# stats: HP, Attack, Defense, Sp. Atk, Sp. Def, Speed.\n");
         yaml.append("pokemon:\n");
         for (Map.Entry<Integer, ReferenceSpecies> entry : referenceSpecies.entrySet()) {
             int dex = entry.getKey();
@@ -308,7 +297,7 @@ public class GeneratePokeemeraldRuleset {
                 System.out.println("  name #" + dex + ": " + species.name() + " (" + entry.getValue().name() + ")");
             }
             yaml.append("  ").append(dex).append(":\n");
-            appendSpecies(yaml, species, abilityNames, hackAbilityNames, pokeApiAbilities, spriteNames);
+            appendSpecies(yaml, species, spriteNames);
             List<String> formLines = new ArrayList<>();
             for (ReferenceForm form : entry.getValue().forms()) {
                 String formIdentifier = formIdentifier(form, pokemonIdentifiers, dex);
@@ -323,10 +312,6 @@ public class GeneratePokeemeraldRuleset {
                     line.append(", region: ").append(form.region());
                 }
                 line.append(", stats: ").append(data.stats());
-                List<String> abilities = abilitySlugs(data, abilityNames, hackAbilityNames, pokeApiAbilities);
-                if (!abilities.isEmpty()) {
-                    line.append(", abilities: [").append(String.join(", ", abilities)).append(']');
-                }
                 formLines.add(line.append(" }").toString());
                 spriteNames.add(data.sprite());
             }
@@ -339,15 +324,10 @@ public class GeneratePokeemeraldRuleset {
         return yaml.toString();
     }
 
-    private void appendSpecies(StringBuilder yaml, HackSpecies species, Map<String, String> abilityNames, Map<String, String> hackAbilityNames,
-                               Map<String, String> pokeApiAbilities, Set<String> spriteNames) {
+    private void appendSpecies(StringBuilder yaml, HackSpecies species, Set<String> spriteNames) {
         yaml.append("    name: ").append(nameMap(species.name())).append('\n');
         yaml.append("    types: ").append(species.types()).append('\n');
         yaml.append("    stats: ").append(species.stats()).append('\n');
-        List<String> abilities = abilitySlugs(species, abilityNames, hackAbilityNames, pokeApiAbilities);
-        if (!abilities.isEmpty()) {
-            yaml.append("    abilities: [").append(String.join(", ", abilities)).append("]\n");
-        }
         yaml.append("    sprite: ").append(quote(species.requireSprite())).append('\n');
         spriteNames.add(species.sprite());
     }
@@ -374,7 +354,7 @@ public class GeneratePokeemeraldRuleset {
     }
 
     /**
-     * Newer expansion layout: one species_info.h entry per species and form with types, stats, abilities, name and
+     * Newer expansion layout: one species_info.h entry per species and form with types, stats, name and
      * front picture. The species of a dex number is its entry with the lowest id (Gen 9 ids follow the older forms);
      * all others are forms.
      */
@@ -445,66 +425,12 @@ public class GeneratePokeemeraldRuleset {
                 speciesTypes.add(type); // TYPE_FIRE twice = pure Fire
             }
         }
-        List<String> abilities = new ArrayList<>();
-        Matcher slots = Pattern.compile("\\.abilities\\s*=\\s*\\{([^}]*)}").matcher(body);
-        Matcher hidden = Pattern.compile("\\.abilityHidden\\s*=\\s*(\\w+)").matcher(body);
-        List<String> constants = new ArrayList<>(slots.find() ? Arrays.stream(slots.group(1).split(",")).map(this::select).toList() : List.of());
-        if (hidden.find()) {
-            constants.add(hidden.group(1));
-        }
-        for (String ability : constants) {
-            if (!ability.isEmpty() && !ability.equals("ABILITY_NONE") && !abilities.contains(ability)) {
-                abilities.add(ability);
-            }
-        }
         String name = names.get(constant);
         if (name == null) {
             throw new IllegalStateException(constant + " has no name in species_names.h");
         }
         // null if the species has no front picture: only an error for species and forms that are written
-        return new HackSpecies(constant, name, List.copyOf(speciesTypes), List.copyOf(stats), List.copyOf(abilities), sprites.get(constant));
-    }
-
-    /**
-     * Ability constants -> PokeAPI identifiers, by constant ("ABILITY_LEVITATE") or else by English name; the hack's
-     * own abilities get "&lt;ruleset&gt;-&lt;constant&gt;" (no effect PokeSight knows).
-     */
-    private List<String> abilitySlugs(HackSpecies species, Map<String, String> abilityNames, Map<String, String> hackAbilityNames,
-                                      Map<String, String> pokeApiAbilities) {
-        List<String> slugs = new ArrayList<>();
-        for (String constant : species.abilities()) {
-            String slug = ABILITY_ALIASES.getOrDefault(constant, constant.substring("ABILITY_".length()).toLowerCase().replace('_', '-'));
-            String name = hackAbilityNames.get(constant);
-            if (name == null) {
-                throw new IllegalStateException(species.constant() + ": ability " + constant + " has no name");
-            }
-            if (!pokeApiAbilities.containsKey(slug)) {
-                slug = pokeApiAbilities.getOrDefault(NAME_KEY + normalize(name), rulesetId + "-" + slug);
-            }
-            abilityNames.putIfAbsent(slug, name);
-            slugs.add(slug);
-        }
-        return slugs;
-    }
-
-    /** PokeAPI abilities: identifier -> identifier, and {@link #NAME_KEY} + English name -> identifier where the name is unique. */
-    private Map<String, String> pokeApiAbilities() throws IOException, InterruptedException {
-        Map<String, String> identifiers = pokeApiColumns("abilities", "id", "identifier");
-        Map<String, String> abilities = new HashMap<>();
-        identifiers.values().forEach(identifier -> abilities.put(identifier, identifier));
-        Map<String, List<String>> byName = new HashMap<>();
-        for (String line : csvLines("ability_names")) {
-            String[] values = line.split(",", 3); // ability_id,local_language_id,name
-            if (values.length == 3 && values[1].equals(ENGLISH_ID) && identifiers.containsKey(values[0])) {
-                byName.computeIfAbsent(normalize(values[2]), name -> new ArrayList<>()).add(identifiers.get(values[0]));
-            }
-        }
-        byName.forEach((name, matches) -> {
-            if (matches.size() == 1) {
-                abilities.put(NAME_KEY + name, matches.getFirst());
-            }
-        });
-        return abilities;
+        return new HackSpecies(constant, name, List.copyOf(speciesTypes), List.copyOf(stats), sprites.get(constant));
     }
 
     /** PokeAPI identifier of a reference form: by its sprite id, or "&lt;species&gt;-&lt;type&gt;" for type forms ("493-fire"). */
@@ -712,29 +638,6 @@ public class GeneratePokeemeraldRuleset {
                 .append(generationOf("B_PHYSICAL_SPECIAL_SPLIT")).append(".\n");
         yaml.append("moves:\n");
         moves.forEach((id, move) -> yaml.append("  ").append(id).append(": ").append(move).append('\n'));
-        return yaml.toString();
-    }
-
-    // ---------------------------------------------------------------- abilities
-
-    /** Ability constant -> in-game name (the name table at the top of abilities.h). */
-    private Map<String, String> abilityNames() throws IOException, InterruptedException {
-        String source = preprocess(read(hackSource, "src/data/text/abilities.h"));
-        int start = source.indexOf("gAbilityNames");
-        int end = source.indexOf("};", start);
-        if (start < 0 || end < 0) {
-            throw new IllegalStateException("gAbilityNames not found in abilities.h");
-        }
-        return names(source.substring(start, end));
-    }
-
-    private String abilitiesYaml(String header, Map<String, String> names) {
-        StringBuilder yaml = new StringBuilder(header);
-        yaml.append("# The generation, which decides how abilities work, and the names of the abilities in pokemon.yaml.\n");
-        yaml.append("# Identifiers as in PokeAPI; \"" + rulesetId + "-...\" = made up by the hack (none of the effects PokeSight knows).\n");
-        yaml.append("generation: ").append(generation()).append('\n');
-        yaml.append("abilities:\n");
-        names.forEach((slug, name) -> yaml.append("  ").append(slug).append(": ").append(nameMap(name)).append('\n'));
         return yaml.toString();
     }
 

@@ -2,6 +2,7 @@ package de.alorbach.pokesight.ui;
 
 import de.alorbach.pokesight.battle.BattleMonitor;
 import de.alorbach.pokesight.battle.PokemonId;
+import de.alorbach.pokesight.catching.CatchAdvice;
 import de.alorbach.pokesight.game.GameDefinition;
 import de.alorbach.pokesight.matchup.EnemyAnalysis;
 import de.alorbach.pokesight.matchup.MatchupCalculator;
@@ -39,10 +40,12 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Live view: one card per opposing Pokémon. The user can force a scan, correct a misread Pokémon, add one by hand,
- * set their team, pick which team member is out (read from their own name box if that area is selected) and check
+ * set their team, pick which team members are out (read from their own name boxes if those areas are selected; two
+ * in a double battle) and check
  * what the scan captured. In borderless mode only the cards remain and fill the window
  * (one opponent: all of it, two: one half each). Wire the actions with the {@code setOn...} methods; all methods
  * must be called on the JavaFX thread.
@@ -51,6 +54,8 @@ public final class BattleView extends BorderPane {
 
     /** Opponents side by side: a double battle shows its two opponents left and right. */
     private static final int COLUMNS = 2;
+    /** Room for "Add Pokémon…" at the default window width with both "Out" choices shown. */
+    private static final double ADD_FIELD_MIN_WIDTH = 110;
 
     private final MatchupCalculator calculator;
     private final Language language;
@@ -71,9 +76,12 @@ public final class BattleView extends BorderPane {
     private final StackPane compactRoot = new StackPane();
     private final VBox emptyState;
     private final boolean terastal;
+    private final CatchAdvice catchAdvice;
     /** Which team member is out: set by the scan of the own name box or by the user. */
     private final ComboBox<ActiveChoice> activeChoice = new ComboBox<>();
-    private PokemonId lastReadActive;
+    /** The second one in a double battle; shown when two opponents are on the board or one is chosen. */
+    private final ComboBox<ActiveChoice> partnerChoice = new ComboBox<>();
+    private List<PokemonId> lastReadActive = List.of();
 
     private Team team;
     private Runnable onScanNow = () -> { };
@@ -92,6 +100,7 @@ public final class BattleView extends BorderPane {
         this.pokemonOptions = SearchField.pokemon(calculator.ruleset(), language);
         this.team = store.game(gameId).toTeam();
         this.terastal = settings.game().terastal();
+        this.catchAdvice = CatchAdvice.forGame(settings.game(), calculator.ruleset(), language);
         getStyleClass().add("battle-view");
 
         top = new VBox(header(onBack), actionBar());
@@ -114,6 +123,7 @@ public final class BattleView extends BorderPane {
         VBox.setVgrow(emptyState, Priority.ALWAYS);
         render();
         activeChoice.valueProperty().addListener((obs, old, chosen) -> render());
+        partnerChoice.valueProperty().addListener((obs, old, chosen) -> render());
         sprites.downloadMissing(this::render); // first start: the cards get their sprites once the download is done
     }
 
@@ -150,10 +160,18 @@ public final class BattleView extends BorderPane {
         activeChoice.getStyleClass().add("active-choice");
         activeChoice.setTooltip(new Tooltip("Your Pokémon on the field: its moves are marked, and the cards say whether "
                 + "another team member hits harder. Read from your own name box if its area is selected on the start screen."));
+        partnerChoice.getStyleClass().add("active-choice");
+        partnerChoice.setTooltip(new Tooltip("Your second Pokémon in a double battle. Read from your own name boxes if "
+                + "the double battle area is selected on the start screen."));
         refreshActiveChoices();
         Label out = new Label("Out:");
         out.getStyleClass().add("action-label");
-        HBox bar = new HBox(scanNow, clear, teamButton, preview, out, activeChoice, spacer(), add);
+        // A narrow window shortens only the search field, never the buttons or the "Out" choices to "...".
+        for (Region fixed : List.of(scanNow, clear, teamButton, preview, out, activeChoice, partnerChoice)) {
+            fixed.setMinWidth(Region.USE_PREF_SIZE);
+        }
+        add.setMinWidth(ADD_FIELD_MIN_WIDTH);
+        HBox bar = new HBox(scanNow, clear, teamButton, preview, out, activeChoice, partnerChoice, spacer(), add);
         bar.getStyleClass().add("action-bar");
         bar.setAlignment(Pos.CENTER_LEFT);
         return bar;
@@ -236,9 +254,10 @@ public final class BattleView extends BorderPane {
         }
     }
 
-    /** The team members to pick from; keeps the choice if that member is still in the team. */
+    /** The team members to pick from; keeps the choices of members that are still in the team. */
     private void refreshActiveChoices() {
-        PokemonId selected = activePokemon();
+        PokemonId selected = chosen(activeChoice);
+        PokemonId partner = chosen(partnerChoice);
         List<ActiveChoice> choices = new ArrayList<>();
         choices.add(new ActiveChoice(null, "—"));
         for (Team.Member member : team.members()) {
@@ -247,19 +266,33 @@ public final class BattleView extends BorderPane {
                     .ifPresent(name -> choices.add(new ActiveChoice(member.pokemon(), name)));
         }
         activeChoice.getItems().setAll(choices);
-        selectActive(selected);
+        partnerChoice.getItems().setAll(choices);
+        select(activeChoice, selected);
+        select(partnerChoice, partner);
         activeChoice.setDisable(team.isEmpty());
+        partnerChoice.setDisable(team.members().size() < 2);
     }
 
-    private void selectActive(PokemonId pokemon) {
-        activeChoice.setValue(activeChoice.getItems().stream()
-                .filter(choice -> Objects.equals(choice.pokemon(), pokemon))
+    /** Selects the Pokémon read in the own name boxes: the first in the first choice, the second (if any) in the other. */
+    private void selectActive(List<PokemonId> pokemon) {
+        select(activeChoice, pokemon.isEmpty() ? null : pokemon.getFirst());
+        select(partnerChoice, pokemon.size() < 2 ? null : pokemon.get(1));
+    }
+
+    private static void select(ComboBox<ActiveChoice> choice, PokemonId pokemon) {
+        choice.setValue(choice.getItems().stream()
+                .filter(item -> Objects.equals(item.pokemon(), pokemon))
                 .findFirst()
-                .orElse(activeChoice.getItems().getFirst()));
+                .orElse(choice.getItems().getFirst()));
     }
 
-    private PokemonId activePokemon() {
-        return activeChoice.getValue() == null ? null : activeChoice.getValue().pokemon();
+    private static PokemonId chosen(ComboBox<ActiveChoice> choice) {
+        return choice.getValue() == null ? null : choice.getValue().pokemon();
+    }
+
+    /** The team members on the field, chosen or read; at most two, without repeats. */
+    private List<PokemonId> activePokemon() {
+        return Stream.of(chosen(activeChoice), chosen(partnerChoice)).filter(Objects::nonNull).distinct().toList();
     }
 
     /** Same as the Borderless toggle in the title bar. */
@@ -289,11 +322,11 @@ public final class BattleView extends BorderPane {
         status.setText(update.message());
         status.getStyleClass().removeIf(style -> style.startsWith("state-"));
         status.getStyleClass().add("state-" + update.state().name().toLowerCase(Locale.ROOT).replace('_', '-'));
-        // A newly read own Pokémon replaces the choice; the user's choice stays until the scan reads another one.
-        if (update.active() != null && !update.active().equals(lastReadActive)) {
+        // Newly read own Pokémon replace the choices; the user's choices stay until the scan reads others.
+        if (!update.active().isEmpty() && !update.active().equals(lastReadActive)) {
             selectActive(update.active());
-        } else if (update.state() == BattleMonitor.State.WAITING && lastReadActive != null) {
-            selectActive(null); // the battle is over
+        } else if (update.state() == BattleMonitor.State.WAITING && !lastReadActive.isEmpty()) {
+            selectActive(List.of()); // the battle is over
         }
         lastReadActive = update.active();
         List<BattleBoard.Entry> before = board.entries();
@@ -305,9 +338,13 @@ public final class BattleView extends BorderPane {
     }
 
     private void render() {
+        // The second "Out" choice only matters with two opponents (double battle) or once it is set.
+        boolean partnerShown = board.entries().size() >= 2 || chosen(partnerChoice) != null;
+        partnerChoice.setVisible(partnerShown);
+        partnerChoice.setManaged(partnerShown);
         boolean compact = borderless.isSelected();
         PokemonCard.Context context = new PokemonCard.Context(calculator.ruleset(), language, pokemonOptions, !team.isEmpty(),
-                sprites::image, terastal, activePokemon());
+                sprites::image, terastal, activePokemon(), catchAdvice);
         List<Node> enemyCards = new ArrayList<>();
         for (BattleBoard.Entry entry : board.entries()) {
             Optional<EnemyAnalysis> analysis = calculator.analyze(entry.pokemon(), language, team, entry.tera());

@@ -1,7 +1,10 @@
 package de.alorbach.pokesight.ui;
 
 import de.alorbach.pokesight.capture.CaptureRegion;
+import de.alorbach.pokesight.game.GameCategory;
 import de.alorbach.pokesight.game.GameDefinition;
+import de.alorbach.pokesight.game.GameOption;
+import de.alorbach.pokesight.game.GameRulesets;
 import de.alorbach.pokesight.ocr.GlyphFont;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.settings.AppSettings;
@@ -11,6 +14,7 @@ import de.alorbach.pokesight.update.UpdateCheck;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
@@ -18,6 +22,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -38,8 +43,10 @@ import java.util.function.Consumer;
 
 /**
  * Start screen: pick the game (= its YAML file), the language and, optionally, where the opponents'
- * names appear in single and double battles and where the player's own name box is. Without a selected opponent
- * area the whole main screen is read. Choices are remembered in the settings files.
+ * names appear in single and double battles and where the player's own name boxes are (one in single battles, two in
+ * double battles). Without a selected opponent
+ * area the whole main screen is read. Games with options (Platinum Together's MODERN POKéMON) show them as switches.
+ * Choices are remembered in the settings files.
  */
 public final class StartView extends BorderPane {
 
@@ -51,8 +58,12 @@ public final class StartView extends BorderPane {
     private final AreaRow doubleArea = new AreaRow(GameSettings::withDoubleArea,
             "Drag a rectangle around both opponents' name boxes in a double battle");
     private final AreaRow ownArea = new AreaRow(GameSettings::withOwnArea,
-            "Drag a rectangle around your own Pokémon's name box");
+            "Drag a rectangle around your own Pokémon's name box in a single battle");
+    private final AreaRow ownDoubleArea = new AreaRow(GameSettings::withOwnDoubleArea,
+            "Drag a rectangle around both of your own Pokémon's name boxes in a double battle");
     private final Button forgetLetters = new Button("Forget learned letters");
+    private final GridPane form = new GridPane();
+    private final FlowPane gameOptions = new FlowPane();
 
     public StartView(List<GameDefinition> games, SettingsStore store, Consumer<SessionSettings> onStart) {
         this.store = store;
@@ -73,23 +84,19 @@ public final class StartView extends BorderPane {
         game.setButtonCell(new GameCell(false));
         game.getStyleClass().add("game-combo");
         language.prefWidthProperty().bind(game.widthProperty());
+        gameOptions.getStyleClass().add("game-options");
+
+        form.getStyleClass().add("form");
+        layOutForm(null);
         game.valueProperty().addListener((obs, old, selected) -> gameChanged(selected, saved.language()));
         game.setValue(games.stream()
                 .filter(g -> g.id().equals(saved.game()))
                 .findFirst()
                 .orElse(games.isEmpty() ? null : games.getFirst()));
 
-        GridPane form = new GridPane();
-        form.getStyleClass().add("form");
-        form.addRow(0, formLabel("Game"), game);
-        form.addRow(1, formLabel("Language"), language);
-        form.addRow(2, formLabel("Single battle area"), singleArea);
-        form.addRow(3, formLabel("Double battle area"), doubleArea);
-        form.addRow(4, formLabel("Your Pokémon area"), ownArea);
-
         Label hint = new Label("""
                 Areas are optional: drag a rectangle around the opponents' name boxes (without one the whole screen \
-                is read, slower) and around your own name box. Never let PokeSight cover a selected area.""");
+                is read, slower) and around your own name boxes. Never let PokeSight cover a selected area.""");
         hint.getStyleClass().add("hint");
         hint.setWrapText(true);
         hint.setMinHeight(Region.USE_PREF_SIZE); // all of it, not cut to one line when the window is small
@@ -127,7 +134,28 @@ public final class StartView extends BorderPane {
     private static Label formLabel(String text) {
         Label label = new Label(text);
         label.getStyleClass().add("form-label");
+        label.setMinWidth(Region.USE_PREF_SIZE); // never cut to "Single battle ..."
         return label;
+    }
+
+    /**
+     * The rows of the form: the language only if the game has more than one, the rules only for games with options
+     * (the card has no room for more rows at the default window height).
+     */
+    private void layOutForm(GameDefinition selected) {
+        form.getChildren().clear();
+        int row = 0;
+        form.addRow(row++, formLabel("Game"), game);
+        if (selected == null || selected.languages().size() > 1) {
+            form.addRow(row++, formLabel("Language"), language);
+        }
+        if (selected != null && !selected.options().isEmpty()) {
+            form.addRow(row++, formLabel("Rules"), gameOptions);
+        }
+        form.addRow(row++, formLabel("Single battle area"), singleArea);
+        form.addRow(row++, formLabel("Double battle area"), doubleArea);
+        form.addRow(row++, formLabel("Your single battle area"), ownArea);
+        form.addRow(row, formLabel("Your double battle area"), ownDoubleArea);
     }
 
     private void gameChanged(GameDefinition selected, Language savedLanguage) {
@@ -138,11 +166,24 @@ public final class StartView extends BorderPane {
         List<Language> available = selected.languages().stream().sorted().toList();
         language.getItems().setAll(available);
         language.setValue(available.contains(savedLanguage) ? savedLanguage : available.getFirst());
+        layOutForm(selected);
+        gameOptions.getChildren().setAll(selected.options().stream().map(option -> optionBox(selected, option)).toList());
         GameSettings settings = store.game(selected.id());
         singleArea.load(selected.id(), settings.singleArea());
         doubleArea.load(selected.id(), settings.doubleArea());
         ownArea.load(selected.id(), settings.ownArea());
+        ownDoubleArea.load(selected.id(), settings.ownDoubleArea());
         forgetLetters.setDisable(!Files.exists(GlyphFont.defaultFile(selected.id())));
+    }
+
+    /** A switch of the game, saved in the app settings as soon as it changes. */
+    private CheckBox optionBox(GameDefinition selected, GameOption option) {
+        CheckBox box = new CheckBox(option.label());
+        box.setSelected(GameRulesets.isOn(option, store.app().options(selected.id())));
+        box.setTooltip(new Tooltip(option.description()));
+        box.selectedProperty().addListener((obs, old, on) -> Theme.saveOrWarn(getScene().getWindow(),
+                () -> store.saveApp(store.app().withOption(selected.id(), option.id(), on))));
+        return box;
     }
 
     private void forgetLearnedLetters() {
@@ -193,33 +234,39 @@ public final class StartView extends BorderPane {
             Rectangle2D screen = Screen.getPrimary().getBounds();
             regions.add(new CaptureRegion((int) screen.getMinX(), (int) screen.getMinY(), (int) screen.getWidth(), (int) screen.getHeight()));
         }
-        onStart.accept(new SessionSettings(selectedGame, language.getValue(), regions, description, ownArea.region().orElse(null)));
+        List<CaptureRegion> ownRegions = new ArrayList<>();
+        ownArea.region().ifPresent(ownRegions::add);
+        ownDoubleArea.region().ifPresent(ownRegions::add);
+        onStart.accept(new SessionSettings(selectedGame, language.getValue(), regions, description, ownRegions,
+                store.app().options(selectedGame.id())));
     }
 
     /**
-     * A game in the combo box. ROM hacks carry a "ROM hack" badge; in the drop-down list the first one also has a
-     * "ROM hacks" heading above it, which is no part of the selectable row: it is never highlighted and ignores clicks.
+     * A game in the combo box. ROM hacks and custom games carry a badge ("ROM hack", "Custom"); in the drop-down list
+     * the first game of each of these categories also has a heading above it ("ROM hacks", "Custom games"), which is
+     * no part of the selectable row: it is never highlighted and ignores clicks.
      */
     private static final class GameCell extends ListCell<GameDefinition> {
 
         private static final String SECTION_START = "section-start";
 
         private final boolean headings;
-        private final Label badge = romHackBadge();
-        // Graphic of the first ROM hack in the list: heading, then the row that is highlighted instead of the cell
+        private final Label badge = categoryBadge();
+        // Graphic of the first game of a category: heading, then the row that is highlighted instead of the cell
+        private final Label heading = new Label();
         private final Label rowName = new Label();
+        private final Label rowBadge = categoryBadge();
         private final VBox sectionStart;
 
         GameCell(boolean headings) {
             this.headings = headings;
-            Label heading = new Label("ROM hacks");
             heading.getStyleClass().addAll("section-title", "combo-section");
             heading.setMaxWidth(Double.MAX_VALUE);
             heading.addEventFilter(MouseEvent.MOUSE_PRESSED, MouseEvent::consume);
             heading.addEventFilter(MouseEvent.MOUSE_RELEASED, MouseEvent::consume);
             heading.addEventFilter(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
             rowName.getStyleClass().add("game-name");
-            HBox row = new HBox(6, rowName, romHackBadge());
+            HBox row = new HBox(6, rowName, rowBadge);
             row.getStyleClass().add("game-row");
             row.setAlignment(Pos.CENTER_LEFT);
             sectionStart = new VBox(heading, row);
@@ -233,26 +280,47 @@ public final class StartView extends BorderPane {
             if (empty || item == null) {
                 setText(null);
                 setGraphic(null);
-            } else if (headings && isFirstRomHack(item)) {
+            } else if (headings && isFirstOfSection(item)) {
                 getStyleClass().add(SECTION_START);
+                heading.setText(sectionTitle(item.category()));
                 rowName.setText(item.name());
+                rowBadge.setText(badgeText(item.category()));
                 setText(null);
                 setGraphic(sectionStart);
                 setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
             } else {
                 setText(item.name());
-                setGraphic(item.romHack() ? badge : null);
+                badge.setText(badgeText(item.category()));
+                setGraphic(item.category() == GameCategory.OFFICIAL ? null : badge);
                 setContentDisplay(ContentDisplay.RIGHT);
             }
         }
 
-        private boolean isFirstRomHack(GameDefinition item) {
-            return item.romHack() && getListView() != null
-                    && getListView().getItems().stream().filter(GameDefinition::romHack).findFirst().orElse(null) == item;
+        /** The first ROM hack or custom game in the list: it carries its category's heading. */
+        private boolean isFirstOfSection(GameDefinition item) {
+            return item.category() != GameCategory.OFFICIAL && getListView() != null
+                    && getListView().getItems().stream().filter(game -> game.category() == item.category()).findFirst()
+                    .orElse(null) == item;
         }
 
-        private static Label romHackBadge() {
-            Label badge = new Label("ROM hack");
+        private static String sectionTitle(GameCategory category) {
+            return switch (category) {
+                case OFFICIAL -> "Games";
+                case ROM_HACK -> "ROM hacks";
+                case CUSTOM -> "Custom games";
+            };
+        }
+
+        private static String badgeText(GameCategory category) {
+            return switch (category) {
+                case OFFICIAL -> "";
+                case ROM_HACK -> "ROM hack";
+                case CUSTOM -> "Custom";
+            };
+        }
+
+        private static Label categoryBadge() {
+            Label badge = new Label();
             badge.getStyleClass().add("rom-hack-badge");
             badge.setMinWidth(Region.USE_PREF_SIZE);
             return badge;

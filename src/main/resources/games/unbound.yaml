@@ -1,5 +1,5 @@
 # Pokémon Unbound (GBA): ROM hack of FireRed (US) by Skeli, built on Complete-Fire-Red-Upgrade (battle engine) and
-# Dynamic-Pokemon-Expansion (Pokémon data); Pokémon up to Gen 8, Fairy, changed abilities, stats and moves. English only.
+# Dynamic-Pokemon-Expansion (Pokémon data); Pokémon up to Gen 8, Fairy, changed stats and moves. English only.
 # https://pokefirered.com/pokemon-unbound/ - https://github.com/Skeli789/Complete-Fire-Red-Upgrade
 name: Pokémon Unbound
 ruleset: unbound         # generated from the hack's sources (tools/GenerateCfruRuleset.java)

@@ -11,11 +11,11 @@ import java.util.regex.Pattern;
  *
  * <ul>
  *   <li>Engine: pokeemerald-expansion (developer's documentation, credits "Feature Branches" of the expansion). The
- *       expansion's default data are the current main series games' (Gen 9 types, stats, abilities, moves, type chart):
+ *       expansion's default data are the current main series games' (Gen 9 types, stats, moves, type chart):
  *       {@code tools/GeneratePokeemeraldRuleset.java} on Emerald Rogue EX (expansion defaults) gives the gen9 reference's
- *       types (Hisuian Goodra's order aside), stats, abilities, moves and type chart. So the reference is taken as it is.</li>
+ *       types (Hisuian Goodra's order aside), stats, moves and type chart. So the reference is taken as it is.</li>
  *   <li>Changes in the changelogs (pokemonlazarus.net "Full Changelog", demo 1.0 to v2.0) that matter for matchups:
- *       none. Mega Evolutions and their types/abilities (Mega Raichu X Electric/Fighting, Mega Heliolisk Electric/Fire,
+ *       none. Mega Evolutions and their types (Mega Raichu X Electric/Fighting, Mega Heliolisk Electric/Fire,
  *       ...) are battle-only forms, which PokeSight leaves out; Piscivore (Vaporeon) only speeds up fishing; Flower Gift
  *       summoning sun, Slam's priority and learnset changes do not change a type matchup or a move's power.</li>
  *   <li>Names: in-game names in mixed case, full length (expansion 1.9+ allows 12 letters; Lazarus started in 2025),
@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  */
 public class GenerateLazarusRuleset {
 
-    private static final List<String> FILES = List.of("type-chart.yaml", "pokemon.yaml", "moves.yaml", "abilities.yaml");
+    private static final List<String> FILES = List.of("type-chart.yaml", "pokemon.yaml", "moves.yaml");
     /** The German names of the reference: the hack is English only. */
     private static final Pattern GERMAN_NAME = Pattern.compile("DE: \"(?:[^\"\\\\]|\\\\.)*\", ");
     private static final String HEADER = """

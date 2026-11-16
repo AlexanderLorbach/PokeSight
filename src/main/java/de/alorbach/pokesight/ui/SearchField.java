@@ -3,6 +3,7 @@ package de.alorbach.pokesight.ui;
 import de.alorbach.pokesight.battle.NameMatcher;
 import de.alorbach.pokesight.battle.PokemonId;
 import de.alorbach.pokesight.ruleset.Language;
+import de.alorbach.pokesight.ruleset.Move;
 import de.alorbach.pokesight.ruleset.PokemonType;
 import de.alorbach.pokesight.ruleset.Ruleset;
 import de.alorbach.pokesight.ruleset.TypeChart;
@@ -19,6 +20,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Text field with name suggestions (Pokémon, moves). In action mode a pick is reported and the field is cleared
@@ -26,7 +28,6 @@ import java.util.function.Consumer;
  */
 final class SearchField<T> extends TextField {
 
-    private static final int MAX_SUGGESTIONS = 10;
 
     /**
      * @param detail     extra text shown in the suggestion list only (e.g. a move's type and power); may be empty
@@ -50,6 +51,8 @@ final class SearchField<T> extends TextField {
     private final ContextMenu suggestions = new ContextMenu();
     private Option<T> selected;
     private boolean settingText;
+    /** Options listed first among equally good name matches (moves that suit the chosen Pokémon). */
+    private Predicate<T> preferred = value -> false;
 
     SearchField(List<Option<T>> options, String prompt, boolean keepSelection, Consumer<T> onPick) {
         this.options = List.copyOf(options);
@@ -92,14 +95,22 @@ final class SearchField<T> extends TextField {
         return options;
     }
 
-    /** All damaging moves of the ruleset; the suggestions show type and power. */
+    /** All damaging moves of the ruleset; the suggestions show type, kind (physical or special) and power. */
     static List<Option<Integer>> moves(Ruleset ruleset, Language language) {
         TypeChart chart = ruleset.typeChart();
         List<Option<Integer>> options = new ArrayList<>();
         ruleset.moves().forEach((moveId, move) -> options.add(Option.of(move.name(language),
-                chart.name(move.type(), language) + " · " + move.power(), moveId, moveTypeStyle(move.type()))));
+                chart.name(move.type(), language) + " · " + categoryName(move.category()) + " · " + move.power(), moveId,
+                moveTypeStyle(move.type()))));
         options.sort(Comparator.comparing(Option::label));
         return options;
+    }
+
+    static String categoryName(Move.Category category) {
+        return switch (category) {
+            case PHYSICAL -> "Physical";
+            case SPECIAL -> "Special";
+        };
     }
 
     /** Style class that marks a move with its type colour, e.g. "move-type-fire" (see theme.css). */
@@ -128,15 +139,14 @@ final class SearchField<T> extends TextField {
         }
     }
 
-    /** Names starting with the input first, then names containing it. */
+    /** Lists the options with these values first among names that match equally well; null prefers none. */
+    void prefer(Predicate<T> values) {
+        preferred = values == null ? value -> false : values;
+    }
+
+    /** The suggestions for this text, see {@link Suggestions#matching}. */
     List<Option<T>> matches(String text) {
-        String key = NameMatcher.normalize(text);
-        if (key.isEmpty()) {
-            return List.of();
-        }
-        List<Option<T>> result = new ArrayList<>(options.stream().filter(option -> option.key().startsWith(key)).toList());
-        options.stream().filter(option -> !option.key().startsWith(key) && option.key().contains(key)).forEach(result::add);
-        return result.subList(0, Math.min(MAX_SUGGESTIONS, result.size()));
+        return Suggestions.matching(options, text, preferred);
     }
 
     private void showSuggestions(String text) {

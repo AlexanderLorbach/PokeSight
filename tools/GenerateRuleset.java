@@ -12,9 +12,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * Generates the generation-specific ruleset YAML files from the PokeAPI CSV dump.
@@ -26,7 +24,7 @@ import java.util.TreeSet;
  * species and the type chart; moves and forms are taken as they were in that game. Within a generation moves can
  * change (Let's Go doubled Absorb's power), so Gen 7 uses ultra-sun-ultra-moon and Let's Go has its own ruleset.
  *
- * <p>Writes {@code type-chart.yaml}, {@code pokemon.yaml}, {@code moves.yaml} and {@code abilities.yaml}.
+ * <p>Writes {@code type-chart.yaml}, {@code pokemon.yaml} and {@code moves.yaml}.
  */
 public class GenerateRuleset {
 
@@ -77,9 +75,6 @@ public class GenerateRuleset {
     /** Water Shuriken (594) was physical in Gen 6; PokeAPI has no history of damage classes (Showdown gen6 mod). */
     private static final String WATER_SHURIKEN = "594";
     private static final int WATER_SHURIKEN_PHYSICAL_UNTIL = 6;
-    /** Abilities exist since Gen 3; hidden abilities since Gen 5. */
-    private static final int FIRST_ABILITY_GENERATION = 3;
-    private static final int FIRST_HIDDEN_ABILITY_GENERATION = 5;
     /** PokeAPI stat ids in the order written: HP, Attack, Defense, Sp. Atk, Sp. Def, Speed. */
     private static final List<String> STAT_IDS = List.of("1", "2", "3", "4", "5", "6");
     /** Gen 1's single Special stat (PokeAPI stat 9): it counts as both Sp. Atk and Sp. Def. */
@@ -97,8 +92,6 @@ public class GenerateRuleset {
     private int generation;
     /** PokeAPI's chronological order of the last version group whose data counts. */
     private int lastOrder;
-    /** Abilities written to pokemon.yaml, named in abilities.yaml. */
-    private final Set<String> usedAbilities = new TreeSet<>();
 
     private GenerateRuleset(String versionGroup) {
         this.versionGroup = versionGroup;
@@ -118,7 +111,6 @@ public class GenerateRuleset {
         Files.writeString(outputDir.resolve("type-chart.yaml"), generator.typeChartYaml(typeKeys), StandardCharsets.UTF_8);
         Files.writeString(outputDir.resolve("pokemon.yaml"), generator.pokemonYaml(typeKeys), StandardCharsets.UTF_8);
         Files.writeString(outputDir.resolve("moves.yaml"), generator.movesYaml(typeKeys), StandardCharsets.UTF_8);
-        Files.writeString(outputDir.resolve("abilities.yaml"), generator.abilitiesYaml(), StandardCharsets.UTF_8); // after pokemon.yaml
         System.out.println("Ruleset for " + args[0] + " (generation " + generator.generation + ") written to " + outputDir.toAbsolutePath());
     }
 
@@ -204,7 +196,6 @@ public class GenerateRuleset {
         Map<String, Map<String, String>> formNames = names("pokemon_form_names", "pokemon_form_id", "pokemon_name");
         Map<String, Map<String, String>> formLabels = names("pokemon_form_names", "pokemon_form_id", "form_name");
         Map<String, int[]> stats = stats();
-        Map<String, List<String>> abilities = abilities();
 
         StringBuilder yaml = new StringBuilder(HEADER);
         yaml.append("# Key: national dex number.\n");
@@ -212,7 +203,6 @@ public class GenerateRuleset {
         yaml.append("# sprite: PokeAPI sprite file name of a form (the base form's sprite is its national dex number).\n");
         yaml.append("# region: regional form (alola, galar, hisui, paldea); games set in that region show it by default.\n");
         yaml.append("# stats: base stats of this generation: HP, Attack, Defense, Sp. Atk, Sp. Def, Speed (Gen 1: Special twice).\n");
-        yaml.append("# abilities: the abilities it can have in this generation (none before Gen 3, hidden ones since Gen 5).\n");
         yaml.append("pokemon:\n");
         for (Map<String, String> species : csv("pokemon_species")) {
             if (Integer.parseInt(species.get("generation_id")) > generation) {
@@ -247,21 +237,19 @@ public class GenerateRuleset {
                 formLines.add("      " + index + ": { name: " + nameMap(formName(form, formNames, formLabels, speciesNames.get(speciesId)))
                         + ", types: " + typeList(typeKeys, formTypeIds, speciesId) + ", sprite: " + quote(sprite)
                         + (region == null ? "" : ", region: " + region)
-                        + ", stats: " + statList(stats, formPokemonId) + ", abilities: " + abilityList(abilities, formPokemonId) + " }\n");
+                        + ", stats: " + statList(stats, formPokemonId) + " }\n");
             }
 
             String name = nameMap(speciesNames.get(speciesId));
             String types = typeList(typeKeys, typeIds, speciesId);
-            String statsAndAbilities = "stats: " + statList(stats, pokemonId) + ", abilities: " + abilityList(abilities, pokemonId);
             if (formLines.isEmpty()) {
                 yaml.append("  ").append(speciesId).append(": { name: ").append(name).append(", types: ").append(types)
-                        .append(", ").append(statsAndAbilities).append(" }\n");
+                        .append(", stats: ").append(statList(stats, pokemonId)).append(" }\n");
             } else {
                 yaml.append("  ").append(speciesId).append(":\n")
                         .append("    name: ").append(name).append('\n')
                         .append("    types: ").append(types).append('\n')
                         .append("    stats: ").append(statList(stats, pokemonId)).append('\n')
-                        .append("    abilities: ").append(abilityList(abilities, pokemonId)).append('\n')
                         .append("    forms:\n");
                 formLines.forEach(yaml::append);
             }
@@ -328,22 +316,6 @@ public class GenerateRuleset {
         return yaml.toString();
     }
 
-    /** The generation and the names of the abilities written to pokemon.yaml. */
-    private String abilitiesYaml() throws IOException, InterruptedException {
-        Set<String> used = usedAbilities;
-        Map<String, String> idByIdentifier = new HashMap<>();
-        csv("abilities").forEach(row -> idByIdentifier.put(row.get("identifier"), row.get("id")));
-        Map<String, Map<String, String>> abilityNames = names("ability_names", "ability_id", "name");
-        StringBuilder yaml = new StringBuilder(HEADER);
-        yaml.append("# The generation, which decides how abilities work, and the names of the abilities in pokemon.yaml.\n");
-        yaml.append("generation: ").append(generation).append('\n');
-        yaml.append("abilities:").append(used.isEmpty() ? " {}" : "").append('\n');
-        for (String ability : used) {
-            yaml.append("  ").append(ability).append(": ").append(nameMap(abilityNames.get(idByIdentifier.get(ability)))).append('\n');
-        }
-        return yaml.toString();
-    }
-
     /**
      * Base stats by Pokemon id as they were in this generation. PokeAPI's past rows hold a value up to and including
      * their generation; the oldest one still valid wins (Butterfree's Sp. Atk 80 until Gen 5, 90 since Gen 6).
@@ -384,63 +356,12 @@ public class GenerateRuleset {
         return stats;
     }
 
-    /**
-     * Ability identifiers by Pokemon id as they were in this generation, in slot order. Past rows change one slot up
-     * to their generation (Gengar: Levitate until Gen 6); an empty past row means the slot did not exist yet.
-     */
-    private Map<String, List<String>> abilities() throws IOException, InterruptedException {
-        if (generation < FIRST_ABILITY_GENERATION) {
-            return Map.of();
-        }
-        // Only abilities of this generation: newer ones belong to forms that did not exist yet (Mega Evolutions of Z-A).
-        Map<String, String> identifiers = new HashMap<>();
-        csv("abilities").stream()
-                .filter(row -> row.get("is_main_series").equals("1") && Integer.parseInt(row.get("generation_id")) <= generation)
-                .forEach(row -> identifiers.put(row.get("id"), row.get("identifier")));
-        Map<String, Map<Integer, String>> slots = new HashMap<>();
-        Map<String, Boolean> hidden = new HashMap<>();
-        for (Map<String, String> row : csv("pokemon_abilities")) {
-            slots.computeIfAbsent(row.get("pokemon_id"), id -> new TreeMap<>()).put(Integer.parseInt(row.get("slot")), row.get("ability_id"));
-            hidden.put(row.get("pokemon_id") + "/" + row.get("slot"), row.get("is_hidden").equals("1"));
-        }
-        Map<String, Integer> chosen = new HashMap<>();
-        for (Map<String, String> row : csv("pokemon_abilities_past")) {
-            int validUntil = Integer.parseInt(row.get("generation_id"));
-            String key = row.get("pokemon_id") + "/" + row.get("slot");
-            if (validUntil < generation || validUntil >= chosen.getOrDefault(key, Integer.MAX_VALUE)) {
-                continue;
-            }
-            chosen.put(key, validUntil);
-            slots.computeIfAbsent(row.get("pokemon_id"), id -> new TreeMap<>()).put(Integer.parseInt(row.get("slot")), row.get("ability_id"));
-            hidden.put(key, row.get("is_hidden").equals("1"));
-        }
-        Map<String, List<String>> result = new HashMap<>();
-        slots.forEach((pokemonId, bySlot) -> {
-            List<String> abilities = new ArrayList<>();
-            bySlot.forEach((slot, abilityId) -> {
-                boolean isHidden = hidden.getOrDefault(pokemonId + "/" + slot, false);
-                String identifier = identifiers.get(abilityId);
-                if (identifier != null && (!isHidden || generation >= FIRST_HIDDEN_ABILITY_GENERATION) && !abilities.contains(identifier)) {
-                    abilities.add(identifier);
-                }
-            });
-            result.put(pokemonId, abilities);
-        });
-        return result;
-    }
-
     private static String statList(Map<String, int[]> stats, String pokemonId) {
         int[] values = stats.get(pokemonId);
         if (values == null || Arrays.stream(values).anyMatch(value -> value <= 0)) {
             throw new IllegalStateException("Pokemon " + pokemonId + " has no complete base stats");
         }
         return Arrays.toString(values);
-    }
-
-    private String abilityList(Map<String, List<String>> abilities, String pokemonId) {
-        List<String> list = abilities.getOrDefault(pokemonId, List.of());
-        usedAbilities.addAll(list);
-        return "[" + String.join(", ", list) + "]";
     }
 
     /**

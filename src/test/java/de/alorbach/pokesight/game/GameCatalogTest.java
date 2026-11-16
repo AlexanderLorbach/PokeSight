@@ -40,7 +40,7 @@ class GameCatalogTest {
             assertThat(game.languages()).contains(Language.EN);
             assertThat(game.spriteUrl()).containsPattern("/[0-9a-f]{40}/").contains("{name}").endsWith(".png"); // pinned commit
         });
-        assertThat(games).filteredOn(game -> !game.romHack()).hasSize(22).allSatisfy(game -> {
+        assertThat(games).filteredOn(game -> game.category() == GameCategory.OFFICIAL).hasSize(22).allSatisfy(game -> {
             assertThat(game.languages()).containsExactly(Language.EN, Language.DE);
             assertThat(game.spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/").endsWith("{name}.png");
             assertThat(game.spriteSheets()).isFalse();
@@ -69,7 +69,9 @@ class GameCatalogTest {
         GameDefinition emeraldRogue = game("emerald-rogue");
         GameDefinition lazarus = game("lazarus");
 
-        assertThat(games.stream().dropWhile(game -> !game.romHack())).containsExactly(heartfeltGold, odyssey, rowe, unbound, glazed, emeraldRogue, lazarus);
+        assertThat(games).filteredOn(game -> game.category() == GameCategory.ROM_HACK)
+                .containsExactly(heartfeltGold, odyssey, rowe, unbound, glazed, emeraldRogue, lazarus);
+        assertThat(games.stream().map(GameDefinition::category)).isSorted(); // official, ROM hacks, custom games
         assertThat(heartfeltGold.ruleset()).isEqualTo("heartfelt-gold");
         assertThat(heartfeltGold.languages()).containsExactly(Language.EN); // hg-engine works on the US ROM only
         assertThat(heartfeltGold.capitalNames()).isFalse();
@@ -91,15 +93,34 @@ class GameCatalogTest {
         assertThat(lazarus.ruleset()).isEqualTo("lazarus");
         assertThat(lazarus.languages()).containsExactly(Language.EN);
         assertThat(lazarus.capitalNames()).isFalse(); // "Tentacool"
-        assertThat(game("heartgold-soulsilver").romHack()).isFalse();
-        assertThat(game("emerald").romHack()).isFalse();
+        assertThat(game("heartgold-soulsilver").category()).isEqualTo(GameCategory.OFFICIAL);
+        assertThat(game("emerald").category()).isEqualTo(GameCategory.OFFICIAL);
+    }
+
+    @Test
+    void listsPlatinumTogetherAsCustomGameWithItsModernPokemonSwitch() {
+        GameDefinition together = game("platinum-together");
+
+        assertThat(GameCatalog.load()).filteredOn(game -> game.category() == GameCategory.CUSTOM).containsExactly(together);
+        assertThat(together.ruleset()).isEqualTo("gen4");
+        assertThat(together.languages()).containsExactly(Language.EN);
+        assertThat(together.capitalNames()).isTrue(); // "SCOVILLAIN"
+        assertThat(together.spriteUrl()).contains("/" + PINNED_SPRITE_COMMIT + "/sprites/pokemon/{name}.png");
+        assertThat(together.options()).singleElement().satisfies(option -> {
+            assertThat(option.id()).isEqualTo("modern-pokemon");
+            assertThat(option.label()).isEqualTo("MODERN POKéMON"); // as the world's RULES name it
+            assertThat(option.description()).isNotBlank();
+            assertThat(option.enabledByDefault()).isFalse();
+        });
+        assertThat(game("platinum").options()).isEmpty();
     }
 
     @Test
     void romHacksLeaveTheOfficialGamesUnchanged() {
         List<GameDefinition> games = GameCatalog.load();
-        List<GameDefinition> official = games.stream().filter(game -> !game.romHack()).toList();
-        List<String> hackRulesets = games.stream().filter(GameDefinition::romHack).map(GameDefinition::ruleset).toList();
+        List<GameDefinition> official = games.stream().filter(game -> game.category() == GameCategory.OFFICIAL).toList();
+        List<String> hackRulesets = games.stream().filter(game -> game.category() == GameCategory.ROM_HACK)
+                .map(GameDefinition::ruleset).toList();
 
         assertThat(games.subList(0, official.size())).isEqualTo(official); // official games first, order kept
         assertThat(official).allSatisfy(game -> {
@@ -111,11 +132,7 @@ class GameCatalogTest {
     }
 
     @Test
-    void knowsGamesWithoutAbilitiesAndWithTerastallization() {
-        assertThat(game("lets-go").withoutAbilities()).isTrue();
-        assertThat(game("legends-arceus").withoutAbilities()).isTrue();
-        assertThat(game("legends-za").withoutAbilities()).isTrue();
-        assertThat(game("sword-shield").withoutAbilities()).isFalse();
+    void knowsGamesWithTerastallization() {
         assertThat(game("scarlet-violet").terastal()).isTrue();
         assertThat(game("sword-shield").terastal()).isFalse();
     }

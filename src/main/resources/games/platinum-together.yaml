@@ -1,0 +1,29 @@
+# Pokémon Platinum Together: multiplayer mod of Pokémon Platinum (US) with its own Windows launcher, open beta (0.4.1).
+# https://platinumtogether.online - rules from its patch notes (https://platinumtogether.online/patch-notes/); the mod
+# publishes no source code or data files. A world's MODERN POKéMON setting is picked on the start screen.
+name: Pokémon Platinum Together
+ruleset: gen4            # Platinum's own data; "Classic worlds play as they always have" (patch notes 0.3.0)
+languages: [EN]
+# Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
+# The mod's animated Gen 5 style sprites are not published: the default PokeAPI sprites (all 1025 + forms).
+spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69afd48dc1273da9033ede9c/sprites/pokemon/{name}.png"
+capitalNames: true       # name plates show "SCOVILLAIN", "RALTS" (MODERN BATTLES on and off)
+# The one world setting that changes matchups, chosen on the start screen. The others change no type: MORE POKéMON
+# only moves Platinum's own Pokémon to earlier routes; RANDOM POKéMON rolls which Pokémon appear (their names are read
+# as they are); LEVEL CAPS, START WITH EXP. SHARE, SKIP TUTORIALS, PARTNER STARTERS, SPEED UP, TOP SPEED, SPEED TIMER,
+# FRIENDS and STORY SCENES do not touch battles. MODERN BATTLES (battle settings, 0.4.0) only changes the battle screen
+# and status rules (critical hits, burn, sleep): both screens are read the same way.
+options:
+  - id: modern-pokemon
+    label: MODERN POKéMON
+    # The world settings offer OFF (default) and PREVIEW; on here means PREVIEW. In-game, PREVIEW: "A preview of
+    # Pokémon from the newer games, like Sylveon, and the Fairy type: Clefairy and others are Fairy, Steel no longer
+    # resists Ghost or Dark, and Fairy moves are added." OFF: "Only Platinum's own Pokémon, and types and moves work as
+    # they did in Platinum."
+    description: >-
+      PREVIEW: Pokémon of the newer games (Gen 5 to 9, like Sylveon) and the Fairy type: Clefairy and others are
+      Fairy, Steel no longer resists Ghost or Dark, Fairy moves are added. Off: only Platinum's own Pokémon, types and
+      moves.
+    enabledByDefault: false
+    rules: { typesFrom: gen9, speciesFrom: gen9 }
+tierList: platinum       # catch star: Smogon in-game tier list, tiers/platinum.yaml

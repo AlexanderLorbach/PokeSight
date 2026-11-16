@@ -7,3 +7,4 @@ languages: [EN, DE]
 spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69afd48dc1273da9033ede9c/sprites/pokemon/{name}.png"
 capitalNames: false      # names in mixed case ("Gengar") since Gen 5
 region: alola            # wild Pokémon appear in their regional form
+tierList: sm             # catch star: Smogon in-game tier list, tiers/sm.yaml

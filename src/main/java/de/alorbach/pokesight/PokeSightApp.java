@@ -6,12 +6,12 @@ import de.alorbach.pokesight.battle.NameMatcher;
 import de.alorbach.pokesight.capture.RobotScreenSource;
 import de.alorbach.pokesight.game.GameCatalog;
 import de.alorbach.pokesight.game.GameDefinition;
+import de.alorbach.pokesight.game.GameRulesets;
 import de.alorbach.pokesight.matchup.MatchupCalculator;
 import de.alorbach.pokesight.ocr.GlyphFont;
 import de.alorbach.pokesight.ocr.TesseractTextRecognizer;
 import de.alorbach.pokesight.ocr.TextRecognizer;
 import de.alorbach.pokesight.ruleset.Ruleset;
-import de.alorbach.pokesight.ruleset.RulesetLoader;
 import de.alorbach.pokesight.settings.SettingsStore;
 import de.alorbach.pokesight.ui.BattleView;
 import de.alorbach.pokesight.ui.SessionSettings;
@@ -97,15 +97,14 @@ public final class PokeSightApp extends Application {
     private void startSession(SessionSettings settings) {
         TextRecognizer recognizer = null;
         try {
-            Ruleset ruleset = RulesetLoader.load(settings.game().ruleset());
+            Ruleset ruleset = GameRulesets.load(settings.game(), settings.options());
             recognizer = new TesseractTextRecognizer(settings.language());
             Path glyphFile = GlyphFont.defaultFile(settings.game().id());
             GlyphFont glyphs = GlyphFont.load(glyphFile);
             BattleScanner scanner = new BattleScanner(recognizer, new NameMatcher(ruleset, settings.language(), settings.game().region()),
                     settings.game().capitalNames(), settings.game().floatingNames(), glyphs);
-            BattleView view = new BattleView(settings, new MatchupCalculator(ruleset, !settings.game().withoutAbilities()),
-                    store, this::showStartView);
-            BattleMonitor monitor = new BattleMonitor(new RobotScreenSource(), settings.regions(), settings.ownRegion(), scanner,
+            BattleView view = new BattleView(settings, new MatchupCalculator(ruleset), store, this::showStartView);
+            BattleMonitor monitor = new BattleMonitor(new RobotScreenSource(), settings.regions(), settings.ownRegions(), scanner,
                     update -> Platform.runLater(() -> view.show(update)));
             view.setOnScanNow(monitor::scanNow);
             view.setOnReset(monitor::reset);

@@ -13,27 +13,17 @@ import java.util.Map;
  *
  * @param types     its types as they are now: the Tera type alone once it terastallized
  * @param tera      whether {@code types} is a Tera type
- * @param matchup   attack types by multiplier, with an ability it surely has
- * @param abilities abilities that change its type matchups
+ * @param matchup   attack types by multiplier
  * @param bestMoves the team's moves against it, strongest first; empty without a team
  * @param switchIns the team against its attacks, safest first; empty without a team
  */
-public record EnemyAnalysis(String name, List<PokemonType> types, boolean tera, Matchup matchup, List<AbilityNote> abilities,
+public record EnemyAnalysis(String name, List<PokemonType> types, boolean tera, Matchup matchup,
                             List<MoveOption> bestMoves, List<SwitchIn> switchIns) {
 
     public EnemyAnalysis {
         types = List.copyOf(types);
-        abilities = List.copyOf(abilities);
         bestMoves = List.copyOf(bestMoves);
         switchIns = List.copyOf(switchIns);
-    }
-
-    /**
-     * An ability of the opponent that changes type matchups.
-     *
-     * @param certain it is the species' only ability, so the opponent has it (and it is applied); otherwise it may
-     */
-    public record AbilityNote(String name, boolean certain, AbilityEffect effect) {
     }
 
     /**
