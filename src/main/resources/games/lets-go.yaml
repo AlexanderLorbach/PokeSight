@@ -1,6 +1,7 @@
 # Pokémon Let's Go, Pikachu! / Eevee! (Switch)
 name: "Pokémon Let's Go, Pikachu! / Eevee!"
 ruleset: lets-go
+learnsets: lets-go-pikachu-lets-go-eevee
 languages: [EN, DE]
 # Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
 # PokeAPI has no PNG sprites of this game (only GIF/WebP, which JavaFX cannot show), so the default sprites are used.

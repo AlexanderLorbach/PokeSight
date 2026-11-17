@@ -16,8 +16,10 @@ import de.alorbach.pokesight.settings.SettingsStore;
 import java.awt.AWTException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Reads one of your Pokémon from the game for the team editor: its name and its moves, from two screen areas that are
@@ -79,9 +81,10 @@ final class TeamScan {
      * Captures the selected areas and reads the Pokémon's name and its damaging moves. Blocks for a moment (OCR): call
      * it off the JavaFX thread.
      *
+     * @param nicknames the team's nicknames: a summary showing one is read as that team member
      * @throws IllegalStateException if no moves area is selected
      */
-    Reading read() throws IOException, AWTException {
+    Reading read(Map<String, PokemonId> nicknames) throws IOException, AWTException {
         CaptureRegion moves = movesArea().orElseThrow(() -> new IllegalStateException("No moves area selected"));
         RobotScreenSource screen = new RobotScreenSource();
         try (TesseractTextRecognizer recognizer = new TesseractTextRecognizer(language)) {
@@ -90,7 +93,9 @@ final class TeamScan {
                 // The summary's name box is a fixed box in every game, also in those whose battle names float.
                 BattleScanner names = new BattleScanner(recognizer, new NameMatcher(ruleset, language, game.region()),
                         game.capitalNames());
-                pokemon = names.scan(screen.capture(nameArea)).stream().findFirst().map(Sighting::pokemon);
+                // A nicknamed Pokémon's summary shows its nickname: matched to that team member, not to a species.
+                pokemon = names.scan(screen.capture(nameArea), new NameMatcher.Preferred(Set.of(), nicknames)).stream()
+                        .findFirst().map(Sighting::pokemon);
             }
             return new Reading(pokemon, new MoveReader(recognizer, ruleset, language).read(screen.capture(moves)));
         }

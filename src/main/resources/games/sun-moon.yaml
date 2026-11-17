@@ -1,6 +1,7 @@
 # Pokémon Sun / Moon (3DS)
 name: Pokémon Sun / Moon
 ruleset: gen7
+learnsets: sun-moon
 languages: [EN, DE]
 # Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
 # PokeAPI has no PNG sprites of this game (only GIF/WebP, which JavaFX cannot show), so the default sprites are used.

@@ -82,6 +82,17 @@ class SettingsStoreTest {
     }
 
     @Test
+    void savesNicknamesAndWritesNoneForMembersWithout() throws Exception {
+        Team team = new Team(List.of(new Team.Member(PokemonId.of(160), List.of(57), "Gator"),
+                new Team.Member(PokemonId.of(94), List.of())));
+
+        new SettingsStore(directory).saveGame("platinum", GameSettings.DEFAULT.withTeam(team));
+
+        assertThat(new SettingsStore(directory).game("platinum").toTeam()).isEqualTo(team);
+        assertThat(Files.readString(directory.resolve("games/platinum.yaml"))).containsOnlyOnce("nickname").contains("nickname: Gator");
+    }
+
+    @Test
     void missingFilesGiveDefaults() {
         SettingsStore store = new SettingsStore(directory);
 

@@ -5,8 +5,10 @@ import de.alorbach.pokesight.catching.Pokedex;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -58,7 +60,7 @@ public record Team(List<Member> members) {
             return Optional.empty();
         }
         return Optional.of(new Team(members.stream()
-                .map(member -> member == before ? new Member(evolved, member.moves()) : member)
+                .map(member -> member == before ? new Member(evolved, member.moves(), member.nickname()) : member)
                 .toList()));
     }
 
@@ -88,13 +90,33 @@ public record Team(List<Member> members) {
         return species;
     }
 
-    public record Member(PokemonId pokemon, List<Integer> moves) {
+    /**
+     * The members' nicknames and who has them; members without one are left out. A nicknamed Pokémon's own name box
+     * shows the nickname, not the species.
+     */
+    public Map<String, PokemonId> nicknames() {
+        Map<String, PokemonId> nicknames = new LinkedHashMap<>();
+        members.stream().filter(Member::hasNickname).forEach(member -> nicknames.putIfAbsent(member.nickname(), member.pokemon()));
+        return nicknames;
+    }
+
+    /** @param nickname the name the player gave it; empty for none */
+    public record Member(PokemonId pokemon, List<Integer> moves, String nickname) {
         public Member {
             Objects.requireNonNull(pokemon, "pokemon");
             moves = List.copyOf(moves);
             if (moves.size() > MAX_MOVES) {
                 throw new IllegalArgumentException("A Pokémon knows at most " + MAX_MOVES + " moves, got " + moves.size());
             }
+            nickname = nickname == null ? "" : nickname.strip();
+        }
+
+        public Member(PokemonId pokemon, List<Integer> moves) {
+            this(pokemon, moves, "");
+        }
+
+        public boolean hasNickname() {
+            return !nickname.isEmpty();
         }
     }
 }

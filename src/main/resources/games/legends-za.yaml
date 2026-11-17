@@ -1,6 +1,7 @@
 # Pokémon Legends: Z-A (Switch)
 name: "Pokémon Legends: Z-A"
 ruleset: gen9
+learnsets: legends-za
 languages: [EN, DE]
 # Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
 # PokeAPI has no PNG sprites of this game (only GIF/WebP, which JavaFX cannot show), so the default sprites are used.

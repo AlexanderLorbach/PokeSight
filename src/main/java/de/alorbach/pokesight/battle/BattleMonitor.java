@@ -78,7 +78,7 @@ public final class BattleMonitor implements AutoCloseable {
     });
 
     private volatile List<BufferedImage> lastCaptures = List.of();
-    private volatile Set<Integer> team = Set.of();
+    private volatile NameMatcher.Preferred team = NameMatcher.Preferred.NONE;
     private Update current = WAITING_UPDATE;
     private final Deque<List<Sighting>> recentReadings = new ArrayDeque<>();
     private final Deque<List<PokemonId>> recentOwn = new ArrayDeque<>();
@@ -125,12 +125,17 @@ public final class BattleMonitor implements AutoCloseable {
         });
     }
 
-    /**
-     * The species of the player's team: in the own name boxes they are found despite more misread letters, since only a
-     * few Pokémon can stand there. May be called from any thread; the next scan uses it.
-     */
+    /** See {@link #setTeam(NameMatcher.Preferred)}, without nicknames. */
     public void setTeam(Collection<Integer> species) {
-        team = Set.copyOf(species);
+        setTeam(NameMatcher.Preferred.species(Set.copyOf(species)));
+    }
+
+    /**
+     * The player's team and its nicknames: in the own name boxes they are found despite more misread letters, since
+     * only a few Pokémon can stand there. May be called from any thread; the next scan uses it.
+     */
+    public void setTeam(NameMatcher.Preferred team) {
+        this.team = Objects.requireNonNull(team);
     }
 
     /** The screenshots of the last scan, one per region, for the capture preview. */
@@ -209,7 +214,7 @@ public final class BattleMonitor implements AutoCloseable {
             readings.add(scanner.scan(image));
         }
         List<List<Sighting>> ownReadings = new ArrayList<>();
-        Set<Integer> ownTeam = team;
+        NameMatcher.Preferred ownTeam = team;
         for (CaptureRegion region : ownRegions) {
             BufferedImage image = screen.capture(region);
             captures.add(image);

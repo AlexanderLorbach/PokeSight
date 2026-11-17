@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -230,6 +231,19 @@ class BattleMonitorTest {
         for (int i = 0; i < 2; i++) {
             showForEveryRead("ZUBAT Lv12", "GOLBAT Lv22");
             showForEveryRead("PERAIIGAIK Lv22"); // too far from FERALIGATR for an opponent
+            monitor.poll();
+        }
+
+        assertThat(updates).last().extracting(Update::active).asInstanceOf(LIST).containsExactly(PokemonId.of(160));
+    }
+
+    @Test
+    void readsANicknameInTheOwnBoxAsThatTeamMember() {
+        BattleMonitor monitor = ownMonitor(OWN_SINGLE);
+        monitor.setTeam(new NameMatcher.Preferred(Set.of(160), Map.of("Gator", PokemonId.of(160))));
+        for (int i = 0; i < 2; i++) {
+            showForEveryRead("ZUBAT Lv12", "GOLBAT Lv22");
+            showForEveryRead("GATOR Lv22");
             monitor.poll();
         }
 
