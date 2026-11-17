@@ -18,11 +18,15 @@ or memory access.
 - Correct a misread Pokémon or add one by hand with a name search
 - **Your best moves**: enter your team once (or let PokeSight read the moves from the game), see the strongest move
   per opponent, ranked by power, type, STAB and the Pokémon's base stats; moves are marked with their type colour.
-  When you pick moves, each Pokémon shows whether physical or special moves suit it (Attack vs Sp. Atk), and moves of
-  that kind are suggested first
-- **Who is out**: with your own name boxes selected (or picked by hand), your active Pokémon's moves are marked and the
-  card says whether another team member hits harder; in double battles both of your Pokémon on the field
-- **Safest switch-ins**: which of your Pokémon takes the opponent's attacks of its own types best
+  When you pick moves, each Pokémon shows its types and whether physical or special moves suit it (Attack vs Sp. Atk),
+  and moves of that kind are suggested first
+- **Team coverage**: the team editor lists your move types, the ones missing, the types no move hits super
+  effectively, and which move type to add ("Add a GROUND move: hits ELECTRIC")
+- **Who is out**: with your own name boxes selected (or picked by hand), your active Pokémon's moves are marked and its
+  best move is in bold; in double battles both of your Pokémon on the field. When a team
+  member evolved, PokeSight reads the new name in a single battle and updates the saved team (keeping its moves)
+- **Best switch-ins**: your top 3 Pokémon against this opponent, by the damage they deal for the damage they take
+- **Danger warning**: a Pokémon on the field that takes 2× or 4× from the opponent's types is told to switch out, and to whom
 - **Worth catching**: a ★ next to the name marks Pokémon worth catching for your team; hover it to see why
   (see [Catch star](#catch-star))
 - **Terastallization** (Scarlet/Violet): set an opponent's Tera type on its card
@@ -41,7 +45,7 @@ The name reading is checked on 254 real battle screenshots, at least five per ga
 
 | Game | Ruleset | Read | | Game | Ruleset | Read |
 |---|---|---|---|---|---|---|
-| Red / Blue | gen1 | 36 / 42 | | Black / White | gen5 | 37 / 54 |
+| Red / Blue | gen1 | 36 / 42 | | Black / White | gen5 | 38 / 54 |
 | Yellow | gen1 | 32 / 33 | | Black 2 / White 2 | gen5 | 30 / 45 |
 | Gold / Silver | gen2 | 28 / 33 | | X / Y | gen6 | 28 / 48 |
 | Crystal | gen2 | 34 / 36 | | Omega Ruby / Alpha Sapphire | gen6 | 29 / 42 |
@@ -54,8 +58,8 @@ The name reading is checked on 254 real battle screenshots, at least five per ga
 | | | | | Scarlet / Violet | gen9 | 14 / 15 |
 | | | | | Legends: Z-A | gen9 | 5 / 5 |
 
-That is 563 of 656 views (86 %) on the very first scan. PokeSight also learns the letter shapes of your game while
-you play (see [How it works](#how-it-works)); learned from the other screenshots of the same game, it reads 582 of 656
+That is 564 of 656 views (86 %) on the very first scan. PokeSight also learns the letter shapes of your game while
+you play (see [How it works](#how-it-works)); learned from the other screenshots of the same game, it reads 586 of 656
 views (89 %), most of all in the Game Boy games (Red/Blue 41 / 42, Crystal 36 / 36) and Ultra Sun / Ultra Moon
 (23 / 24). A missed view is usually a single scan: PokeSight scans every 0.7 s and a battle starts as soon as two of
 the last three scans agree, so it is still detected as long as most scans read the name. The Game Boy, GBA and DS
@@ -176,12 +180,12 @@ The first build downloads the OCR models and the test screenshots (see [Licenses
 | **Team** | Your team: up to six Pokémon with up to four moves each; **Read** fills a Pokémon's moves from the game (see below) |
 | **Change** (on a card) | Search for the correct Pokémon if a name was misread; also for alternate forms like Sandy Wormadam |
 | **Tera…** (on a card, Scarlet/Violet) | It terastallized: pick its Tera type. It then has that type alone, but still attacks with its own types too |
-| **Out:** | Which of your team is on the field; read from your own name boxes if those areas are selected, or picked here. A second choice appears with two opponents (double battle) |
+| **Out:** | Which of your team is on the field; read from your own name boxes if those areas are selected, or picked here. A second choice appears with two opponents (double battle). Your team's names are found there despite more misread letters than an opponent's (only six can stand there), and each Pokémon read in two of the last three scans counts, so a scan that misses one box keeps the other |
 | **Add Pokémon…** | Add an opponent by hand |
 | **Clear** | Forget the current battle, corrections and additions |
 | **Capture preview** | Shows (and saves) the last captured images |
 | **Always on top** | Keeps the window above the emulator |
-| **Borderless** | Only the cards remain and fill the window: one opponent the whole window, two opponents the left and right half. Hovering shows a button bar (scan, clear, team, always on top, exit); Esc also exits; drag to move |
+| **Borderless** | Only the cards remain and fill the window: one opponent the whole window, two opponents the left and right half. They keep the danger warning, your best moves and the best switch-ins. Hovering shows a button bar (scan, clear, team, always on top, exit); Esc also exits; drag to move |
 
 In a double battle the two opponents stand side by side (left and right), in the normal view and in borderless mode;
 more opponents (triple battles, hordes) continue in rows of two. The default window size is 855 × 640, which every
@@ -194,17 +198,38 @@ game and press **Read** in a row: the Pokémon is filled in from the name (anoth
 with its moves), and the damaging moves found fill the empty move fields. Status moves are skipped, they do not take
 part in the ranking. The move under the cursor is drawn highlighted and often not read: move the cursor and press
 **Read** again, moves already in the row are kept. A nickname cannot be matched to a species: pick nicknamed Pokémon
-by hand, Read still fills in their moves.
+by hand, Read still fills in their moves. Type labels next to the PP ("PSYCHIC PP 20/20" under Psybeam since Gen 4,
+"TYPE/PSYCHIC" until Gen 3) are not read as moves; one case cannot be told apart: in Gen 3 a Psychic in the top-right
+slot stands next to the PP of the side panel and is skipped, add it by hand. Long move names may be misread by a
+quarter of their letters as long as no other move comes close (Platinum Together's pixel font: "Dreaming Kiss" is
+Draining Kiss); shorter ones by one letter at most.
+
+**Evolution:** when your own name box shows a Pokémon that is not in your team but a later stage of exactly one team
+member (Monferno for Chimchar), that member becomes the evolved Pokémon, keeps its moves and the team is saved; the
+status line says so. Only single battles count: in a double battle the second box may show an ally's Pokémon
+(Platinum Together is multiplayer). With two members of the same line, or the evolution already in the team, nothing
+changes. If you change an evolved member back to its earlier stage in the team editor (Kirlia to Ralts), PokeSight
+remembers it and does not evolve it again, nor into later stages (Gardevoir); putting the evolution in the team by hand
+lifts that. Declined evolutions are saved per game (`declinedEvolutions` in `games/<game id>.yaml`). A scanned Pokémon of another form than the team member (Rotom for Wash Rotom) is still recognized as out.
 
 **Your best moves** ranks the team's moves per opponent by move power × type effectiveness × 1.5 if the move has its
 Pokémon's type (STAB) × your Pokémon's base Attack / the opponent's base Defense (Sp. Atk / Sp. Def for special
 moves; until Gen 3 the move's type decides). Level, natures, EVs and stat changes are not known: the score ranks the
-moves, it is not the exact damage. With your active Pokémon known, its best move is always listed and marked, and a
-line above says either "Infernape is out: Close Combat is your best move." (green) or which team member hits harder
-(yellow), so you can decide whether to switch.
+moves, it is not the exact damage. With your active Pokémon known, its moves are marked with its name in green and
+"OUT", and its best move is always listed (also when none of its moves hits) in bold green: a green move further down
+means another team member hits harder.
 
-**Safest switch-ins** lists the team members that take the opponent's attacks of its own types (its STAB moves, the
-most likely threats) best, with the multiplier per type. The opponent's real moves are not known.
+**Best switch-ins** lists your top 3 team members against the opponent: the damage they deal (their best move's score,
+as in Your best moves) for the damage they take (the worst multiplier against the opponent's own types, its STAB
+moves, × the opponent's Attack / their Defense or Sp. Atk / Sp. Def, whichever is worse; an immunity counts as ¼×).
+Against a Water type an Electric Pokémon comes first: it hits 2× and takes 1×. Each row shows the best move and the
+most it takes (hover it for each type); one on the field is marked OUT. Base stats only: levels and the opponent's
+real moves are not known.
+
+**Danger warning:** when one of your Pokémon on the field takes 2× or more from the opponent's own types, a red box
+under the opponent's types says so and names the best switch-in that is not on the field ("Kirlia takes 2× from GHOST
+and POISON: switch to Magmortar."); from 4× on it adds that it is likely knocked out in one hit. In a double battle
+each opponent's card shows whom of yours it counters. It also shows in borderless mode.
 
 ### Catch star
 
@@ -326,7 +351,8 @@ licenses/                license texts of the bundled third-party software (THIR
 - **Add a game:** create `games/<id>.yaml` (copy an existing game of the same generation) and list `<id>` in
   `games/index.yaml` (ROM hacks under `romHacks`, other fan games under `custom`; both are listed below the official
   games). `region` (alola, galar, hisui, paldea) makes recognized Pokémon show in their regional form,
-  `floatingNames` reads the labels above HP bars instead of fixed name boxes, `terastal` offers the Tera type picker,
+  `floatingNames` reads the labels above HP bars instead of fixed name boxes, `yellowNames` also reads yellow names
+  (Platinum Together's Pokémon whose turn it is; not for all games, yellow sand would be read too), `terastal` offers the Tera type picker,
   `options` adds start-screen switches that take types (`typesFrom`) or added Pokémon (`speciesFrom`) from another
   ruleset (Platinum Together), `tierList` names the Smogon in-game tier list behind the catch star (`tiers/<id>.yaml`).
 - **OCR tests:** `src/test/resources/screenshots.tsv` lists the battle screenshots (URL, SHA-256, game, language, the

@@ -8,6 +8,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.Set;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class NameMatcherTest {
@@ -24,6 +26,21 @@ class NameMatcherTest {
         assertThat(english.nearName("GEMGAR", 1)).contains("Gengar"); // N/M look alike
         assertThat(english.nearName("GENGA", 2)).isEmpty(); // a letter fewer
         assertThat(german.nearName("Ramoth", 0)).isEmpty(); // not in Gen 4
+    }
+
+    @Test
+    void theTeamIsFoundDespiteMoreMisreadLetters() {
+        Set<Integer> team = Set.of(160, 94); // Feraligatr, Gengar
+
+        assertThat(english.match("PERAIIGAIK")).isEmpty(); // 3 letters off: too far among all species
+        assertThat(english.match("PERAIIGAIK", team)).map(NameMatcher.Match::pokemon).contains(PokemonId.of(160));
+        assertThat(english.match("WATER", team)).isEmpty(); // a type label beside the box is no team member
+    }
+
+    @Test
+    void anotherSpeciesNeedsAStrictMatchAndWinsOnlyIfCloser() {
+        assertThat(english.match("GENGAR", Set.of(160))).map(NameMatcher.Match::pokemon).contains(PokemonId.of(94)); // an ally's
+        assertThat(english.match("NIDORXXX", Set.of(30, 33))).isEmpty(); // Nidorina or Nidorino: ambiguous
     }
 
     @ParameterizedTest

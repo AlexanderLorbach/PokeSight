@@ -117,26 +117,27 @@ public class GameScreenshotOcrTest {
     }
 
     public static List<Case> cases() {
+        List<Case> cases = new ArrayList<>();
+        rows().filter(fields -> !fields[5].startsWith(MoveReaderTest.MOVES)).forEach(fields -> { // move lists: MoveReaderTest
+            List<String> expected = fields[5].isEmpty() ? List.of() : Arrays.asList(fields[5].split("\\+"));
+            Rectangle screen = null;
+            if (fields.length > 6 && !fields[6].isEmpty()) { // x,y,width,height
+                int[] bounds = Arrays.stream(fields[6].split(",")).mapToInt(Integer::parseInt).toArray();
+                screen = new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
+            }
+            cases.add(new Case(fields[0], fields[3], Language.valueOf(fields[4]), expected, screen));
+        });
+        return cases;
+    }
+
+    /** The rows of {@code screenshots.tsv}, split into their tab-separated fields; comments and blank lines left out. */
+    static Stream<String[]> rows() {
         try (InputStream in = Objects.requireNonNull(GameScreenshotOcrTest.class.getResourceAsStream("/screenshots.tsv"));
              BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
-            List<Case> cases = new ArrayList<>();
-            for (String line : reader.lines().toList()) {
-                if (line.isBlank() || line.startsWith("#")) {
-                    continue;
-                }
-                String[] fields = line.split("\t", -1);
-                if (fields[5].startsWith(MoveReaderTest.MOVES)) {
-                    continue; // a move list, read by MoveReaderTest
-                }
-                List<String> expected = fields[5].isEmpty() ? List.of() : Arrays.asList(fields[5].split("\\+"));
-                Rectangle screen = null;
-                if (fields.length > 6 && !fields[6].isEmpty()) { // x,y,width,height
-                    int[] bounds = Arrays.stream(fields[6].split(",")).mapToInt(Integer::parseInt).toArray();
-                    screen = new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
-                }
-                cases.add(new Case(fields[0], fields[3], Language.valueOf(fields[4]), expected, screen));
-            }
-            return cases;
+            return reader.lines()
+                    .filter(line -> !line.isBlank() && !line.startsWith("#"))
+                    .map(line -> line.split("\t", -1))
+                    .toList().stream();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -216,7 +217,8 @@ public class GameScreenshotOcrTest {
             }
             BufferedImage image = screenshot.read(resource);
             BattleScanner scanner = new BattleScanner(RECOGNIZERS.get(screenshot.language()),
-                    new NameMatcher(ruleset, screenshot.language(), game.region()), game.capitalNames(), game.floatingNames());
+                    new NameMatcher(ruleset, screenshot.language(), game.region()), game.capitalNames(), game.floatingNames(),
+                    null, game.nameColors());
             List<PokemonId> expected = screenshot.expected().stream()
                     .map(name -> id(ruleset, screenshot.language(), name, game.region())).toList();
             for (int[] view : image.getWidth() <= SMALL_SCREEN_MAX_WIDTH ? SMALL_SCREEN_VIEWS : List.of(new int[]{1, 0})) {
@@ -306,7 +308,8 @@ public class GameScreenshotOcrTest {
 
     private static BattleScanner scanner(GameDefinition game, Ruleset ruleset, Case screenshot, GlyphFont glyphs) {
         return new BattleScanner(RECOGNIZERS.get(screenshot.language()),
-                new NameMatcher(ruleset, screenshot.language(), game.region()), game.capitalNames(), game.floatingNames(), glyphs);
+                new NameMatcher(ruleset, screenshot.language(), game.region()), game.capitalNames(), game.floatingNames(), glyphs,
+                game.nameColors());
     }
 
     /** The species with that name in the game's language, in the game's regional form if it has one. */

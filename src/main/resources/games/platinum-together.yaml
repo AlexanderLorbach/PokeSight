@@ -8,6 +8,7 @@ languages: [EN]
 # The mod's animated Gen 5 style sprites are not published: the default PokeAPI sprites (all 1025 + forms).
 spriteUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/7a7d66b1620e646f69afd48dc1273da9033ede9c/sprites/pokemon/{name}.png"
 capitalNames: true       # name plates show "SCOVILLAIN", "RALTS" (MODERN BATTLES on and off)
+yellowNames: true        # the name of your Pokémon whose turn it is is yellow, the others white
 # The one world setting that changes matchups, chosen on the start screen. The others change no type: MORE POKéMON
 # only moves Platinum's own Pokémon to earlier routes; RANDOM POKéMON rolls which Pokémon appear (their names are read
 # as they are); LEVEL CAPS, START WITH EXP. SHARE, SKIP TUTORIALS, PARTNER STARTERS, SPEED UP, TOP SPEED, SPEED TIMER,

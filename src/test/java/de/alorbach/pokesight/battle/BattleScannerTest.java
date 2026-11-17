@@ -76,6 +76,19 @@ class BattleScannerTest {
     }
 
     @Test
+    void aNameOnlySomeVariantsReadIsKeptBesideTheOther() {
+        Sighting swellow = new Sighting("SHELLOH", PokemonId.of(277));
+        Sighting dodrio = new Sighting("DODRIO", PokemonId.of(85));
+        Sighting bidoof = new Sighting("BIDOOF", PokemonId.of(399));
+        List<List<Sighting>> readings = List.of(List.of(dodrio), List.of(dodrio), List.of(dodrio), List.of(dodrio),
+                List.of(swellow, dodrio), List.of(swellow), List.of(bidoof, dodrio));
+
+        assertThat(BattleScanner.best(readings)).containsExactly(swellow, dodrio); // Bidoof: read by one variant only
+        assertThat(BattleScanner.best(List.of(List.of(dodrio), List.of(dodrio), List.of(bidoof, dodrio))))
+                .containsExactly(dodrio);
+    }
+
+    @Test
     void toleratesNoiseWordsAndSplitNames() {
         recognizer.showLines("~ MR. MIME 9 Lu45");
 

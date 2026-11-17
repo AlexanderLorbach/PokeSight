@@ -47,6 +47,15 @@ public record Pokedex(int lastDex, Map<Integer, Entry> species) {
         return YamlResources.read("pokedex.yaml", Pokedex.class);
     }
 
+    /** The bundled Pokédex, loaded once on first use. */
+    public static Pokedex shared() {
+        return Holder.POKEDEX;
+    }
+
+    private static final class Holder {
+        static final Pokedex POKEDEX = load();
+    }
+
     public boolean knows(int speciesId) {
         return speciesId >= 1 && speciesId <= lastDex;
     }

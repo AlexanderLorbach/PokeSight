@@ -18,7 +18,7 @@ import java.util.stream.Stream;
  * Turns a screenshot into what OCR reads best: only the letters, black on white, at a size Tesseract handles well.
  *
  * <p>Game fonts are pixel fonts with a drop shadow or an outline, and their colour depends on the game: some use dark
- * text on light boxes, others white text on dark boxes. So the caller tries both {@link TextColor}s. Steps:
+ * text on light boxes, others white text on dark boxes. So the caller tries both ({@link #DARK_AND_LIGHT}). Steps:
  * <ol>
  *   <li>Text pixels: on the text side of a limit between the text colour and the background. This drops the box
  *       and (for light text) the shadow.</li>
@@ -34,7 +34,16 @@ import java.util.stream.Stream;
  */
 public final class ImagePreprocessor {
 
-    public enum TextColor { DARK, LIGHT }
+    /**
+     * {@code LIGHT} is white text; {@code LIGHT_OR_YELLOW} also takes yellow text, for a game that writes some names in
+     * yellow (Platinum Together: the player's Pokémon whose turn it is). Not for every game: yellow sand and sunlit
+     * scenes behind the 3DS and DS Gen 5 boxes then become text too (measured: 3 views fewer in Omega Ruby/Alpha
+     * Sapphire, 1 in Black 2/White 2).
+     */
+    public enum TextColor { DARK, LIGHT, LIGHT_OR_YELLOW }
+
+    /** The text colours most games are read with. */
+    public static final List<TextColor> DARK_AND_LIGHT = List.of(TextColor.DARK, TextColor.LIGHT);
 
     static final int PADDING = 16;
     /** About twice the DS font size; clearly larger or smaller letters were read worse. */
@@ -55,6 +64,11 @@ public final class ImagePreprocessor {
     private static final double BACKGROUND_PERCENTILE = 0.25;
     /** Light text is white: its colour channels differ by at most this much (smoothed edges blend in the background). */
     private static final int MAX_LIGHT_TEXT_CHROMA = 64;
+    /**
+     * Yellow text ({@link TextColor#LIGHT_OR_YELLOW}): red and green differ by at most this much and blue is the lowest
+     * channel; sky and water (blue highest), grass and HP bars (red far below green) stay background.
+     */
+    private static final int MAX_YELLOW_RED_GREEN_DIFFERENCE = 64;
     private static final int MIN_LETTER_HEIGHT = 4;
     private static final int BAR_MIN_ASPECT = 3;
     private static final double MAX_LINE_LETTERS = 2.5;
@@ -200,8 +214,8 @@ public final class ImagePreprocessor {
      * a few stray pixels) and the background ({@value #BACKGROUND_PERCENTILE} percentile from the other end; the median
      * fails when the battle scene fills most of the selection, its dark pixels are then taken for the background of
      * dark text). The limit sits closer to the text than the drop shadow is, but wide enough to keep the blended edges
-     * of smoothed (filtered) emulator output. Light text is white in every game, so brightly coloured pixels (sky,
-     * water and HP bars behind the 3DS and Switch name boxes) are not text.
+     * of smoothed (filtered) emulator output. Light text is white (or also yellow, see {@link TextColor}), so other
+     * brightly coloured pixels (sky, water and HP bars behind the 3DS and Switch name boxes) are not text.
      */
     static boolean[] textMask(BufferedImage source, TextColor textColor) {
         return textMask(source, textColor, TEXT_SIDES.getFirst());
@@ -209,19 +223,20 @@ public final class ImagePreprocessor {
 
     static boolean[] textMask(BufferedImage source, TextColor textColor, double textSide) {
         int[] luminance = luminance(source);
-        int[] chroma = chroma(source);
+        boolean dark = textColor == TextColor.DARK;
+        boolean[] lightTextColour = dark ? null : lightTextColour(source, textColor == TextColor.LIGHT_OR_YELLOW);
         int[] sorted = luminance.clone();
         Arrays.sort(sorted);
         int onePercent = sorted.length / 100;
-        int background = textColor == TextColor.DARK
+        int background = dark
                 ? sorted[(int) (sorted.length * (1 - BACKGROUND_PERCENTILE))]
                 : sorted[(int) (sorted.length * BACKGROUND_PERCENTILE)];
-        int limit = textColor == TextColor.DARK
+        int limit = dark
                 ? sorted[onePercent] + (int) ((background - sorted[onePercent]) * textSide)
                 : sorted[sorted.length - 1 - onePercent] - (int) ((sorted[sorted.length - 1 - onePercent] - background) * textSide);
         boolean[] text = new boolean[luminance.length];
         for (int i = 0; i < luminance.length; i++) {
-            text[i] = textColor == TextColor.DARK ? luminance[i] <= limit : luminance[i] >= limit && chroma[i] <= MAX_LIGHT_TEXT_CHROMA;
+            text[i] = dark ? luminance[i] <= limit : luminance[i] >= limit && lightTextColour[i];
         }
         return text;
     }
@@ -384,18 +399,23 @@ public final class ImagePreprocessor {
         return result;
     }
 
-    /** Colourfulness per pixel: largest minus smallest colour channel (0 for grey, white and black). */
-    private static int[] chroma(BufferedImage image) {
+    /**
+     * Whether each pixel has a colour light text can have: grey to white (colourfulness, largest minus smallest channel,
+     * at most {@value #MAX_LIGHT_TEXT_CHROMA}) or, if allowed, yellow ({@link #MAX_YELLOW_RED_GREEN_DIFFERENCE}).
+     */
+    private static boolean[] lightTextColour(BufferedImage image, boolean yellowToo) {
         int width = image.getWidth();
         int[] rgb = image.getRGB(0, 0, width, image.getHeight(), null, 0, width);
-        int[] chroma = new int[rgb.length];
+        boolean[] light = new boolean[rgb.length];
         for (int i = 0; i < rgb.length; i++) {
             int r = (rgb[i] >> 16) & 0xFF;
             int g = (rgb[i] >> 8) & 0xFF;
             int b = rgb[i] & 0xFF;
-            chroma[i] = Math.max(r, Math.max(g, b)) - Math.min(r, Math.min(g, b));
+            int chroma = Math.max(r, Math.max(g, b)) - Math.min(r, Math.min(g, b));
+            boolean yellow = yellowToo && Math.abs(r - g) <= MAX_YELLOW_RED_GREEN_DIFFERENCE && b <= Math.min(r, g);
+            light[i] = chroma <= MAX_LIGHT_TEXT_CHROMA || yellow;
         }
-        return chroma;
+        return light;
     }
 
     private static int[] luminance(BufferedImage image) {

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.LIST;
@@ -205,6 +206,34 @@ class BattleMonitorTest {
 
         assertThat(updates).last().extracting(Update::active).asInstanceOf(LIST)
                 .containsExactly(PokemonId.of(94), PokemonId.of(67));
+    }
+
+    @Test
+    void aScanThatMissesOneOwnBoxKeepsTheOther() {
+        BattleMonitor monitor = ownMonitor(OWN_DOUBLE);
+        for (String[] own : List.of(new String[]{"GENGAR Lv30", "MACHOKE Lv28"}, new String[]{"GENGAR Lv30"},
+                new String[]{"MACHOKE Lv28"})) {
+            showForEveryRead("ZUBAT Lv12", "GOLBAT Lv22");
+            showForEveryRead(own);
+            monitor.poll();
+        }
+
+        // Each was read twice; Gengar in the upper box stays first though Machoke was read alone last.
+        assertThat(updates).last().extracting(Update::active).asInstanceOf(LIST)
+                .containsExactly(PokemonId.of(94), PokemonId.of(67));
+    }
+
+    @Test
+    void readsTheTeamInTheOwnBoxesDespiteMoreMisreadLetters() {
+        BattleMonitor monitor = ownMonitor(OWN_SINGLE);
+        monitor.setTeam(Set.of(160)); // Feraligatr
+        for (int i = 0; i < 2; i++) {
+            showForEveryRead("ZUBAT Lv12", "GOLBAT Lv22");
+            showForEveryRead("PERAIIGAIK Lv22"); // too far from FERALIGATR for an opponent
+            monitor.poll();
+        }
+
+        assertThat(updates).last().extracting(Update::active).asInstanceOf(LIST).containsExactly(PokemonId.of(160));
     }
 
     private BattleMonitor ownMonitor(CaptureRegion... ownRegions) {

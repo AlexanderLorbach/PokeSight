@@ -100,24 +100,61 @@ class MatchupCalculatorTest {
     }
 
     @Test
-    void ranksSwitchInsByHowTheyTakeItsOwnTypes() {
+    void theBestSwitchInDealsTheMostDamageForTheDamageItTakes() {
         List<SwitchIn> vsGyarados = analyze(130, 0, Language.EN).switchIns(); // Water and Flying attacks
 
+        // Gyarados: Attack 125, Sp. Atk 60. Pikachu: Defense 30, Sp. Def 40. Monferno: Defense 52, Sp. Def 52.
         assertThat(vsGyarados).extracting(SwitchIn::member, SwitchIn::worst).containsExactly(
-                tuple(PIKACHU, 1.0),   // Water 1x, Flying 1/2x
-                tuple(MONFERNO, 2.0)); // Water 2x, Flying 2x
-        assertThat(vsGyarados.getFirst().taken()).containsExactly(
-                entry(WATER, 1.0), entry(FLYING, 0.5));
+                tuple(PIKACHU, 1.0),   // Water 1x, Flying 1/2x; Thunderbolt 4x: 285 / (1 x 125/30) = 68.4
+                tuple(MONFERNO, 2.0)); // Water 2x, Flying 2x; Mach Punch: 29.6 / (2 x 125/52) = 6.2
+        SwitchIn pikachu = vsGyarados.getFirst();
+        assertThat(pikachu.taken()).containsExactly(entry(WATER, 1.0), entry(FLYING, 0.5));
+        assertThat(pikachu.bestMove()).map(MoveOption::moveId).contains(THUNDERBOLT);
+        assertThat(pikachu.damageTaken()).isCloseTo(125.0 / 30, offset(0.01));
+        assertThat(pikachu.rating()).isCloseTo(285 / (125.0 / 30), offset(0.01));
+        assertThat(vsGyarados.get(1).rating()).isCloseTo(29.62 / (2 * 125.0 / 52), offset(0.01));
     }
 
     @Test
-    void aSwitchInIsRatedByItsTypesAlone() {
+    void withoutMovesTheSwitchInThatTakesTheLeastComesFirst() {
+        Team noMoves = new Team(List.of(new Team.Member(MONFERNO, List.of()), new Team.Member(PIKACHU, List.of())));
+
+        List<SwitchIn> vsGyarados = calculator.analyze(PokemonId.of(130), Language.EN, noMoves).orElseThrow().switchIns();
+
+        assertThat(vsGyarados).extracting(SwitchIn::member).containsExactly(PIKACHU, MONFERNO);
+        assertThat(vsGyarados).allSatisfy(switchIn -> {
+            assertThat(switchIn.bestMove()).isEmpty();
+            assertThat(switchIn.rating()).isZero();
+        });
+    }
+
+    @Test
+    void anImmuneSwitchInStillCompares() {
+        Team withGengar = new Team(List.of(new Team.Member(GENGAR, List.of(THUNDERBOLT))));
+
+        SwitchIn gengar = calculator.analyze(PokemonId.of(143), Language.EN, withGengar).orElseThrow() // Snorlax: Normal
+                .switchIns().getFirst();
+
+        assertThat(gengar.worst()).isZero();
+        assertThat(gengar.damageTaken()).isPositive();
+        assertThat(gengar.rating()).isPositive().isFinite();
+        assertThat(gengar.dangerTypes()).isEmpty();
+    }
+
+    @Test
+    void aSwitchInTakingTwiceOrMoreIsInDanger() {
         Team withGengar = new Team(List.of(new Team.Member(GENGAR, List.of())));
+        Team withGarchomp = new Team(List.of(new Team.Member(GARCHOMP, List.of())));
 
-        List<SwitchIn> vsGarchomp = calculator.analyze(GARCHOMP, Language.EN, withGengar).orElseThrow().switchIns();
+        SwitchIn gengar = calculator.analyze(GARCHOMP, Language.EN, withGengar).orElseThrow().switchIns().getFirst();
+        SwitchIn garchomp = calculator.analyze(PokemonId.of(471), Language.EN, withGarchomp).orElseThrow() // Glaceon: Ice
+                .switchIns().getFirst();
 
-        assertThat(vsGarchomp).singleElement().satisfies(gengar -> // Levitate is not counted
-                assertThat(gengar.taken()).containsEntry(GROUND, 2.0));
+        assertThat(gengar.taken()).containsEntry(GROUND, 2.0); // Levitate is not counted
+        assertThat(gengar.dangerTypes()).containsExactly(GROUND);
+        assertThat(garchomp.worst()).isEqualTo(EnemyAnalysis.ONE_HIT);
+        assertThat(garchomp.dangerTypes()).containsExactly(ICE);
+        assertThat(analyze(130, 0, Language.EN).switchIn(PIKACHU)).map(SwitchIn::dangerTypes).contains(List.of());
     }
 
     @Test

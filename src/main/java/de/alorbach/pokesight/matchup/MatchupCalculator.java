@@ -18,12 +18,14 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 /**
- * Works out which attack types hurt a defender, which of the team's moves hit it hardest and which team member takes
- * its attacks best. By types alone: abilities, items and stat changes are not known.
+ * Works out which attack types hurt a defender, which of the team's moves hit it hardest and which team member is the
+ * best switch-in against it. By types and base stats: abilities, items, levels and stat changes are not known.
  */
 public final class MatchupCalculator {
 
     private static final double STAB = 1.5;
+    /** Multiplier an immune switch-in counts with: still the best defensively, without dividing by zero. */
+    private static final double MIN_TAKEN = 0.25;
 
     private final Ruleset ruleset;
 
@@ -53,8 +55,9 @@ public final class MatchupCalculator {
             if (tera != null && !threats.contains(tera)) {
                 threats.add(tera);
             }
-            return new EnemyAnalysis(form.name(language), types, tera != null, defensiveMatchup(types),
-                    rankMoves(team, form, types), switchIns(team, threats));
+            List<MoveOption> moves = rankMoves(team, form, types);
+            return new EnemyAnalysis(form.name(language), types, tera != null, defensiveMatchup(types), moves,
+                    switchIns(team, form, threats, moves));
         });
     }
 
@@ -101,8 +104,14 @@ public final class MatchupCalculator {
         return options;
     }
 
-    /** How each team member takes attacks of these types, safest first: by the worst multiplier, then by the sum. */
-    public List<SwitchIn> switchIns(Team team, List<PokemonType> attackTypes) {
+    /**
+     * Every team member against an attacker, best switch-in first: the most damage dealt for the damage taken (see
+     * {@link SwitchIn#rating}); on a tie (no moves entered) the one that takes the least.
+     *
+     * @param attackTypes the attacker's types it attacks with (its own, and a Tera type)
+     * @param moves       the team's moves against it, strongest first ({@link #rankMoves})
+     */
+    public List<SwitchIn> switchIns(Team team, Species.Form attacker, List<PokemonType> attackTypes, List<MoveOption> moves) {
         List<SwitchIn> result = new ArrayList<>();
         for (Team.Member member : team.members()) {
             Optional<Species.Form> form = form(member.pokemon());
@@ -114,10 +123,17 @@ public final class MatchupCalculator {
                 taken.put(attackType, ruleset.typeChart().multiplier(attackType, form.get().types()));
             }
             double worst = taken.values().stream().mapToDouble(Double::doubleValue).max().orElse(1);
-            result.add(new SwitchIn(member.pokemon(), taken, worst));
+            Optional<MoveOption> bestMove = moves.stream()
+                    .filter(option -> option.user().equals(member.pokemon()) && option.score() > 0)
+                    .findFirst();
+            double statRatio = Math.max(
+                    (double) attacker.stat(Stat.ATTACK) / form.get().stat(Stat.DEFENSE),
+                    (double) attacker.stat(Stat.SPECIAL_ATTACK) / form.get().stat(Stat.SPECIAL_DEFENSE));
+            double damageTaken = Math.max(worst, MIN_TAKEN) * statRatio;
+            double rating = bestMove.map(MoveOption::score).orElse(0.0) / damageTaken;
+            result.add(new SwitchIn(member.pokemon(), taken, worst, bestMove, damageTaken, rating));
         }
-        result.sort(Comparator.comparingDouble(SwitchIn::worst)
-                .thenComparingDouble(switchIn -> switchIn.taken().values().stream().mapToDouble(Double::doubleValue).sum()));
+        result.sort(Comparator.comparingDouble(SwitchIn::rating).reversed().thenComparingDouble(SwitchIn::damageTaken));
         return result;
     }
 
