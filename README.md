@@ -5,43 +5,41 @@
 > app I develop myself from scratch. **Result:** for a simple app like this it works surprisingly well, and it was
 > surprisingly fast.
 
-PokeSight is a second-screen companion for Pokémon games. It reads the opponents' names from the screen, detects
-when a battle starts and shows each opponent's weaknesses, resistances and immunities, which moves of your team hit it
-hardest and which of your Pokémon takes its attacks best. It only looks at the screen, so it needs no emulator plugin
-or memory access.
+PokeSight is a second-screen companion for Pokémon games. It reads the opponents' names from the screen, detects when a
+battle starts and shows each opponent's weaknesses, resistances and immunities, your best moves against it and which
+of your Pokémon to switch in. It only looks at the screen: no emulator plugin, no memory access.
 
 | Single battle | Double battle |
 |---|---|
-| ![A battle against Mamoswine in Platinum: Garchomp is out and takes 4× from Ice, switch to Lucario; your best moves, the best switch-ins and all weaknesses, resistances and immunities](docs/screenshots/battle-single.png) | ![Double battle against Togekiss and Weavile: each card warns which of your two Pokémon on the field it counters](docs/screenshots/battle-double.png) |
+| ![A battle against Mamoswine in Platinum: Garchomp is out and takes 4× from Ice; your best moves, the best switch-ins and all weaknesses, resistances and immunities](docs/screenshots/battle-single.png) | ![Double battle against Togekiss and Weavile: each card warns which of your two Pokémon on the field it counters](docs/screenshots/battle-double.png) |
+| **Start screen** | **Team editor** |
+| ![Start screen: game, language and the screen areas with the opponents' and your own name boxes](docs/screenshots/start.png) | ![Team editor: four Pokémon with their moves in type colours, the team's coverage and which move each member can learn to fill a gap, e.g. Shadow Claw by TM65](docs/screenshots/team.png) |
 
-- Single, double and triple battles and hordes, auto-detection plus **Scan now** if a battle was missed
-- Correct a misread Pokémon or add one by hand with a name search
-- **Your best moves**: enter your team once (or let PokeSight read the moves from the game), see the strongest move
-  per opponent, ranked by power, type, STAB and the Pokémon's base stats; moves are marked with their type colour.
-  When you pick moves, each Pokémon shows its types and whether physical or special moves suit it (Attack vs Sp. Atk),
-  and moves of that kind are suggested first
-- **Team coverage**: the team editor lists your move types, the ones missing, the types no move hits super
-  effectively, and which move type to add ("Add a GROUND move: hits ELECTRIC")
-- **Who is out**: with your own name boxes selected (or picked by hand), your active Pokémon's moves are marked and its
-  best move is in bold; in double battles both of your Pokémon on the field. When a team
-  member evolved, PokeSight reads the new name in a single battle and updates the saved team (keeping its moves)
-- **Best switch-ins**: your top 3 Pokémon against this opponent, by the damage they deal for the damage they take
-- **Danger warning**: a Pokémon on the field that takes 2× or 4× from the opponent's types is told to switch out, and to whom
-- **Worth catching**: a ★ next to the name marks Pokémon worth catching for your team; hover it to see why
-  (see [Catch star](#catch-star))
-- **Terastallization** (Scarlet/Violet): set an opponent's Tera type on its card
-- **Borderless mode**: only the cards, filling a small window you can put over a part of the emulator
-- Regional forms: in Sun/Moon a wild Meowth is shown as Alolan Meowth, in Sword/Shield as Galarian Meowth, etc.
-- Dark theme, original sprites, English and German game names
+## Features
 
-**Supported:** all main-series games from Red/Blue to Legends: Z-A, English and German, on Windows. Every game uses
-the rules of its own generation (type chart, types, move power); remakes are separate games with their own rules and
-screens, e.g. Red/Blue (Gen 1, Game Boy font) and FireRed/LeafGreen (Gen 3, GBA font).
+| Feature | What you get |
+|---|---|
+| Battle detection | Single, double and triple battles and hordes; **Scan now** if one was missed |
+| Matchups | Weaknesses, resistances and immunities by the rules of the game's generation |
+| Your best moves | The strongest moves of your team per opponent; your Pokémon on the field in green, its best move in bold |
+| Best switch-ins | Your top 3 Pokémon against the opponent: damage dealt for damage taken |
+| Danger warning | "⚠ Kirlia takes 4× from ICE" under the opponent's types when it counters your Pokémon on the field |
+| Team editor | Moves in their type colours, a physical/special icon per Pokémon, team coverage with the moves your Pokémon can learn; **Read** fills in a Pokémon and its moves from the game |
+| Who is out | Read from your own name boxes, or picked by hand; evolved team members are updated |
+| Catch star | ★ marks Pokémon worth catching ([Catch star](#catch-star)) |
+| Corrections | **Change** a misread Pokémon or its form, **Add Pokémon…** by name, **Tera…** in Scarlet/Violet |
+| Borderless mode | Only the cards, in a small window over a part of the emulator |
 
-**ROM hacks:** see [Supported ROM hacks](#supported-rom-hacks).
+Regional forms are shown in their region's games (Alolan Meowth in Sun/Moon). Dark theme, English and German names.
 
-The name reading is checked on 254 real battle screenshots, at least five per game, at emulator window sizes 1×, 2×
-(smoothed) and 3× (Full HD screenshots of the Switch games at their size). Correctly read views:
+**Supported:** all main-series games from Red/Blue to Legends: Z-A, English and German, on Windows, each with the rules
+of its own generation (remakes have their own: FireRed/LeafGreen uses Gen 3). Plus [ROM hacks](#supported-rom-hacks)
+and [custom games](#custom-games).
+
+### Name reading
+
+Checked on 254 real battle screenshots (at least five per game) at emulator window sizes 1×, 2× (smoothed) and 3×.
+Correctly read views on the first scan:
 
 | Game | Ruleset | Read | | Game | Ruleset | Read |
 |---|---|---|---|---|---|---|
@@ -58,388 +56,246 @@ The name reading is checked on 254 real battle screenshots, at least five per ga
 | | | | | Scarlet / Violet | gen9 | 14 / 15 |
 | | | | | Legends: Z-A | gen9 | 5 / 5 |
 
-That is 564 of 656 views (86 %) on the very first scan. PokeSight also learns the letter shapes of your game while
-you play (see [How it works](#how-it-works)); learned from the other screenshots of the same game, it reads 586 of 656
-views (89 %), most of all in the Game Boy games (Red/Blue 41 / 42, Crystal 36 / 36) and Ultra Sun / Ultra Moon
-(23 / 24). A missed view is usually a single scan: PokeSight scans every 0.7 s and a battle starts as soon as two of
-the last three scans agree, so it is still detected as long as most scans read the name. The Game Boy, GBA and DS
-games work best. In Black/White and X/Y the narrow, outlined fonts are read less reliably. In Legends: Arceus, Scarlet/Violet and Legends: Z-A the name floats above the opponent in the 3D
-scene and is found by its HP bar, also when the bar is almost empty; only a fainted opponent's empty bar is not found.
-Text of the scene is only taken for a name if it stands right over the bar. If a game works badly for you, a
-screenshot of your emulator window during a battle helps to improve it.
+Total 564 of 656 views (86 %); with the letter shapes PokeSight learns while you play
+([How it works](#how-it-works)) 586 (89 %). A missed view is usually one scan: a battle starts when two of the last
+three scans agree. The Game Boy, GBA and DS games read best; the narrow outlined fonts of Black/White and X/Y worst.
+In Legends: Arceus, Scarlet/Violet and Legends: Z-A the name floating in the 3D scene is found by its HP bar (not once
+the bar is empty). If a game reads badly for you, a screenshot of your emulator window in battle helps improve it.
 
 > PokeSight is a fan project. It is not affiliated with, endorsed or sponsored by Nintendo, Game Freak, Creatures or
 > The Pokémon Company. Pokémon and all related names are trademarks of their respective owners.
 
 ## Supported ROM hacks
 
-Listed below the official games with a "ROM hack" badge. Rules come from each hack's own data; English only.
+Listed below the official games with a "ROM hack" badge; English only. Rules come from each hack's own data.
 
-**[Pokémon Heartfelt Gold](https://pokehackdex.com/romhacks/pokemon-heartfelt-gold/)** (HeartGold, hg-engine):
-Pokémon of all generations, Gen 9 types and type chart, the hack's move changes and in-game names, the game's own
-sprites. Names read: 6 / 6.
-
-**[Pokémon Odyssey](https://eeveeexpo.com/odyssey/)** (FireRed): its own Aether type instead of Fairy, Etrian
-Variants, new Pokémon (no sprite) and new or changed moves, from the developer's data. Names read: 8 / 9.
-
-**[Pokémon R.O.W.E.](https://www.hackdex.app/hack/pokemon-rowe)** (Emerald, pokeemerald): open-world Emerald with all
-1025 Pokémon and Fairy; the hack's changed types (e.g. Poison/Dark Arbok), stats and moves, in-game names
-and its own sprites, from its source code (default game options). Names read: 7 / 9.
-
-**[Pokémon Unbound](https://pokefirered.com/pokemon-unbound/)** (FireRed, CFRU + DPE): Pokémon up to Gen 8 and Fairy;
-the hack's changed stats and move powers, its own moves, in-game names and GBA-style sprites, from Skeli's
-public source code. Names read: 12 / 12.
-
-**[Pokémon Glazed](https://www.gamebrew.org/wiki/Pokemon_Glazed_GBA)** (Emerald, v9.1): Gen 1-6 Pokémon in Emerald's
-411 slots, Fairy, Gen VII stats and moves, Mega Evolutions as own slots. No source code exists: built from the
-changelog, the fan wiki's slot table and the developers' move document; sprites are the official ones. Names read: 14 / 15.
-
-**[Pokémon Emerald Rogue](https://www.hackdex.app/hack/emerald-rogue)** (Emerald, pokeemerald-expansion, EX edition
-v2.1): roguelite Emerald with all 1025 Pokémon; types, stats and moves are the expansion's defaults (Gen 9),
-names as in the game (10 letters, "Kilowatrel") and its own sprites, from its source code. The Vanilla edition keeps
-Emerald's data unchanged: choose Pokémon Emerald for it. Names read: 8 / 12.
-
-**[Pokémon Lazarus](https://pokemonlazarus.net/)** (Emerald, pokeemerald-expansion, v2.0): the Ilios region with
-GBC-style graphics. No source code exists; the developer's documentation and the changelogs change no matchup outside
-Mega Evolutions (which PokeSight leaves out), so the rules are the expansion's Gen 9 defaults; sprites are the official
-ones. Names read: 3 / 10 (the only battle screenshots are a 1.5x scaled collage).
+| Hack | Base | Rules and sprites | Names read |
+|---|---|---|---|
+| [Heartfelt Gold](https://pokehackdex.com/romhacks/pokemon-heartfelt-gold/) | HeartGold, hg-engine | All generations, Gen 9 type chart, the hack's moves and names; own sprites | 6 / 6 |
+| [Odyssey](https://eeveeexpo.com/odyssey/) | FireRed | Aether type instead of Fairy, Etrian Variants, new Pokémon (no sprite) and moves, from the developer's data | 8 / 9 |
+| [R.O.W.E.](https://www.hackdex.app/hack/pokemon-rowe) | Emerald, pokeemerald | All 1025 Pokémon, the hack's types (Poison/Dark Arbok), stats and moves (default options); own sprites | 7 / 9 |
+| [Unbound](https://pokefirered.com/pokemon-unbound/) | FireRed, CFRU + DPE | Up to Gen 8, the hack's stats, move powers and moves; own sprites | 12 / 12 |
+| [Glazed](https://www.gamebrew.org/wiki/Pokemon_Glazed_GBA) | Emerald, v9.1 | Gen 1-6 in Emerald's 411 slots, Gen 7 stats and moves, Megas as own slots; built from changelog and fan wiki (no source) | 14 / 15 |
+| [Emerald Rogue](https://www.hackdex.app/hack/emerald-rogue) | Emerald, pokeemerald-expansion | EX edition v2.1: all 1025 Pokémon, Gen 9 defaults, in-game names; own sprites. Vanilla edition: choose Emerald | 8 / 12 |
+| [Lazarus](https://pokemonlazarus.net/) | Emerald, pokeemerald-expansion | v2.0: the expansion's Gen 9 defaults (no source; documented changes affect no matchup) | 3 / 10 (only a 1.5× collage) |
 
 ## Custom games
 
-Fan games that are not ROM hacks, listed below them with a "Custom" badge. English only.
+**[Pokémon Platinum Together](https://platinumtogether.online/)** (multiplayer mod of Platinum, "Custom" badge,
+English): the start screen has a switch for the world rule **MODERN POKéMON**, remembered in `settings.yaml`.
 
-**[Pokémon Platinum Together](https://platinumtogether.online/)** (multiplayer mod of Platinum with its own launcher):
-the start screen has one switch for the world rule that changes matchups, **MODERN POKéMON** (off by default, as in a
-new world). PokeSight remembers it in `settings.yaml`, like the window position.
-
-| MODERN POKéMON | What PokeSight uses |
+| MODERN POKéMON | Rules |
 |---|---|
-| OFF | Platinum's own 493 Pokémon, types, moves and type chart |
-| PREVIEW (switch on) | also the Pokémon of the newer games (Gen 5-9), the Fairy type and the Gen 6+ type chart (Clefairy is Fairy, Steel no longer resists Ghost or Dark), the newer games' types and moves (Ralts is Psychic/Fairy, Knock Off 65), Fairy moves |
+| OFF (default) | Platinum's 493 Pokémon, types, moves and type chart |
+| ON | Plus Gen 5-9 Pokémon, the Fairy type, the Gen 6+ type chart and the newer games' types and moves (Ralts is Psychic/Fairy) |
 
-The other rules (MORE POKéMON, RANDOM POKéMON, LEVEL CAPS, SPEED UP, ...) change no type. Base stats stay Platinum's
-for the original 493 Pokémon (no [patch note](https://platinumtogether.online/patch-notes/) changes them). MODERN
-BATTLES only changes the battle screen and status rules, not types: both screens are read like Platinum's (all-caps
-names). Sprites are the default PokeAPI ones (the mod's animated sprites are not published).
+The other world rules change no type. Base stats of the original 493 are Platinum's. Sprites are PokeAPI's defaults.
 
 ## Getting started
 
-### Option 1: Download a release (no Java needed)
-
-1. Download `PokeSight-<version>-windows.zip` from the [Releases](../../releases) page.
-2. Unzip it anywhere and start `PokeSight\PokeSight.exe`.
-
-The first battle view downloads the sprites of the selected game (0.5–2 MB) from
-[PokeAPI/sprites](https://github.com/PokeAPI/sprites); until then, or offline, the cards show no sprite.
-
-### Option 2: Run from source
-
-Requirements: Windows and a JDK 25 (for example `winget install EclipseAdoptium.Temurin.25.JDK`). Clone the repository
-to a Windows folder (not inside WSL: the app captures the Windows desktop), then:
-
-```
-gradlew.bat run
-```
-
-or run the Gradle task `run` (group *application*).
-
-The first build downloads the OCR models and the test screenshots (see [Licenses](#licenses-and-credits)).
-
-### Option 3: Build your own exe
-
-| Gradle task (group *distribution*) | Result |
+| Option | How |
 |---|---|
-| `gradlew.bat installLocal` | Installs for the current user to `%LOCALAPPDATA%\Programs\PokeSight` with desktop and Start menu shortcuts |
-| `gradlew.bat portableZip` | `build/distributions/PokeSight-<version>-windows.zip`: unzip anywhere and start `PokeSight.exe` |
-| `gradlew.bat jpackageImage` | Just the app folder `build/jpackage/PokeSight` (`PokeSight.exe` + Java runtime) |
+| Download (no Java needed) | `PokeSight-<version>-windows.zip` from [Releases](../../releases), unzip, start `PokeSight\PokeSight.exe` |
+| From source | JDK 25 (`winget install EclipseAdoptium.Temurin.25.JDK`), clone to a Windows folder (not WSL), `gradlew.bat run` |
+| Own exe | `gradlew.bat installLocal` (installs with shortcuts), `portableZip` or `jpackageImage` |
+
+The first battle downloads the game's sprites (0.5-2 MB) from [PokeAPI/sprites](https://github.com/PokeAPI/sprites);
+offline the cards show none. The first build downloads the OCR models and test screenshots.
 
 ## Using PokeSight
 
-1. Start the game in your emulator and PokeSight next to it (a second monitor works best).
-2. On the start screen pick the game and its language (and, for Platinum Together, whether MODERN POKéMON is on).
-3. Optionally select the **screen areas** where the opponents' name boxes appear:
+1. Start the game and PokeSight next to it (a second monitor works best).
+2. On the start screen pick the game and its language.
+3. Optionally select the screen areas with the name boxes. PokeSight reads what is visible, so never cover them with its
+   window. Without an opponent area the whole main screen is read: slower, and other windows may be picked up.
 
-   | Setting | What to select |
+   | Area | What to select |
    |---|---|
-   | Single battle area | the opponent's name box in a single battle |
-   | Double battle area | the part with both opponents' name boxes in a double battle |
-   | Your single battle area | your own Pokémon's name box in a single battle: tells PokeSight which of your team is out |
-   | Your double battle area | the part with both of your own Pokémon's name boxes in a double battle: both of them are out |
+   | Single battle | the opponent's name box |
+   | Double battle | both opponents' name boxes |
+   | Your single battle | your own name box: which of your team is out |
+   | Your double battle | both of your own name boxes |
 
-   Each scan reads every selected opponent area and uses the one that recognizes the most names; your own areas the
-   same way. Without any opponent
-   area the whole main screen is read: slower, and it may pick up other windows. PokeSight reads what is visible on screen, including
-   its own window, so never let it cover a selected area. With melonDS's hybrid layout, select the name boxes on the
-   large screen; PokeSight can cover the small copy of the top screen.
-4. Press **Start**. Use **Capture preview** to check what the scan sees.
+4. Press **Start**. **Capture preview** shows what the scan sees.
 
 | Control | Purpose |
 |---|---|
-| automatic | A battle starts when the same names are read in two of the last three scans (every 0.7 s); it ends after about 4 s without any name |
-| **Scan now** | Reads the screen immediately, even if auto-detection did not trigger |
-| **Team** | Your team: up to six Pokémon with up to four moves each; **Read** fills a Pokémon's moves from the game (see below) |
-| **Change** (on a card) | Search for the correct Pokémon if a name was misread; also for alternate forms like Sandy Wormadam |
-| **Tera…** (on a card, Scarlet/Violet) | It terastallized: pick its Tera type. It then has that type alone, but still attacks with its own types too |
-| **Out:** | Which of your team is on the field; read from your own name boxes if those areas are selected, or picked here. A second choice appears with two opponents (double battle). Your team's names are found there despite more misread letters than an opponent's (only six can stand there), and each Pokémon read in two of the last three scans counts, so a scan that misses one box keeps the other |
-| **Add Pokémon…** | Add an opponent by hand |
-| **Clear** | Forget the current battle, corrections and additions |
-| **Capture preview** | Shows (and saves) the last captured images |
-| **Always on top** | Keeps the window above the emulator |
-| **Borderless** | Only the cards remain and fill the window: one opponent the whole window, two opponents the left and right half. They keep the danger warning, your best moves and the best switch-ins. Hovering shows a button bar (scan, clear, team, always on top, exit); Esc also exits; drag to move |
+| automatic | A battle starts when two of the last three scans (every 0.7 s) agree; it ends after about 4 s without a name |
+| **Scan now** | Read the screen now |
+| **Team** | Your team: up to six Pokémon with four moves each |
+| **Change** (card) | Pick the right Pokémon or form (Sandy Wormadam) |
+| **Tera…** (card) | Scarlet/Violet: the opponent's Tera type |
+| **Out:** | Your Pokémon on the field; read from your own areas or picked here (a second one in double battles) |
+| **Add Pokémon…** / **Clear** | Add an opponent by hand / forget the battle |
+| **Always on top** | Keep the window above the emulator |
+| **Borderless** | Only the cards, two opponents side by side; hover for the buttons, Esc exits, drag to move |
 
-In a double battle the two opponents stand side by side (left and right), in the normal view and in borderless mode;
-more opponents (triple battles, hordes) continue in rows of two. The default window size is 855 × 640, which every
-view fills; PokeSight remembers the size and position you leave it at.
+The window remembers its size and position (default 855 × 640).
 
-**Reading your team:** in the team editor, press **Moves area…** once per game and drag a rectangle around the move
-names of the game's move selection (the fight menu or the summary's move list). Optionally press **Name area…** and
-drag a rectangle around the Pokémon's name on the same screen. Then open a Pokémon's move selection or summary in the
-game and press **Read** in a row: the Pokémon is filled in from the name (another Pokémon than the row had replaces it,
-with its moves), and the damaging moves found fill the empty move fields. Status moves are skipped, they do not take
-part in the ranking. The move under the cursor is drawn highlighted and often not read: move the cursor and press
-**Read** again, moves already in the row are kept. A nickname cannot be matched to a species: pick nicknamed Pokémon
-by hand, Read still fills in their moves. Type labels next to the PP ("PSYCHIC PP 20/20" under Psybeam since Gen 4,
-"TYPE/PSYCHIC" until Gen 3) are not read as moves; one case cannot be told apart: in Gen 3 a Psychic in the top-right
-slot stands next to the PP of the side panel and is skipped, add it by hand. Long move names may be misread by a
-quarter of their letters as long as no other move comes close (Platinum Together's pixel font: "Dreaming Kiss" is
-Draining Kiss); shorter ones by one letter at most.
+### Team editor
 
-**Evolution:** when your own name box shows a Pokémon that is not in your team but a later stage of exactly one team
-member (Monferno for Chimchar), that member becomes the evolved Pokémon, keeps its moves and the team is saved; the
-status line says so. Only single battles count: in a double battle the second box may show an ally's Pokémon
-(Platinum Together is multiplayer). With two members of the same line, or the evolution already in the team, nothing
-changes. If you change an evolved member back to its earlier stage in the team editor (Kirlia to Ralts), PokeSight
-remembers it and does not evolve it again, nor into later stages (Gardevoir); putting the evolution in the team by hand
-lifts that. Declined evolutions are saved per game (`declinedEvolutions` in `games/<game id>.yaml`). A scanned Pokémon of another form than the team member (Rotom for Wash Rotom) is still recognized as out.
+| Part | Meaning |
+|---|---|
+| Move fields | Filled in the move's type colour, type and category below |
+| Burst / rings beside a Pokémon's types | Physical / special moves hit harder for it (both: about equal); hover or click for Attack vs Sp. Atk. Its move suggestions list that kind first. |
+| Team coverage | All types; faded ones no move of yours hits super effectively (hover a type for the moves that do) |
+| Add a … move | The move type that hits most faded types, and where it could go: team members with an empty move slot, or moves you can replace without losing any super-effective coverage (else those that lose the least, with what they lose). Each place names the move that member learns and how (**Earthquake TM26**); only members that learn one are named, faded if none does. Click the type to list them all |
+| **Learnable moves** | The game's learnsets as a searchable list: damaging moves, power and how they are learned (level, TM/HM/TR, tutor, egg). Your team or every Pokémon; search by move, type, Pokémon or TM (`ground infernape`, `tm26`). Official games only; Platinum Together's MODERN POKéMON learn what they learn in the newest game that has them (*italic*) |
+| **Nicknames** | Shows a nickname field per Pokémon. A nicknamed Pokémon's name box shows the nickname: enter it so PokeSight knows it is out (and **Read** knows it) |
 
-**Your best moves** ranks the team's moves per opponent by move power × type effectiveness × 1.5 if the move has its
-Pokémon's type (STAB) × your Pokémon's base Attack / the opponent's base Defense (Sp. Atk / Sp. Def for special
-moves; until Gen 3 the move's type decides). Level, natures, EVs and stat changes are not known: the score ranks the
-moves, it is not the exact damage. With your active Pokémon known, its moves are marked with its name in green and
-"OUT", and its best move is always listed (also when none of its moves hits) in bold green: a green move further down
-means another team member hits harder.
+**Reading your team:** press **Moves area…** once per game and drag around the move names of the game's move selection
+or summary; optionally **Name area…** around the Pokémon's name on the same screen. Then show a Pokémon's moves in the
+game and press **Read** in a row. The move under the cursor is often missed: move the cursor and read again. Status
+moves are skipped. Nicknamed Pokémon cannot be matched: pick them by hand, **Read** still fills in their moves.
 
-**Best switch-ins** lists your top 3 team members against the opponent: the damage they deal (their best move's score,
-as in Your best moves) for the damage they take (the worst multiplier against the opponent's own types, its STAB
-moves, × the opponent's Attack / their Defense or Sp. Atk / Sp. Def, whichever is worse; an immunity counts as ¼×).
-Against a Water type an Electric Pokémon comes first: it hits 2× and takes 1×. Each row shows the best move and the
-most it takes (hover it for each type); one on the field is marked OUT. Base stats only: levels and the opponent's
-real moves are not known.
+**Evolution:** when your single-battle name box shows a later stage of exactly one team member (Monferno for
+Chimchar), that member evolves and keeps its moves. Change it back by hand in the team editor and it stays that way
+(saved as `declinedEvolutions`). A nicknamed Pokémon is recognized by its nickname, so its evolution is not
+detected: change it in the team editor.
 
-**Danger warning:** when one of your Pokémon on the field takes 2× or more from the opponent's own types, a red box
-under the opponent's types says so and names the best switch-in that is not on the field ("Kirlia takes 2× from GHOST
-and POISON: switch to Magmortar."); from 4× on it adds that it is likely knocked out in one hit. In a double battle
-each opponent's card shows whom of yours it counters. It also shows in borderless mode.
+### How the advice is scored
+
+Base stats only: levels, natures, EVs, abilities and the opponent's real moves are not known.
+
+| Advice | Score |
+|---|---|
+| Your best moves | Power × type effectiveness × 1.5 for STAB × your Attack / its Defense (Sp. Atk / Sp. Def for special moves; until Gen 3 the move's type decides) |
+| Best switch-ins | Damage dealt (best move score) for damage taken (worst of its types as STAB moves against yours, × its attack / your defense; immunity counts as ¼×) |
+| Danger warning | Your Pokémon on the field takes 2× or more from the opponent's types; 4× (likely a one-hit knock-out) in stronger red |
 
 ### Catch star
 
-A ★ next to an opponent's name means it is worth catching. Earlier stages get the star of their evolution: Magikarp
-gets Gyarados's, Abra gets Alakazam's. A list entry for one evolution path only stars that path: "Eevee (Vaporeon)"
-stars Eevee and Vaporeon, not Flareon.
+A ★ next to an opponent's name means it is worth catching; hover it for the reason. Earlier stages get the star of
+their evolution (Magikarp gets Gyarados's); an entry for one evolution path stars only that path.
 
 | Rule | Which Pokémon |
 |---|---|
 | Always | Legendary and mythical Pokémon, Ultra Beasts, Paradox Pokémon |
-| Games with a Smogon in-game tier list | The top tiers (S and A; High in the older lists). These lists rate each line for a playthrough by availability, typing, stats, movepool and the major battles |
-| Games without a list, and Pokémon newer than the list's game (Platinum Together's MODERN POKéMON) | The 5 strongest final evolutions of each type by base stat total, ties included. Dual types count for both types; the groups that are always starred are left out |
+| Games with a Smogon in-game tier list | The top tiers (S and A; High in older lists), rated for a playthrough |
+| Other games, and Pokémon newer than the list | The 5 strongest final evolutions of each type by base stat total |
 
 | Tier list | Games |
 |---|---|
-| [Smogon guides](https://www.smogon.com/ingame/guides/): Red/Blue/Yellow, Ruby/Sapphire/Emerald, FireRed/LeafGreen, Diamond/Pearl, Platinum, HeartGold/SoulSilver, Black/White | those games, and Platinum Together (Platinum's list) |
-| Smogon forum lists (S and A tiers transcribed): Gold/Silver/Crystal, Black 2/White 2, Omega Ruby/Alpha Sapphire, Sun/Moon, Ultra Sun/Ultra Moon, Brilliant Diamond/Shining Pearl | those games |
-| none (base stats) | X/Y (its forum list rates only 12 Pokémon), Let's Go, Sword/Shield, Legends: Arceus, Scarlet/Violet, Legends: Z-A, all ROM hacks |
+| [Smogon guides](https://www.smogon.com/ingame/guides/) | Red/Blue/Yellow, Ruby/Sapphire/Emerald, FireRed/LeafGreen, Diamond/Pearl, Platinum (also Platinum Together), HeartGold/SoulSilver, Black/White |
+| Smogon forum lists (S and A transcribed) | Gold/Silver/Crystal, Black 2/White 2, Omega Ruby/Alpha Sapphire, Sun/Moon, Ultra Sun/Ultra Moon, Brilliant Diamond/Shining Pearl |
+| none (base stats) | X/Y, Let's Go, Sword/Shield, Legends: Arceus, Scarlet/Violet, Legends: Z-A, all ROM hacks |
 
-Version-exclusive entries only count in their version (Squirtle is A in Red/Blue, B in Yellow). Pokémon that a list
-leaves out (unavailable before the end of the game, such as Bagon in HeartGold/SoulSilver) get no star. ROM hacks'
-own Pokémon (Glazed's Mega slots, event battle Pokémon) get none either. Shiny Pokémon cannot be recognized:
-PokeSight only reads the name.
+Version exclusives count only in their version; Pokémon a list leaves out get no star.
 
 ## Settings
 
-All settings are plain YAML files in `%APPDATA%\PokeSight`; nothing is written to the registry. Edit them only while
-PokeSight is closed; a file that cannot be read is ignored and the defaults are used. Delete the folder to reset.
-The sprites are a download cache in `%LOCALAPPDATA%\PokeSight\sprites`; they are downloaded again if deleted. The
-letter shapes learned per game are in `%LOCALAPPDATA%\PokeSight\glyphs\<game id>.txt` (saved every minute while
-scanning); **Forget learned letters** on the start screen deletes the selected game's file, for example after changing
-the emulator's window size or screen filter a lot.
+Plain YAML in `%APPDATA%\PokeSight`; edit only while PokeSight is closed, delete the folder to reset. An unreadable
+file is ignored. Caches in `%LOCALAPPDATA%\PokeSight`: `sprites\` and the learned letter shapes `glyphs\<game id>.txt`
+(**Forget learned letters** on the start screen deletes them, e.g. after changing the emulator's window size).
 
-On start PokeSight asks GitHub once whether a newer version exists (one anonymous request, nothing about you is sent)
-and shows a **Download** button on the start screen if so. Set `updateCheck: false` in `settings.yaml` to turn this
-off.
+On start PokeSight asks GitHub once for a newer version (anonymous) and offers a **Download** button;
+`updateCheck: false` in `settings.yaml` turns this off.
 
 ```
 %APPDATA%\PokeSight\
-├─ settings.yaml          last game and language, window position, size and maximized state, updateCheck,
-│                          game switches (gameOptions: Platinum Together's MODERN POKéMON)
-└─ games\
-   └─ <game id>.yaml      screen areas (singleArea, doubleArea, ownArea, movesArea, nameArea) and your team for that game
+├─ settings.yaml          last game and language, window, updateCheck, gameOptions (MODERN POKéMON)
+└─ games\<game id>.yaml   screen areas and your team for that game
 ```
 
 ```yaml
-# games/<game id>.yaml, e.g. games/red-blue.yaml
+# games/<game id>.yaml
 singleArea: { x: 2, "y": 210, width: 757, height: 211 }   # screen pixels; null = not selected
 doubleArea: { x: 1, "y": 104, width: 1099, height: 418 }
-ownArea: { x: 520, "y": 330, width: 400, height: 90 }    # your own name box: which of your team is out
-ownDoubleArea: { x: 500, "y": 300, width: 600, height: 180 } # both of your name boxes in a double battle
-movesArea: { x: 40, "y": 520, width: 600, height: 160 }   # the move selection, read by the team editor
-nameArea: { x: 40, "y": 80, width: 260, height: 50 }     # the Pokémon's name next to its moves (team editor)
+ownArea: { x: 520, "y": 330, width: 400, height: 90 }
+ownDoubleArea: { x: 500, "y": 300, width: 600, height: 180 }
+movesArea: { x: 40, "y": 520, width: 600, height: 160 }   # team editor: move selection
+nameArea: { x: 40, "y": 80, width: 260, height: 50 }     # team editor: the Pokémon's name
 team:
-  - { pokemon: 4, form: 0, moves: [52, 10] }              # national dex number, form index, move ids
+  - { pokemon: 4, form: 0, moves: [52, 10], nickname: Blaze } # national dex number, form index, move ids, nickname (optional)
 ```
 
 ## How it works
 
-Every 0.7 seconds PokeSight takes a screenshot of the selected areas and reads them with [Tesseract](https://github.com/tesseract-ocr/tesseract) OCR.
-Game fonts are tiny pixel fonts with a drop shadow or an outline, so each image is prepared first: only the pixels
-close to the text colour are kept (some games use white text on dark boxes, others dark text on light ones, so both
-are tried; white text must also be uncoloured, which drops sky and water behind the 3DS and Switch name boxes), box
-borders and HP bars are removed, the remaining letter-sized shapes are kept and scaled to about twice the DS size.
-The text is then matched against the game's Pokémon names with a small edit distance in which letters OCR often mixes
-up (G/S, O/D/C, U/V/W, ...) count half; name boxes standing side by side on one line (double battles since Gen 5) are
-split at wide gaps. In games that write names in capitals (Gen 1–4), text in mixed case (code, chats, websites) is
-ignored. In the games whose names float in the 3D scene, the solid HP bars are located first and only the labels
-above them are read.
+Every 0.7 s PokeSight captures the selected areas and reads them with [Tesseract](https://github.com/tesseract-ocr/tesseract)
+OCR. Each image is prepared first: only pixels near the text colour are kept (dark and light text; light text must be
+uncoloured, so sky and water drop out), box borders and HP bars are removed and the letters are scaled up. The text is
+matched against the game's names with an edit distance in which look-alike letters (G/S, O/D/C, U/V/W) count half.
+Your own name boxes are matched against your team only, which allows more misread letters.
 
-Tesseract misreads some pixel fonts consistently (Black/White "Ramoth" as "kanoth"), although the prepared letters are
-clean. So PokeSight learns the font of your game on your screen: whenever a word is a name (at most one look-alike
-letter off), the shapes of its letters are stored under that name's letters, and every image is also read by
-comparing its letter shapes with the stored ones. Both readings vote. The shapes come from your own emulator window and
-stay on your computer; nothing of the games ships with PokeSight. The tests are listed under
-[Development](#development).
+Tesseract misreads some pixel fonts consistently, so PokeSight also learns your game's font on your screen: the letter
+shapes of every recognized name are stored, and each image is also read by comparing shapes. Both readings vote. The
+shapes stay on your computer.
 
 ## Development
 
 ```
 src/main/java/de/alorbach/pokesight/
-├─ PokeSightApp.java     entry point, wires everything together
-├─ game/                 game definitions (games/*.yaml): ruleset, languages, sprite URL
-├─ sprite/               sprite download and cache in %LOCALAPPDATA%\PokeSight\sprites
-├─ ruleset/              generation data: types, type chart, species, forms, moves
+├─ PokeSightApp.java     entry point
+├─ game/                 game definitions (games/*.yaml)
+├─ sprite/               sprite download and cache
+├─ ruleset/              types, type chart, species, forms, moves, learnsets
 ├─ capture/              screenshots of screen regions
-├─ ocr/                  Tesseract adapter, image preparation, learned letter shapes, HP bar search
+├─ ocr/                  Tesseract adapter, image preparation, learned letters, HP bar search
 ├─ battle/               name matching, battle scanning, auto-detection, move reading
-├─ matchup/              weaknesses, move ranking, switch-ins, attack style
-├─ catching/             catch star: Smogon tier lists, legendaries, strongest of each type
-├─ settings/             settings files in %APPDATA%\PokeSight
-├─ update/               update check against the GitHub releases
-└─ ui/                   JavaFX views (start screen, battle view, cards, team editor, title bar, theme)
-
-src/main/resources/      games/*.yaml, rulesets/<id>/*.yaml (generated), pokedex.yaml and tiers/*.yaml (generated,
-                         catch star), ui/ (theme, font, icons)
-packaging/               PokeSight.ico, install.ps1 (installLocal)
-tools/                   GenerateRuleset.java (PokeAPI → YAML), GenerateHgEngineRuleset.java (hg-engine hack → YAML),
-                         GenerateOdysseyRuleset.java (Odyssey workbook → YAML), GeneratePokeemeraldRuleset.java
-                         (pokeemerald hack → YAML), GenerateCfruRuleset.java (CFRU + DPE hack → YAML),
-                         GenerateGlazedRuleset.java (Glazed documentation → YAML), GenerateLazarusRuleset.java
-                         (Lazarus: gen9 → YAML), GenerateCatchData.java (PokeAPI evolutions + Smogon tier
-                         lists → YAML), GenerateIcon.java (app icon)
+├─ matchup/              weaknesses, move ranking, switch-ins, coverage, attack style
+├─ catching/             catch star
+├─ settings/             settings files
+├─ update/               update check
+└─ ui/                   JavaFX views
+src/main/resources/      games/*.yaml, rulesets/<id>/, learnsets/<id>.yaml and catch data (generated), ui/
+tools/                   ruleset, learnset, catch data and icon generators
+packaging/               icon, install.ps1
 .github/workflows/       release.yml: builds the portable zip for every pushed v* tag
-licenses/                license texts of the bundled third-party software (THIRD-PARTY-NOTICES.md)
 ```
 
 | Pattern | Where | Why |
 |---|---|---|
 | Adapter | `TextRecognizer` / `TesseractTextRecognizer` | Swap the OCR engine without touching the battle logic |
-| Adapter | `ScreenSource` / `RobotScreenSource` | Screenshots are faked in tests; another source can plug in later |
+| Adapter | `ScreenSource` / `RobotScreenSource` | Fake screenshots in tests |
 | Observer | `BattleMonitor` → `BattleView` | Background scanning pushes changes to the UI |
-| View model | `BattleBoard` | Corrections and added Pokémon, testable without JavaFX |
+| View model | `BattleBoard` | Corrections and additions, testable without JavaFX |
 
-- **Tests:** `gradlew.bat test` runs the fast tests (seconds); `gradlew.bat ocrTest` the OCR tests on the real
-  screenshots (several minutes); `gradlew.bat check` both.
-- **Release:** push an annotated tag such as `v1.0.0`; the workflow runs both test tasks, builds the portable zip and
-  attaches it to a release titled with the tag message's first line.
-- **Add a game:** create `games/<id>.yaml` (copy an existing game of the same generation) and list `<id>` in
-  `games/index.yaml` (ROM hacks under `romHacks`, other fan games under `custom`; both are listed below the official
-  games). `region` (alola, galar, hisui, paldea) makes recognized Pokémon show in their regional form,
-  `floatingNames` reads the labels above HP bars instead of fixed name boxes, `yellowNames` also reads yellow names
-  (Platinum Together's Pokémon whose turn it is; not for all games, yellow sand would be read too), `terastal` offers the Tera type picker,
-  `options` adds start-screen switches that take types (`typesFrom`) or added Pokémon (`speciesFrom`) from another
-  ruleset (Platinum Together), `tierList` names the Smogon in-game tier list behind the catch star (`tiers/<id>.yaml`).
-- **OCR tests:** `src/test/resources/screenshots.tsv` lists the battle screenshots (URL, SHA-256, game, language, the
-  opponents they show and, for collages, where the game screen is); the build downloads them. `GameScreenshotOcrTest`
-  reads every one with its game's settings and fails when a game reads fewer views than the minimum recorded there,
-  once with Tesseract alone and once with letter shapes learned from the game's other screenshots (it needs all of
-  them; CI skips it, since one wiki blocks downloads from there); `ScreenshotOcrTest` checks Gen 4 at every window
-  size, `MoveReaderTest` the move reading. All of them are tagged `ocr` and run with `ocrTest`. ROM hacks have their
-  own screenshots and minimums; the official games' minimums may only rise, so work on a hack can never make an
-  official game read worse.
-- **Regenerate a ruleset:** `java tools/GenerateRuleset.java <PokeAPI version group> src/main/resources/rulesets/<id>`.
-  It writes the type chart, the species with their alternate forms and base stats and the damaging moves, as they
-  were in that game (PokeAPI's change logs are rolled back, e.g. Thunderbolt has 95 power in Gen 4, Butterfree has
-  Sp. Atk 80 until Gen 5, Gen 1 has one Special stat):
+| Task | How |
+|---|---|
+| Tests | `gradlew.bat test` (fast), `ocrTest` (real screenshots, minutes), `check` (both) |
+| Release | Push an annotated tag `vX.Y.Z`; CI runs the tests and attaches the zip to a release titled with the tag message's first line |
+| Add a game | `games/<id>.yaml` (copy one of the same generation), listed in `games/index.yaml`. Keys: `region`, `floatingNames`, `yellowNames` (Platinum Together's turn indicator), `terastal`, `options`, `tierList`, `learnsets` |
+| Regenerate a ruleset | `java tools/GenerateRuleset.java <PokeAPI version group> src/main/resources/rulesets/<id>`: the data as it was in that generation |
+| Regenerate learnsets | `java tools/GenerateLearnsets.java src/main/resources/learnsets`: one file per official game (PokeAPI version group), damaging moves only |
+| ROM hack rulesets | `GenerateHgEngineRuleset`, `GenerateOdysseyRuleset`, `GeneratePokeemeraldRuleset`, `GenerateCfruRuleset`, `GenerateGlazedRuleset`, `GenerateLazarusRuleset` in `tools/`; exact commands in their Javadoc |
+| Catch data | `java tools/GenerateCatchData.java src/main/resources`: evolutions and legendary flags from PokeAPI, tier lists from Smogon; every entry checked against PokeAPI |
 
-  | Ruleset | Version group | | Ruleset | Version group |
-  |---|---|---|---|---|
-  | gen1 | yellow | | gen6 | omega-ruby-alpha-sapphire |
-  | gen2 | crystal | | gen7 | ultra-sun-ultra-moon |
-  | gen3 | firered-leafgreen | | lets-go | lets-go-pikachu-lets-go-eevee |
-  | gen4 | heartgold-soulsilver | | gen8 | legends-arceus |
-  | gen5 | black-2-white-2 | | gen9 | the-indigo-disk |
-- **Regenerate a ROM hack ruleset** (hacks built with [hg-engine](https://github.com/BluRosie/hg-engine)):
-  `java tools/GenerateHgEngineRuleset.java <hack's HG-Engine folder> <hg-engine> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id>`,
-  with pinned raw GitHub URLs or local folders (the exact command for Heartfelt Gold is in the tool's Javadoc). It reads
-  the hack's `config.h`, `Species.c` and `Moves.c` and hg-engine's type chart and sprite
-  folders (the game sets `spriteSheets: true`: the first of the two frames is kept, background transparent); the gen9
-  ruleset only supplies dex numbers (checked against PokeAPI), form names, type names and move ids.
-  Pokémon Odyssey: `java tools/GenerateOdysseyRuleset.java <workbook .xlsx or its export URL> src/main/resources/rulesets/gen9 src/main/resources/rulesets/odyssey`
-  (URL in the tool's Javadoc). It reads the type chart from the cell colours, types and base stats of every
-  species, the Pokédex slot names and the new moves (type and category icons recognized by their hash); the workbook's
-  SHA-256 is written into the generated files, since the developer can update it.
-  Hacks built on [pokeemerald](https://github.com/pret/pokeemerald) with the battle engine expansion (Pokémon R.O.W.E.,
-  Emerald Rogue EX):
-  `java tools/GeneratePokeemeraldRuleset.java <hack's source> <source with battle_util.c> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id>`
-  (exact command in the tool's Javadoc). It evaluates the hack's `#if` settings (config headers) and reads
-  `base_stats.h`, `battle_moves.h`, the in-game names and the front sprites (`spriteSheets: true`: the top frame is
-  kept); moves PokeAPI does not know become the hack's own (key 20000 + its move id). Newer expansions (1.7+, with
-  `species_info.h` and `include/config/`) are detected: their species entries, shared-field macros and conditional
-  values (`P_UPDATED_TYPES >= GEN_6 ? TYPE_FAIRY : TYPE_NORMAL`) are evaluated like the C preprocessor does.
-  Hacks built on [CFRU](https://github.com/Skeli789/Complete-Fire-Red-Upgrade) and
-  [DPE](https://github.com/Skeli789/Dynamic-Pokemon-Expansion) (Pokémon Unbound):
-  `java tools/GenerateCfruRuleset.java <DPE> <CFRU> src/main/resources/rulesets/gen9 src/main/resources/rulesets/<id> [DEFINE...]`
-  (exact command in the tool's Javadoc; Unbound: `UNBOUND`). It evaluates CFRU's `config.h` plus the given defines and
-  reads DPE's `Base_Stats.c`, name tables and front sprites and CFRU's type chart and `battle_moves.c`; Z-Moves and
-  Max Moves are left out, the hack's own moves get key 20000 + its move id.
-  Pokémon Glazed (binary hack, no source): `java tools/GenerateGlazedRuleset.java src/main/resources/rulesets/gen7 src/main/resources/rulesets/glazed`
-  reads the fan wiki's slot table (pinned revision) and the move document and applies the changelog to the gen7
-  ruleset (sources in the tool's Javadoc).
-  Pokémon Lazarus (binary hack on pokeemerald-expansion): `java tools/GenerateLazarusRuleset.java src/main/resources/rulesets/gen9 src/main/resources/rulesets/lazarus`
-  takes the expansion's default (Gen 9) data with English names only (why in the tool's Javadoc).
-- **Regenerate the catch star data:** `java tools/GenerateCatchData.java src/main/resources` writes
-  `pokedex.yaml` (evolutions and legendary/mythical flags from PokeAPI; Ultra Beasts and Paradox Pokémon after
-  Bulbapedia) and `tiers/<id>.yaml`. The Smogon guides are downloaded and parsed; the forum lists cannot be read by
-  scripts, so their S and A tiers are transcribed in the tool. Every entry is checked against PokeAPI: an unknown name
-  or an evolution path that does not exist stops the run.
-- **Data checked** against Pokémon Showdown's per-generation data (base data plus the gen1–gen8 and gen7letsgo mods)
-  for every ruleset: type chart, types of all species and their alternate forms, base stats of all species, power,
-  type and category of all moves (until Gen 3 the category follows the type). Gaps in PokeAPI found that way are fixed
-  in the generator (e.g. Cryogonal's Attack and Defense until Gen 6). Remaining difference: Showdown's base Minior is
-  the Core form, while PokeAPI (and PokeSight) has the Meteor form an opponent starts in.
+| Ruleset | Version group | | Ruleset | Version group |
+|---|---|---|---|---|
+| gen1 | yellow | | gen6 | omega-ruby-alpha-sapphire |
+| gen2 | crystal | | gen7 | ultra-sun-ultra-moon |
+| gen3 | firered-leafgreen | | lets-go | lets-go-pikachu-lets-go-eevee |
+| gen4 | heartgold-soulsilver | | gen8 | legends-arceus |
+| gen5 | black-2-white-2 | | gen9 | the-indigo-disk |
+
+**OCR tests:** `src/test/resources/screenshots.tsv` lists the battle screenshots (URL, SHA-256, game, language,
+opponents); the build downloads them. `GameScreenshotOcrTest` fails when a game reads fewer views than its recorded
+minimum, with Tesseract alone and with learned letters. The official games' minimums may only rise. All OCR tests are
+tagged `ocr`.
+
+**Data checked** against Pokémon Showdown's per-generation data for every ruleset: type chart, types and base stats of
+all species and forms, power, type and category of all moves.
 
 ## Known limitations
 
-- Windows only (screen capture of the Windows desktop).
-- Only names are read, not levels or HP. A name box whose name cannot be read is skipped; use **Add Pokémon…**.
-- The battle screen only shows the species name, so alternate forms (Wormadam cloaks, Shaymin Sky, Arceus plates) are
-  shown as the base form, or as the regional form in games of that region; use **Change** to pick the form.
-- Battle-only changes are not shown: Mega Evolution and Dynamax/Gigantamax. Terastallization is set by hand with
-  **Tera…**.
-- Matchups go by types alone: abilities, held items and weather are not taken into account.
-- Each game knows every Pokémon up to its generation, also those that cannot be caught in it (Sword/Shield, Let's Go).
-- Legends: Arceus and Legends: Z-A have their own battle systems; their moves are ranked with the Gen 8 / Gen 9 power.
-- Regional forms with the same types as the base form (e.g. Galarian Slowpoke) are shown with the base form's sprite;
-  the matchup is the same.
-- Type changes during battle (Castform's Forecast, Kecleon's Color Change) are not tracked.
-- With display scaling, monitors with different scale factors can shift the selected areas.
+- Windows only.
+- Only names are read, not levels or HP; an unreadable name box is skipped (use **Add Pokémon…**).
+- Alternate forms (Wormadam cloaks, Arceus plates) show as the base or regional form; use **Change**.
+- Mega Evolution and Dynamax are not shown; Tera types are set by hand.
+- Matchups go by types alone: no abilities, held items or weather.
+- Each game knows every Pokémon up to its generation, also uncatchable ones.
+- Legends: Arceus and Legends: Z-A moves are ranked with Gen 8 / Gen 9 power.
+- Type changes during battle (Forecast, Color Change) are not tracked.
+- Monitors with different display scaling can shift the selected areas.
 
 ## Licenses and credits
 
-PokeSight's own code is released under the [MIT License](LICENSE): free to use, change and fork. The app bundles
-third-party software under its own licenses: see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the
-[licenses](licenses) folder, both also included in the app folder.
+PokeSight's own code is released under the [MIT License](LICENSE). The app bundles third-party software under its own
+licenses: see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the [licenses](licenses) folder, both also in the
+app folder.
 
-The release contains no Pokémon images: the app downloads the sprites on first start, the build downloads the test
-screenshots. The repository only contains the README screenshots in `docs/screenshots`, which show sprites. None of
-these are covered by the MIT License:
+The release contains no Pokémon images: the app downloads the sprites, the build downloads the test screenshots. Only
+the README screenshots in `docs/screenshots` show sprites. None of these are covered by the MIT License:
 
 | What | Source | License / owner |
 |---|---|---|
@@ -448,6 +304,7 @@ these are covered by the MIT License:
 | Test screenshots | Bulbagarden Archives, Wikipedia, PokéWiki (URLs in `src/test/resources/screenshots.tsv`) | © Nintendo / Game Freak / The Pokémon Company |
 | Paldean Tauros / Wooper German names | [PokéWiki](https://www.pokewiki.de) (missing in PokeAPI) | names © Nintendo / Game Freak / The Pokémon Company |
 | Pokémon data (names, types, base stats, moves, evolutions, legendary/mythical) | [PokeAPI](https://pokeapi.co), cross-checked with [Pokémon Showdown](https://github.com/smogon/pokemon-showdown) | game data © Nintendo / Game Freak / The Pokémon Company |
+| Learnsets (which moves a Pokémon learns, TM numbers) | [PokeAPI](https://pokeapi.co) | game data © Nintendo / Game Freak / The Pokémon Company |
 | Catch star tier lists | Smogon in-game tier lists: [RBY](https://www.smogon.com/ingame/guides/rby_ingametiers) (DrumstickGaming, Ryota Mitarai and others), [RSE](https://www.smogon.com/ingame/guides/adv_rse_ingametiers) (Fireburn), [FRLG](https://www.smogon.com/ingame/guides/adv_frlg_ingametiers) (Ryota Mitarai, Kurona, DrumstickGaming, Zebes and others), [DP](https://www.smogon.com/ingame/guides/dpp_ingametiers) and [Platinum](https://www.smogon.com/ingame/guides/dpp_plat_ingametiers) (Jubilee), [HGSS](https://www.smogon.com/ingame/guides/hgss_ingame_tier) (Turdterra, ceal, DrumstickGaming, Ryota Mitarai and others), [BW](https://www.smogon.com/ingame/guides/bw_ingametiers) (DrumstickGaming, Ryota Mitarai, Xator Nova and others); forum lists [GSC](https://www.smogon.com/forums/threads/gsc-in-game-tier-list-mark-v.3687563/) (Turdterra), [B2W2](https://www.smogon.com/forums/threads/pokemon-black-2-and-white-2-in-game-tier-list-reboot.3705068/) (ceal), [ORAS](https://www.smogon.com/forums/threads/oras-tier-list-v2-0.3532211/) and [Sun/Moon](https://www.smogon.com/forums/threads/sun-moon-in-game-tier-list.3587886/) (Colonel M), [USUM](https://www.smogon.com/forums/threads/pokemon-ultra-sun-and-ultra-moon-in-game-tier-list-v2.3676552/) (Ryota Mitarai), [BDSP](https://www.smogon.com/forums/threads/pok%C3%A9mon-brilliant-diamond-and-shining-pearl-in-game-tier-list.3724116/) (MeepBard) | tier placements by the Smogon contributors named; only the tiers and entry names are used |
 | Ultra Beasts, Paradox Pokémon | [Bulbapedia](https://bulbapedia.bulbagarden.net/wiki/Ultra_Beast) / [Paradox Pokémon](https://bulbapedia.bulbagarden.net/wiki/Paradox_Pok%C3%A9mon) lists | reference |
 | OCR engine | [Tesseract](https://github.com/tesseract-ocr/tesseract) via [JavaCPP Presets](https://github.com/bytedeco/javacpp-presets) | Apache 2.0 |

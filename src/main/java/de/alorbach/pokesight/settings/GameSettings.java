@@ -4,6 +4,8 @@ import de.alorbach.pokesight.battle.PokemonId;
 import de.alorbach.pokesight.capture.CaptureRegion;
 import de.alorbach.pokesight.matchup.Team;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.List;
 
 /**
@@ -41,7 +43,8 @@ public record GameSettings(CaptureRegion singleArea, CaptureRegion doubleArea, L
 
     public GameSettings withTeam(Team newTeam) {
         return new GameSettings(singleArea, doubleArea, newTeam.members().stream()
-                .map(member -> new TeamMember(member.pokemon().speciesId(), member.pokemon().form(), member.moves()))
+                .map(member -> new TeamMember(member.pokemon().speciesId(), member.pokemon().form(), member.moves(),
+                        member.hasNickname() ? member.nickname() : null))
                 .toList(), movesArea, ownArea, nameArea, ownDoubleArea, declinedEvolutions);
     }
 
@@ -68,7 +71,7 @@ public record GameSettings(CaptureRegion singleArea, CaptureRegion doubleArea, L
 
     public Team toTeam() {
         return new Team(team.stream()
-                .map(member -> new Team.Member(new PokemonId(member.pokemon(), member.form()), member.moves()))
+                .map(member -> new Team.Member(new PokemonId(member.pokemon(), member.form()), member.moves(), member.nickname()))
                 .toList());
     }
 
@@ -76,8 +79,13 @@ public record GameSettings(CaptureRegion singleArea, CaptureRegion doubleArea, L
         return declinedEvolutions.stream().map(evolution -> new Team.Evolution(evolution.from(), evolution.to())).toList();
     }
 
-    /** One team slot: {@code { pokemon: 390, form: 0, moves: [52, 10] }}. */
-    public record TeamMember(int pokemon, int form, List<Integer> moves) {
+    /**
+     * One team slot: {@code { pokemon: 390, form: 0, moves: [52, 10], nickname: Blaze }}.
+     *
+     * @param nickname null for none (then not written)
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record TeamMember(int pokemon, int form, List<Integer> moves, String nickname) {
         public TeamMember {
             moves = moves == null ? List.of() : List.copyOf(moves);
         }

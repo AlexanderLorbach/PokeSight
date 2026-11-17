@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -95,15 +97,24 @@ public final class PokeSightApp extends Application {
     }
 
     private void startSession(SessionSettings settings) {
+        // Loading the OCR engine takes about as long as building the battle view: both at once.
+        CompletableFuture<TextRecognizer> ocr = new CompletableFuture<>();
+        Thread.ofVirtual().name("ocr-init").start(() -> {
+            try {
+                ocr.complete(new TesseractTextRecognizer(settings.language()));
+            } catch (IOException | RuntimeException e) {
+                ocr.completeExceptionally(e);
+            }
+        });
         TextRecognizer recognizer = null;
         try {
             Ruleset ruleset = GameRulesets.load(settings.game(), settings.options());
-            recognizer = new TesseractTextRecognizer(settings.language());
             Path glyphFile = GlyphFont.defaultFile(settings.game().id());
             GlyphFont glyphs = GlyphFont.load(glyphFile);
+            BattleView view = new BattleView(settings, new MatchupCalculator(ruleset), store, this::showStartView);
+            recognizer = await(ocr);
             BattleScanner scanner = new BattleScanner(recognizer, new NameMatcher(ruleset, settings.language(), settings.game().region()),
                     settings.game().capitalNames(), settings.game().floatingNames(), glyphs, settings.game().nameColors());
-            BattleView view = new BattleView(settings, new MatchupCalculator(ruleset), store, this::showStartView);
             BattleMonitor monitor = new BattleMonitor(new RobotScreenSource(), settings.regions(), settings.ownRegions(), scanner,
                     update -> Platform.runLater(() -> view.show(update)));
             view.setOnScanNow(monitor::scanNow);
@@ -124,8 +135,25 @@ public final class PokeSightApp extends Application {
         } catch (IOException | AWTException | RuntimeException e) {
             if (recognizer != null) {
                 recognizer.close();
+            } else {
+                ocr.thenAccept(TextRecognizer::close); // still loading: closed once it is ready
             }
             showError("Cannot start " + settings.game().name(), e);
+        }
+    }
+
+    /** The OCR engine once it is loaded; its loading error as thrown. */
+    private static TextRecognizer await(CompletableFuture<TextRecognizer> ocr) throws IOException {
+        try {
+            return ocr.join();
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof IOException io) {
+                throw io;
+            }
+            if (e.getCause() instanceof RuntimeException runtime) {
+                throw runtime;
+            }
+            throw e;
         }
     }
 

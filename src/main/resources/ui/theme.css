@@ -545,7 +545,7 @@
 }
 
 .best-moves-grid {
-    -fx-hgap: 8;
+    -fx-hgap: 6;  /* the move and Pokémon columns carry icons: room for all columns in a half-width card */
     -fx-vgap: 6;
     -fx-alignment: center-left;
 }
@@ -564,7 +564,7 @@
 .best-move-user {
     -fx-text-fill: ps-text-muted;
     -fx-font-size: 12px;
-    -fx-graphic-text-gap: 6px;
+    -fx-graphic-text-gap: 4px;
 }
 
 .best-move-score {
@@ -579,9 +579,16 @@
     -fx-font-weight: bold;
 }
 
-/* In Your best moves only the best move of each Pokémon on the field stands out: bold, green like its "OUT" name. */
+/* In Your best moves only the best move of each Pokémon on the field stands out: bold, green like its name. */
 .best-moves-grid .best-move-name {
     -fx-font-weight: normal;
+}
+
+/* The move's type is also its colour bar: a small badge leaves room for your Pokémon's sprite, icons and name. */
+.best-moves-grid .type-badge {
+    -fx-font-size: 10px;
+    -fx-padding: 1 7;
+    -fx-background-radius: 8;
 }
 
 .best-moves-grid .best-move-name.out-best-move {
@@ -620,6 +627,10 @@
     -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-text-fill: ps-text;
+}
+
+.best-move-user.switch-in-name.active-user {
+    -fx-text-fill: ps-good;
 }
 
 /* A Pokémon on the field takes 2× or more from the opponent's types: switch it out. */
@@ -688,19 +699,64 @@
     -fx-padding: 16;
 }
 
-.team-grid {
-    -fx-hgap: 8;
-    -fx-vgap: 10;
-    -fx-alignment: center-left;
+/* One line per team slot: sprite | Pokémon over types and attack icons | four moves over type and category | Read,
+   Clear. Fixed widths, so the columns of all slots line up. */
+.team-slots {
+    -fx-spacing: 6;
 }
 
-/* Sized so that the editor fills the default window (855 px) with six slots of a Pokémon and four moves. */
-.team-grid .search-field {
-    -fx-pref-width: 112;
+.team-slot {
+    -fx-background-color: ps-surface-1;
+    -fx-background-radius: 12;
+    -fx-padding: 8 10;
 }
 
-.team-grid .search-field.team-pokemon {
-    -fx-pref-width: 150;
+/* Wide enough for the longest move names ("Thunder Punch", "Dragon Breath") in bold. */
+.team-slot .search-field {
+    -fx-pref-width: 142;
+}
+
+.team-slot .search-field.team-pokemon {
+    -fx-pref-width: 176;
+    -fx-font-weight: bold;
+}
+
+/* The line under the Pokémon and each move: same height filled or empty, so the fields stay on one line. */
+.team-slot-info {
+    -fx-min-height: 16;
+    -fx-pref-height: 16;
+    -fx-padding: 0 0 0 4;
+}
+
+/* A chosen move fills its field in its type colour (background and label colour from .type-*); the plain border
+   overrides the type bar of .move-type-*. */
+.team-editor .team-move {
+    -fx-border-width: 1;
+}
+
+.team-editor .team-move.typed {
+    -fx-text-fill: #1d1d1f;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent;
+}
+
+.team-editor .team-move.typed.type-poison,
+.team-editor .team-move.typed.type-ground,
+.team-editor .team-move.typed.type-ghost,
+.team-editor .team-move.typed.type-fire,
+.team-editor .team-move.typed.type-dragon,
+.team-editor .team-move.typed.type-dark {
+    -fx-text-fill: white;
+}
+
+.team-editor .team-move:focused {
+    -fx-border-color: ps-pokemon-yellow;
+}
+
+.team-move-type {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: ps-text-muted;
 }
 
 /* A team member's types, under its name: smaller badges than on the opponent cards. */
@@ -710,21 +766,40 @@
     -fx-background-radius: 8;
 }
 
-/* Which types the team's moves hit super effectively, and which move types would fill the gaps. */
-.team-coverage {
-    -fx-background-color: rgba(255, 203, 5, 0.07);
-    -fx-background-radius: 10;
-    -fx-padding: 8 10;
+/* Move category tags: yellow burst on red (physical), light rings on blue (special), with a darker edge. */
+.category-icon.physical .category-tag { -fx-fill: #d8502f; -fx-stroke: #7a2a17; -fx-stroke-width: 1; }
+.category-icon.physical .category-symbol { -fx-fill: #ffd84a; }
+.category-icon.special .category-tag { -fx-fill: #4f72c4; -fx-stroke: #26397a; -fx-stroke-width: 1; }
+.category-icon.special .category-ring { -fx-fill: transparent; -fx-stroke: #e3ebff; -fx-stroke-width: 1.1; }
+
+.attack-style {
+    -fx-cursor: hand;
 }
 
-.coverage-grid {
-    -fx-hgap: 10;
+/* Which types the team's moves hit super effectively, and which move types would fill the gaps. */
+.team-coverage {
+    -fx-background-color: ps-surface-1;
+    -fx-background-radius: 12;
+    -fx-padding: 10 12;
+    -fx-spacing: 8;
+}
+
+.coverage-count {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.coverage-count.coverage-good { -fx-text-fill: ps-good; }
+.coverage-count.coverage-gaps { -fx-text-fill: ps-pokemon-yellow; }
+
+.coverage-chart {
+    -fx-hgap: 6;
     -fx-vgap: 6;
 }
 
-.coverage-label {
-    -fx-font-size: 12px;
-    -fx-text-fill: ps-text-muted;
+/* A type no move of the team hits super effectively. */
+.team-editor .type-badge.uncovered {
+    -fx-opacity: 0.25;
 }
 
 .coverage-tip {
@@ -734,12 +809,114 @@
 }
 
 .coverage-tip.coverage-good { -fx-text-fill: ps-good; }
+
+/* Muted small text beside coverage badges ("instead of", a team member's name). */
+.coverage-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: ps-text-muted;
+}
+
+/* Under a suggestion: where the new move could go, a labelled row each, indented below its "Add a" line. */
+.coverage-places {
+    -fx-hgap: 10;
+    -fx-vgap: 4;
+    -fx-padding: 0 0 6 16;
+}
+
+.member-chip {
+    -fx-font-size: 12px;
+    -fx-text-fill: ps-text;
+    -fx-graphic-text-gap: 2;
+}
+
+/* Beside the Pokémon field when the Nicknames toggle is on. */
+.team-slot .search-field.team-nickname, .team-slot .text-field.team-nickname {
+    -fx-pref-width: 130;
+}
+
+.coverage-loss {
+    -fx-font-size: 11px;
+    -fx-text-fill: ps-pokedex-red;
+    -fx-font-weight: bold;
+}
 .coverage-tip.hint { -fx-font-weight: normal; -fx-text-fill: ps-text-muted; }
 
-/* Under a team member: whether physical or special moves suit it */
-.attack-style {
+/* A suggested move type no team member learns. */
+.badges.unlearnable {
+    -fx-opacity: 0.4;
+}
+
+/* A suggested move type: click to list the team's moves of that type. */
+.type-badge.clickable {
+    -fx-cursor: hand;
+}
+
+/* ---------- Learnable moves ---------- */
+.learnable-moves {
+    -fx-padding: 12 16 16 16;
+}
+
+.learnable-table {
+    -fx-background-color: ps-surface-1;
+    -fx-background-radius: 12;
+    -fx-border-color: transparent;
+    -fx-padding: 4;
+    -fx-table-cell-border-color: transparent;
+    -fx-control-inner-background: ps-surface-1;
+    -fx-control-inner-background-alt: derive(ps-surface-1, 6%);
+    -fx-selection-bar: ps-surface-3;
+    -fx-selection-bar-non-focused: ps-surface-3;
+}
+
+.learnable-table .column-header-background,
+.learnable-table .column-header,
+.learnable-table .filler {
+    -fx-background-color: ps-surface-1;
+    -fx-border-color: transparent transparent ps-surface-3 transparent;
+}
+
+.learnable-table .column-header .label {
     -fx-font-size: 11px;
+    -fx-font-weight: bold;
     -fx-text-fill: ps-text-muted;
+}
+
+.learnable-table .table-row-cell {
+    -fx-cell-size: 32;
+}
+
+/* No stripes below the last row. */
+.learnable-table .table-row-cell:empty {
+    -fx-background-color: transparent;
+}
+
+.learnable-table .table-cell {
+    -fx-padding: 0 8;
+    -fx-alignment: center-left;
+}
+
+.learnable-table .learnable-number {
+    -fx-alignment: center-right;
+}
+
+.learnable-table .type-badge {
+    -fx-font-size: 10px;
+    -fx-padding: 1 7;
+    -fx-background-radius: 8;
+}
+
+.learnable-how {
+    -fx-font-size: 12px;
+}
+
+/* Only by breeding: no Pokémon already caught learns it. */
+.learnable-how.egg-only {
+    -fx-text-fill: ps-text-muted;
+}
+
+/* From a newer game's data: the game's own lacks this Pokémon. */
+.learnable-how.newer-game {
+    -fx-font-style: italic;
 }
 
 .team-sprite {

@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Finds the species whose name is closest to an OCR reading. There are only a few hundred
@@ -30,6 +31,9 @@ public final class NameMatcher {
     private static final int MIN_LOOSE_LENGTH = 5;
     /** Half letters by which the closest preferred name must beat the next one to be taken loosely (two look-alikes). */
     private static final int LOOSE_MARGIN = 4;
+    /** Compiled once: {@link #normalize} runs for every name of the ruleset when the suggestion lists are built. */
+    private static final Pattern MARKS = Pattern.compile("\\p{M}");
+    private static final Pattern NON_LETTERS = Pattern.compile("[^A-Z]");
 
     private final Map<String, PokemonId> pokemonByName = new LinkedHashMap<>();
     private final Map<String, String> nameByKey = new LinkedHashMap<>();
@@ -90,12 +94,41 @@ public final class NameMatcher {
     }
 
     /**
-     * Like {@link #match(String)}, but the names of the preferred species (the player's team, read in their own name
-     * boxes) are also found with up to half their letters misread, as long as no other preferred name is nearly as close:
-     * among six names that is still unambiguous, among all species it is not. Any other species needs a strict match
-     * and wins only if it is closer (an ally's Pokémon in a multiplayer double battle).
+     * The player's team as their own name boxes show it: the species, and the nicknames of members that have one (the
+     * box shows the nickname instead of the species).
+     *
+     * @param nicknames nickname as entered → the member it belongs to
      */
+    public record Preferred(Set<Integer> species, Map<String, PokemonId> nicknames) {
+        public static final Preferred NONE = new Preferred(Set.of(), Map.of());
+
+        public Preferred {
+            species = Set.copyOf(species);
+            nicknames = Map.copyOf(nicknames);
+        }
+
+        public static Preferred species(Set<Integer> species) {
+            return new Preferred(species, Map.of());
+        }
+
+        boolean isEmpty() {
+            return species.isEmpty() && nicknames.isEmpty();
+        }
+    }
+
+    /** See {@link #match(String, Preferred)}, without nicknames. */
     public Optional<Match> match(String text, Set<Integer> preferred) {
+        return match(text, Preferred.species(preferred));
+    }
+
+    /**
+     * Like {@link #match(String)}, but the names of the preferred species (the player's team, read in their own name
+     * boxes) and the team's nicknames are also found with up to half their letters misread, as long as no other
+     * team member's name is nearly as close: among six names that is still unambiguous, among all species it is not.
+     * Any other species needs a strict match and wins only if it is closer (an ally's Pokémon in a multiplayer double
+     * battle).
+     */
+    public Optional<Match> match(String text, Preferred preferred) {
         Optional<Match> strict = match(text);
         if (preferred.isEmpty()) {
             return strict;
@@ -107,30 +140,44 @@ public final class NameMatcher {
         return strict;
     }
 
-    private Optional<Match> preferredMatch(String candidate, Set<Integer> preferred) {
+    private Optional<Match> preferredMatch(String candidate, Preferred preferred) {
         if (candidate.length() < 3) {
             return Optional.empty();
         }
-        Match best = null;
-        String bestName = null;
-        int second = Integer.MAX_VALUE;
-        for (Map.Entry<String, PokemonId> entry : pokemonByName.entrySet()) {
-            if (!preferred.contains(entry.getValue().speciesId())) {
-                continue;
+        // The names a team member may show: its species name and its nickname.
+        Map<String, PokemonId> names = new LinkedHashMap<>();
+        pokemonByName.forEach((name, pokemon) -> {
+            if (preferred.species().contains(pokemon.speciesId())) {
+                names.put(name, pokemon);
             }
-            int distance = ocrDistance(candidate, entry.getKey());
-            if (best == null || distance < best.distance()) {
-                second = best == null ? second : best.distance();
-                best = new Match(entry.getValue(), distance);
-                bestName = entry.getKey();
-            } else {
-                second = Math.min(second, distance);
+        });
+        preferred.nicknames().forEach((nickname, pokemon) -> {
+            String key = normalize(nickname);
+            if (!key.isEmpty()) {
+                names.putIfAbsent(key, pokemon);
             }
-        }
-        if (best == null || best.distance() > looseDistance(bestName.length()) || second - best.distance() < LOOSE_MARGIN) {
+        });
+        // Closest name per team member: a member's species name and nickname do not compete with each other.
+        Map<PokemonId, Integer> distances = new LinkedHashMap<>();
+        Map<PokemonId, String> closest = new LinkedHashMap<>();
+        names.forEach((name, pokemon) -> {
+            int distance = ocrDistance(candidate, name);
+            if (distance < distances.getOrDefault(pokemon, Integer.MAX_VALUE)) {
+                distances.put(pokemon, distance);
+                closest.put(pokemon, name);
+            }
+        });
+        Optional<Map.Entry<PokemonId, Integer>> best = distances.entrySet().stream().min(Map.Entry.comparingByValue());
+        if (best.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(best);
+        int bestDistance = best.get().getValue();
+        int second = distances.entrySet().stream().filter(entry -> !entry.getKey().equals(best.get().getKey()))
+                .mapToInt(Map.Entry::getValue).min().orElse(Integer.MAX_VALUE);
+        if (bestDistance > looseDistance(closest.get(best.get().getKey()).length()) || second - bestDistance < LOOSE_MARGIN) {
+            return Optional.empty();
+        }
+        return Optional.of(new Match(best.get().getKey(), bestDistance));
     }
 
     /** Half letters a preferred name may differ by: half its letters wrong, short names as strictly as ever. */
@@ -143,13 +190,13 @@ public final class NameMatcher {
      * Digits that OCR typically confuses with letters are mapped back to them.
      */
     public static String normalize(String text) {
-        String withoutAccents = Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
-        return withoutAccents.toUpperCase(Locale.ROOT)
+        String withoutAccents = MARKS.matcher(Normalizer.normalize(text, Normalizer.Form.NFD)).replaceAll("");
+        String letters = withoutAccents.toUpperCase(Locale.ROOT)
                 .replace('0', 'O')
                 .replace('1', 'I')
                 .replace('5', 'S')
-                .replace('8', 'B')
-                .replaceAll("[^A-Z]", "");
+                .replace('8', 'B');
+        return NON_LETTERS.matcher(letters).replaceAll("");
     }
 
     /** Short names must match exactly, longer ones may have one or two misread letters. */

@@ -1,7 +1,10 @@
 package de.alorbach.pokesight.game;
 
+import de.alorbach.pokesight.battle.PokemonId;
+import de.alorbach.pokesight.matchup.MovePool;
 import de.alorbach.pokesight.ocr.ImagePreprocessor;
 import de.alorbach.pokesight.ruleset.Language;
+import de.alorbach.pokesight.ruleset.Learnsets;
 import de.alorbach.pokesight.ruleset.PokemonType;
 import de.alorbach.pokesight.ruleset.Ruleset;
 import de.alorbach.pokesight.ruleset.RulesetLoader;
@@ -36,6 +39,23 @@ class GameCatalogTest {
     void onlyPlatinumTogetherReadsYellowNames() {
         assertThat(GameCatalog.load()).filteredOn(GameDefinition::yellowNames).extracting(GameDefinition::id)
                 .containsExactly("platinum-together");
+    }
+
+    @Test
+    void everyOfficialGameHasLearnsetsThatMatchItsRuleset() {
+        List<GameDefinition> official = GameCatalog.load().stream().filter(game -> game.category() == GameCategory.OFFICIAL).toList();
+
+        assertThat(official).allSatisfy(game -> {
+            Ruleset ruleset = RulesetLoader.load(game.ruleset());
+            Learnsets learnsets = Learnsets.load(game.learnsets());
+            // Every species with a learnset is one of the game's, and most of them learn moves the ruleset knows.
+            assertThat(ruleset.species()).containsKeys(learnsets.pokemon().keySet().toArray(Integer[]::new));
+            MovePool pool = new MovePool(learnsets, ruleset);
+            long withMoves = learnsets.pokemon().keySet().stream().filter(id -> !pool.of(PokemonId.of(id)).isEmpty()).count();
+            assertThat(withMoves).as(game.id()).isGreaterThan(learnsets.pokemon().size() * 9L / 10);
+        });
+        assertThat(GameCatalog.load()).filteredOn(game -> game.category() == GameCategory.ROM_HACK)
+                .extracting(GameDefinition::learnsets).containsOnlyNulls();
     }
 
     @Test

@@ -1,12 +1,15 @@
 package de.alorbach.pokesight.ui;
 
 import de.alorbach.pokesight.battle.BattleMonitor;
+import de.alorbach.pokesight.battle.NameMatcher;
 import de.alorbach.pokesight.battle.PokemonId;
 import de.alorbach.pokesight.catching.CatchAdvice;
 import de.alorbach.pokesight.catching.Pokedex;
 import de.alorbach.pokesight.game.GameDefinition;
+import de.alorbach.pokesight.game.GameLearnsets;
 import de.alorbach.pokesight.matchup.EnemyAnalysis;
 import de.alorbach.pokesight.matchup.MatchupCalculator;
+import de.alorbach.pokesight.matchup.MovePool;
 import de.alorbach.pokesight.matchup.Team;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.settings.SettingsStore;
@@ -41,7 +44,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -56,6 +61,7 @@ import java.util.stream.Stream;
  */
 public final class BattleView extends BorderPane {
 
+    private static final System.Logger LOG = System.getLogger(BattleView.class.getName());
     /** Opponents side by side: a double battle shows its two opponents left and right. */
     private static final int COLUMNS = 2;
     /** Room for "Add Pokémon…" at the default window width with both "Out" choices shown. */
@@ -72,6 +78,8 @@ public final class BattleView extends BorderPane {
     private final Label status = new Label("Starting…");
     private final ToggleButton alwaysOnTop = new ToggleButton("Always on top");
     private final ToggleButton borderless = new ToggleButton("Borderless");
+    /** The game's learnsets for the team editor, loaded in the background; empty for games without them. */
+    private final CompletableFuture<Optional<MovePool>> movePool;
     private final Node top;
     private final GridPane cards = new GridPane();
     private final ScrollPane cardsScroll = new ScrollPane(cards);
@@ -93,7 +101,7 @@ public final class BattleView extends BorderPane {
     private Runnable onScanNow = () -> { };
     private Runnable onReset = () -> { };
     private Supplier<List<BufferedImage>> captures = List::of;
-    private Consumer<Set<Integer>> onTeamChange = species -> { };
+    private Consumer<NameMatcher.Preferred> onTeamChange = team -> { };
     private double dragX;
     private double dragY;
 
@@ -109,6 +117,9 @@ public final class BattleView extends BorderPane {
         this.declinedEvolutions = store.game(gameId).toDeclinedEvolutions();
         this.terastal = settings.game().terastal();
         this.catchAdvice = CatchAdvice.forGame(settings.game(), calculator.ruleset(), language);
+        // Up to a few hundred KB of YAML per game (more with MODERN POKéMON): read before the team editor needs it.
+        this.movePool = CompletableFuture.supplyAsync(() -> GameLearnsets.load(settings.game(), settings.options(), calculator.ruleset()),
+                task -> Thread.ofVirtual().name("learnsets").start(task));
         getStyleClass().add("battle-view");
 
         top = new VBox(header(onBack), actionBar());
@@ -241,12 +252,22 @@ public final class BattleView extends BorderPane {
 
     private void editTeam() {
         TeamEditor.show(getScene().getWindow(), team, calculator.ruleset(), language, sprites,
-                new TeamScan(store, game, calculator.ruleset(), language), saved -> {
+                new TeamScan(store, game, calculator.ruleset(), language), movePool(), saved -> {
             declinedEvolutions = declinedAfterEdit(saved);
             Theme.saveOrWarn(getScene().getWindow(), () -> store.saveGame(gameId,
                     store.game(gameId).withTeam(saved).withDeclinedEvolutions(declinedEvolutions)));
             useTeam(saved);
         });
+    }
+
+    /** The learnsets, waiting for them if they are still loading; empty (the editor works without) if they failed. */
+    private Optional<MovePool> movePool() {
+        try {
+            return movePool.join();
+        } catch (CompletionException | CancellationException e) {
+            LOG.log(System.Logger.Level.WARNING, "Learnsets of " + gameId + " not loaded", e);
+            return Optional.empty();
+        }
     }
 
     /**
@@ -263,7 +284,7 @@ public final class BattleView extends BorderPane {
     /** Shows the best moves of this team (not saved; see {@link #editTeam}). */
     void useTeam(Team newTeam) {
         team = newTeam;
-        onTeamChange.accept(team.species());
+        onTeamChange.accept(ownNames(team));
         refreshActiveChoices();
         render();
     }
@@ -373,10 +394,18 @@ public final class BattleView extends BorderPane {
         this.captures = supplier;
     }
 
-    /** @param listener gets the team's species now and whenever the team changes (for reading the own name boxes) */
-    public void setOnTeamChange(Consumer<Set<Integer>> listener) {
+    /**
+     * @param listener gets the team's species and nicknames now and whenever the team changes (for reading the own
+     *                 name boxes)
+     */
+    public void setOnTeamChange(Consumer<NameMatcher.Preferred> listener) {
         this.onTeamChange = Objects.requireNonNull(listener);
-        listener.accept(team.species());
+        listener.accept(ownNames(team));
+    }
+
+    /** What the own name boxes may show of the team: its species, or a member's nickname. */
+    private static NameMatcher.Preferred ownNames(Team team) {
+        return new NameMatcher.Preferred(team.species(), team.nicknames());
     }
 
     public void show(BattleMonitor.Update update) {

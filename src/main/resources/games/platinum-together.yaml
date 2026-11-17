@@ -3,6 +3,7 @@
 # publishes no source code or data files. A world's MODERN POKéMON setting is picked on the start screen.
 name: Pokémon Platinum Together
 ruleset: gen4            # Platinum's own data; "Classic worlds play as they always have" (patch notes 0.3.0)
+learnsets: platinum       # which moves Pokémon learn: Platinum's (none for the newer Pokémon of MODERN POKéMON)
 languages: [EN]
 # Downloaded on first start into %LOCALAPPDATA%\PokeSight\sprites (© Nintendo, so not shipped); pinned commit.
 # The mod's animated Gen 5 style sprites are not published: the default PokeAPI sprites (all 1025 + forms).

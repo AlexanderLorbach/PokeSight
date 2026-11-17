@@ -34,6 +34,15 @@ class TeamTest {
     }
 
     @Test
+    void anEvolvedMemberKeepsItsNickname() {
+        Team team = new Team(List.of(new Team.Member(PokemonId.of(CHIMCHAR), MOVES, "Blaze")));
+
+        assertThat(team.withEvolution(PokemonId.of(MONFERNO), POKEDEX, List.of()).orElseThrow().members().getFirst())
+                .isEqualTo(new Team.Member(PokemonId.of(MONFERNO), MOVES, "Blaze"));
+        assertThat(team.nicknames()).containsExactly(org.assertj.core.api.Assertions.entry("Blaze", PokemonId.of(CHIMCHAR)));
+    }
+
+    @Test
     void skippedStagesAndBranchesCount() {
         assertThat(team(CHIMCHAR).withEvolution(PokemonId.of(INFERNAPE), POKEDEX, List.of())).contains(team(INFERNAPE));
         assertThat(team(EEVEE).withEvolution(PokemonId.of(VAPOREON), POKEDEX, List.of())).contains(team(VAPOREON));
