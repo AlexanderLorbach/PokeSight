@@ -27,12 +27,14 @@ import java.util.Objects;
  *                     MODERN POKéMON); empty for games whose rules are fixed
  * @param tierList     the Smogon in-game tier list that decides the catch star ({@code tiers/<id>.yaml}, see
  *                     {@link de.alorbach.pokesight.catching.CatchAdvice}); null if there is none
+ * @param learnsets    which moves each Pokémon learns in the game ({@code learnsets/<id>.yaml}, see
+ *                     {@link de.alorbach.pokesight.ruleset.Learnsets}); null if there are none (ROM hacks)
  * @param category     where the game is listed (official, ROM hack, custom). Set by {@link GameCatalog}
  */
 public record GameDefinition(String id, String name, String ruleset, List<Language> languages, String spriteUrl,
                              boolean capitalNames, String region, boolean floatingNames, boolean yellowNames,
                              boolean terastal, boolean spriteSheets, List<GameOption> options, String tierList,
-                             GameCategory category) {
+                             String learnsets, GameCategory category) {
 
     public GameDefinition {
         Objects.requireNonNull(name, "name");
@@ -50,7 +52,7 @@ public record GameDefinition(String id, String name, String ruleset, List<Langua
 
     GameDefinition withId(String newId, GameCategory newCategory) {
         return new GameDefinition(newId, name, ruleset, languages, spriteUrl, capitalNames, region, floatingNames,
-                yellowNames, terastal, spriteSheets, options, tierList, newCategory);
+                yellowNames, terastal, spriteSheets, options, tierList, learnsets, newCategory);
     }
 
     /** The text colours of the battle screen's names, for {@link de.alorbach.pokesight.battle.BattleScanner}. */

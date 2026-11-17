@@ -18,6 +18,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Control;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
@@ -32,6 +33,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 import java.math.BigDecimal;
@@ -60,6 +62,8 @@ final class PokemonCard extends VBox {
     private static final double MINI_SPRITE_SIZE = 28;
     private static final int BEST_MOVES_SHOWN = 3;
     private static final int SWITCH_INS_SHOWN = 3;
+    /** Style class of the TYPE column of Your best moves, which a narrow card hides. */
+    private static final String BEST_MOVE_TYPE = "best-move-type";
 
     /**
      * What every card of a battle view shares.
@@ -83,6 +87,8 @@ final class PokemonCard extends VBox {
     }
 
     private final HBox header;
+    /** Min width of Your best moves with its TYPE column, measured while it shows; 0 until then. */
+    private double bestMovesWidthWithType;
     private SearchField<PokemonId> search;
 
     /**
@@ -136,6 +142,7 @@ final class PokemonCard extends VBox {
         }
         analysis.ifPresent(enemy -> {
             bestMoves(enemy.bestMoves(), context, compact).ifPresent(getChildren()::add);
+            widthProperty().addListener((obs, old, width) -> fitBestMoves(width.doubleValue()));
             bestSwitchIns(enemy.switchIns(), context, compact).ifPresent(getChildren()::add);
             if (!context.teamSet() && !compact) {
                 Label hint = styled(new Label("Set your team to see which of your moves hits hardest."), "read-text");
@@ -268,7 +275,7 @@ final class PokemonCard extends VBox {
         moves.addRow(0,
                 columnHeader("EFFECT", "Type effectiveness of the move against this Pokémon"),
                 columnHeader("MOVE", "Your team's move"),
-                columnHeader("TYPE", "The move's type"),
+                styled(columnHeader("TYPE", "The move's type"), BEST_MOVE_TYPE),
                 columnHeader("POKÉMON", "Your Pokémon that knows the move; STAB = the move has its type (1.5× damage)"),
                 columnHeader("SCORE", "Power × effectiveness × 1.5 with STAB × your Pokémon's Attack (Sp. Atk for "
                         + "special moves) / its Defense (Sp. Def), base stats. Ranks the moves; not the real damage"));
@@ -283,28 +290,57 @@ final class PokemonCard extends VBox {
             Label multiplier = styled(new Label(format(option.effectiveness())), "multiplier", multiplierStyle(option.effectiveness()));
             multiplier.setMinWidth(Region.USE_PREF_SIZE);
             Label moveName = styled(new Label(move.name(language)), "best-move-name", SearchField.moveTypeStyle(move.type()));
+            moveName.setTooltip(new Tooltip(ruleset.typeChart().name(move.type(), language) + " · "
+                    + SearchField.categoryName(move.category()) + " · power " + move.power()));
             Label type = styled(new Label(ruleset.typeChart().name(move.type(), language).toUpperCase(Locale.ROOT)),
-                    "type-badge", typeStyle(move.type()));
+                    "type-badge", typeStyle(move.type()), BEST_MOVE_TYPE);
             boolean active = context.isOut(option.user());
-            Label by = styled(new Label(user + (option.stab() ? "  ·  STAB" : "") + (active ? "  ·  OUT" : "")), "best-move-user");
+            Label by = styled(new Label(user + (option.stab() ? "  ·  STAB" : "")), "best-move-user");
             if (active) {
                 by.getStyleClass().add("active-user");
             }
             if (outBests.contains(option)) {
                 moveName.getStyleClass().add("out-best-move");
             }
-            context.sprites().apply(option.user()).ifPresent(image -> by.setGraphic(miniSpriteView(image)));
+            Node byGraphic = userGraphic(option.user(), context);
+            by.setGraphic(byGraphic);
             Label score = styled(new Label(String.valueOf(Math.round(option.score()))), "best-move-score");
             // In a half-width card (double battle) only the Pokémon column may shorten its text.
             moveName.setMinWidth(Region.USE_PREF_SIZE);
             type.setMinWidth(Region.USE_PREF_SIZE);
             score.setMinWidth(Region.USE_PREF_SIZE);
-            by.setMinWidth(0);
+            by.setMinWidth(minWidthWithGraphic(by, byGraphic)); // only the name shortens, never over the score
+            showNameOnlyIfItFits(by);
+            by.setTooltip(new Tooltip(by.getText()));
             moves.addRow(rowIndex++, multiplier, moveName, type, by, score);
         }
         VBox section = new VBox(styled(new Label("YOUR BEST MOVES"), "section-title"), moves);
         section.getStyleClass().addAll("matchup-section", "best-moves");
         return Optional.of(section);
+    }
+
+    /**
+     * Hides the TYPE column of Your best moves when the card is too narrow for all columns (half-width card in a
+     * double battle, small window): the move's type still shows as its colour bar. Wider again, it comes back.
+     */
+    private void fitBestMoves(double cardWidth) {
+        if (!(lookup(".best-moves-grid") instanceof GridPane grid) || !(grid.getParent() instanceof Region section)) {
+            return;
+        }
+        List<Node> typeColumn = grid.getChildren().stream().filter(node -> node.getStyleClass().contains(BEST_MOVE_TYPE)).toList();
+        boolean shown = typeColumn.stream().allMatch(Node::isManaged);
+        if (shown) {
+            bestMovesWidthWithType = grid.minWidth(-1);
+        }
+        double available = cardWidth - snappedLeftInset() - snappedRightInset() - section.snappedLeftInset()
+                - section.snappedRightInset();
+        boolean show = available >= bestMovesWidthWithType;
+        if (show != shown) {
+            typeColumn.forEach(node -> {
+                node.setVisible(show);
+                node.setManaged(show);
+            });
+        }
     }
 
     /**
@@ -317,17 +353,40 @@ final class PokemonCard extends VBox {
         return options.stream().filter(option -> option.user().equals(active)).max(best);
     }
 
+    /** In front of one of your Pokémon's names: its mini sprite (an empty box if there is none). */
+    private static Node userGraphic(PokemonId pokemon, Context context) {
+        HBox graphic = new HBox();
+        graphic.setAlignment(Pos.CENTER_LEFT);
+        context.sprites().apply(pokemon).ifPresent(image -> graphic.getChildren().add(miniSpriteView(image)));
+        return graphic;
+    }
+
+    /** A label's graphic has a fixed size (the sprite): its width is known before CSS and the label keeps it. */
+    private static double minWidthWithGraphic(Label label, Node graphic) {
+        return graphic.prefWidth(-1) + label.getGraphicTextGap();
+    }
+
+    /**
+     * In a half-width card the Pokémon column may be too narrow for the name: then only the sprite shows
+     * (the name is in the tooltip), not a fragment like "St…".
+     */
+    private static void showNameOnlyIfItFits(Label label) {
+        label.widthProperty().addListener((obs, old, width) -> {
+            Text text = new Text(label.getText());
+            text.setFont(label.getFont());
+            double full = label.getGraphic().prefWidth(-1) + label.getGraphicTextGap() + text.getLayoutBounds().getWidth()
+                    + label.snappedLeftInset() + label.snappedRightInset();
+            label.setContentDisplay(width.doubleValue() + 0.5 < full ? ContentDisplay.GRAPHIC_ONLY : ContentDisplay.LEFT);
+        });
+    }
+
     private static String pokemonName(Ruleset ruleset, PokemonId pokemon, Language language) {
         return ruleset.findSpecies(pokemon.speciesId()).map(species -> species.form(pokemon.form()).name(language)).orElse("?");
     }
 
-    private static String moveName(Ruleset ruleset, MoveOption option, Language language) {
-        return ruleset.findMove(option.moveId()).map(move -> move.name(language)).orElse("?");
-    }
-
     /**
      * "BEST SWITCH-INS": the {@value #SWITCH_INS_SHOWN} team members that deal the most damage for the damage they take,
-     * best first, each with its best move and how it takes the opponent's own types. One on the field is marked OUT.
+     * best first, each with its best move and how it takes the opponent's own types. One on the field has a green name.
      */
     private static Optional<VBox> bestSwitchIns(List<EnemyAnalysis.SwitchIn> switchIns, Context context, boolean compact) {
         if (switchIns.isEmpty()) {
@@ -350,19 +409,20 @@ final class PokemonCard extends VBox {
         int rowIndex = 1;
         for (EnemyAnalysis.SwitchIn switchIn : switchIns.stream().limit(SWITCH_INS_SHOWN).toList()) {
             boolean out = context.isOut(switchIn.member());
-            Label name = styled(new Label(rowIndex + ". " + pokemonName(ruleset, switchIn.member(), language)
-                    + (out ? "  ·  OUT" : "")), "best-move-user", "switch-in-name");
+            Label name = styled(new Label(rowIndex + ". " + pokemonName(ruleset, switchIn.member(), language)),
+                    "best-move-user", "switch-in-name");
             if (out) {
                 name.getStyleClass().add("active-user");
             }
-            name.setMinWidth(0);
-            context.sprites().apply(switchIn.member()).ifPresent(image -> name.setGraphic(miniSpriteView(image)));
+            Node nameGraphic = userGraphic(switchIn.member(), context);
+            name.setGraphic(nameGraphic);
+            name.setMinWidth(minWidthWithGraphic(name, nameGraphic));
             rows.add(name, 0, rowIndex);
             if (switchIn.bestMove().isPresent()) {
                 MoveOption move = switchIn.bestMove().get();
                 Label multiplier = styled(new Label(format(move.effectiveness())), "multiplier", multiplierStyle(move.effectiveness()));
-                Label moveName = styled(new Label(moveName(ruleset, move, language)), "best-move-name",
-                        SearchField.moveTypeStyle(ruleset.findMove(move.moveId()).orElseThrow().type()));
+                Move found = ruleset.findMove(move.moveId()).orElseThrow();
+                Label moveName = styled(new Label(found.name(language)), "best-move-name", SearchField.moveTypeStyle(found.type()));
                 multiplier.setMinWidth(Region.USE_PREF_SIZE);
                 moveName.setMinWidth(Region.USE_PREF_SIZE);
                 rows.add(multiplier, 1, rowIndex);
@@ -395,25 +455,19 @@ final class PokemonCard extends VBox {
 
     /**
      * A warning per Pokémon on the field that takes 2× or more from the opponent's own types: "⚠ Kirlia takes 2× from
-     * GHOST: switch to Raichu." From 4× on it is likely knocked out in one hit.
+     * GHOST". From 4× on (likely knocked out in one hit) it stands out more; whom to switch to is in the best switch-ins.
      */
     private static List<Label> dangerWarnings(EnemyAnalysis enemy, Context context) {
         List<Label> warnings = new ArrayList<>();
         Ruleset ruleset = context.ruleset();
         Language language = context.language();
-        Optional<EnemyAnalysis.SwitchIn> replacement = enemy.switchIns().stream()
-                .filter(switchIn -> !context.isOut(switchIn.member()))
-                .findFirst();
         for (PokemonId active : context.active()) {
             enemy.switchIn(active).filter(switchIn -> !switchIn.dangerTypes().isEmpty()).ifPresent(switchIn -> {
                 String types = switchIn.dangerTypes().stream()
                         .map(type -> ruleset.typeChart().name(type, language).toUpperCase(Locale.ROOT))
                         .collect(Collectors.joining(" and "));
                 boolean oneHit = switchIn.worst() >= EnemyAnalysis.ONE_HIT;
-                String text = "⚠ " + pokemonName(ruleset, active, language) + " takes " + format(switchIn.worst()) + " from "
-                        + types + (oneHit ? " and is likely knocked out in one hit" : "")
-                        + replacement.map(other -> ": switch to " + pokemonName(ruleset, other.member(), language) + ".")
-                        .orElse(".");
+                String text = "⚠ " + pokemonName(ruleset, active, language) + " takes " + format(switchIn.worst()) + " from " + types;
                 Label warning = styled(new Label(text), "danger-hint", oneHit ? "one-hit" : "weak");
                 warning.setWrapText(true);
                 warning.setMinHeight(Region.USE_PREF_SIZE); // wraps instead of cutting the text off with "..."
@@ -484,7 +538,7 @@ final class PokemonCard extends VBox {
     }
 
     /** Style class and looked-up colour name of a type, e.g. "type-fire". */
-    private static String typeStyle(PokemonType type) {
+    static String typeStyle(PokemonType type) {
         return "type-" + type.name().toLowerCase(Locale.ROOT);
     }
 

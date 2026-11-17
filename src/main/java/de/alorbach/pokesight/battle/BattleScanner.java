@@ -94,14 +94,19 @@ public final class BattleScanner {
      * {@link ImagePreprocessor}).
      */
     public List<Sighting> scan(BufferedImage image) {
-        return scan(image, Set.of());
+        return scan(image, NameMatcher.Preferred.NONE);
+    }
+
+    /** See {@link #scan(BufferedImage, NameMatcher.Preferred)}, without nicknames. */
+    public List<Sighting> scan(BufferedImage image, Set<Integer> preferred) {
+        return scan(image, NameMatcher.Preferred.species(preferred));
     }
 
     /**
-     * @param preferred species found more loosely (see {@link NameMatcher#match(String, Set)}): the player's team, when
-     *                  reading their own name boxes; empty for the opponents
+     * @param preferred names found more loosely (see {@link NameMatcher#match(String, NameMatcher.Preferred)}): the
+     *                  player's team and its nicknames, when reading their own name boxes; none for the opponents
      */
-    public List<Sighting> scan(BufferedImage image, Set<Integer> preferred) {
+    public List<Sighting> scan(BufferedImage image, NameMatcher.Preferred preferred) {
         if (!floatingNames) {
             return scanBoxes(image, (box, prepared) -> true, preferred);
         }
@@ -129,7 +134,8 @@ public final class BattleScanner {
     }
 
     /** @param accept whether a box of words of a prepared image may hold a name */
-    private List<Sighting> scanBoxes(BufferedImage image, BiPredicate<List<Word>, BufferedImage> accept, Set<Integer> preferred) {
+    private List<Sighting> scanBoxes(BufferedImage image, BiPredicate<List<Word>, BufferedImage> accept,
+                                     NameMatcher.Preferred preferred) {
         List<List<Sighting>> readings = new ArrayList<>();
         for (ImagePreprocessor.TextColor textColor : textColors) {
             for (boolean joinStrokes : new boolean[]{false, true}) {
@@ -150,7 +156,7 @@ public final class BattleScanner {
     }
 
     private List<Sighting> sightings(List<Word> words, BufferedImage prepared, BiPredicate<List<Word>, BufferedImage> accept,
-                                     Set<Integer> preferred) {
+                                     NameMatcher.Preferred preferred) {
         List<Sighting> sightings = new ArrayList<>();
         for (List<Word> line : lines(words)) {
             for (List<Word> box : boxes(line)) {
@@ -283,10 +289,10 @@ public final class BattleScanner {
      * of Black/White).
      */
     Optional<Sighting> toSighting(List<Word> line) {
-        return toSighting(line, Set.of());
+        return toSighting(line, NameMatcher.Preferred.NONE);
     }
 
-    private Optional<Sighting> toSighting(List<Word> line, Set<Integer> preferred) {
+    private Optional<Sighting> toSighting(List<Word> line, NameMatcher.Preferred preferred) {
         List<String> nameTokens = new ArrayList<>();
         for (Word word : line) {
             if (!capitalNames || isMostlyCapitals(word.text())) {

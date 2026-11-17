@@ -25,7 +25,7 @@ public record EnemyAnalysis(String name, List<PokemonType> types, boolean tera, 
 
     /** From this multiplier on, a Pokémon on the field is warned to switch out. */
     public static final double DANGER = 2;
-    /** From this multiplier on, the warning says it is likely knocked out in one hit. */
+    /** From this multiplier on, it is likely knocked out in one hit: the warning stands out more. */
     public static final double ONE_HIT = 4;
 
     public EnemyAnalysis {

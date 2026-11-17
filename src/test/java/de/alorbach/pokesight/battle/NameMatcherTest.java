@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +36,23 @@ class NameMatcherTest {
         assertThat(english.match("PERAIIGAIK")).isEmpty(); // 3 letters off: too far among all species
         assertThat(english.match("PERAIIGAIK", team)).map(NameMatcher.Match::pokemon).contains(PokemonId.of(160));
         assertThat(english.match("WATER", team)).isEmpty(); // a type label beside the box is no team member
+    }
+
+    @Test
+    void aNicknameInTheOwnBoxIsThatTeamMember() {
+        NameMatcher.Preferred team = new NameMatcher.Preferred(Set.of(160, 94), Map.of("Gator", PokemonId.of(160)));
+
+        assertThat(english.match("GATOR")).isEmpty(); // no species
+        assertThat(english.match("GATOR", team)).map(NameMatcher.Match::pokemon).contains(PokemonId.of(160));
+        assertThat(english.match("CATOR", team)).map(NameMatcher.Match::pokemon).contains(PokemonId.of(160)); // look-alike
+        assertThat(english.match("GENGAR", team)).map(NameMatcher.Match::pokemon).contains(PokemonId.of(94));
+    }
+
+    @Test
+    void aNicknameLikeItsOwnSpeciesNameDoesNotMakeItAmbiguous() {
+        NameMatcher.Preferred team = new NameMatcher.Preferred(Set.of(160), Map.of("Feraligat", PokemonId.of(160)));
+
+        assertThat(english.match("PERAIIGAIK", team)).map(NameMatcher.Match::pokemon).contains(PokemonId.of(160));
     }
 
     @Test
