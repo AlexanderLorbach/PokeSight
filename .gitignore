@@ -2,6 +2,9 @@
 .gradle/
 build/
 
+# VS Code Java (Eclipse JDT) compiler output
+bin/
+
 # IDEs
 .idea/
 *.iml
@@ -13,3 +16,6 @@ Thumbs.db
 
 # Local notes for Claude Code
 CLAUDE.md
+
+# Own screenshots and learned letters for local OCR tests (MoveReaderTest, LocalBattleScreenshotOcrTest): (c) Nintendo, never committed
+local-screenshots/

@@ -1,7 +1,8 @@
 # OCR test screenshots, downloaded at build time (task downloadTestScreenshots), pinned by SHA-256.
 # Columns: file, url, sha256, game id (games/<id>.yaml), language, expected opponents top to bottom ("+"-separated,
 # empty = no name may be found; "moves:..." = the damaging moves of a move list, see MoveReaderTest), optionally
-# where the game screen is in a collage (x,y,width,height in pixels; one row per screen, each with its own file name).
+# where the game screen is in a collage (x,y,width,height in pixels; one row per screen, each with its own file name),
+# for a move list the area of the move list (x,y,width,height in pixels; "moves:" alone = no damaging move).
 # Screenshots of fan wikis (© Nintendo / Game Freak / The Pokémon Company) are only downloaded, never committed.
 # Wiki files are labelled by generation, not version: where the version is unknown the screenshot is filed under a
 # game of that generation with the same battle screen.
@@ -259,8 +260,18 @@ legends-za-de-nebulak-2.png	https://www.pokewiki.de/images/9/9e/PLZA_Anvisieren_
 legends-za-de-nagelotz-3.png	https://www.pokewiki.de/images/0/0c/PLZA_Anvisieren_4.png	1198c27d51c1b26d05b9ac6532f17dc2e9c87055f29075601cedbbd5e44aa8f6	legends-za	DE	Nagelotz
 legends-za-de-bibor-4.png	https://www.pokewiki.de/images/2/2b/PLZA_Anvisieren_Schillernd.png	e8e22fcd057d662c2ee942b31068c6a1adff988af8409d94893313e91d033295	legends-za	DE	Bibor
 legends-za-de-taubsi-5.png	https://www.pokewiki.de/images/1/1e/Spielmechanik_Anvisieren_PLZA.png	f57abcd95633272fe4764da2f79b403e08850395fffd290d87a6b052ee4e2c79	legends-za	DE	Taubsi
-bdsp-en-moves-bite-acid-spray.png	https://archives.bulbagarden.net/media/upload/1/10/BDSP_battle_move.png	b2a8cf744ffafbe8c1019b0ba4520e0fc243b949a400c27ec02cea037d2fd887	brilliant-diamond-shining-pearl	EN	moves:Bite+Acid Spray
-sv-en-moves-trop-kick-high-jump-kick-rapid-spin.png	https://archives.bulbagarden.net/media/upload/5/59/SV_battle_move.png	7a9c0bffa9bbba11d849dfe0620933c9d1fcf74d088cbdd6940792181ef66c8d	scarlet-violet	EN	moves:Trop Kick+High Jump Kick+Rapid Spin
+bdsp-en-moves-bite-acid-spray.png	https://archives.bulbagarden.net/media/upload/1/10/BDSP_battle_move.png	b2a8cf744ffafbe8c1019b0ba4520e0fc243b949a400c27ec02cea037d2fd887	brilliant-diamond-shining-pearl	EN	moves:Bite+Acid Spray	512,144,601,216
+# Trop Kick is highlighted by the cursor (dark text on yellow) and not read.
+sv-en-moves-trop-kick-high-jump-kick-rapid-spin.png	https://archives.bulbagarden.net/media/upload/5/59/SV_battle_move.png	7a9c0bffa9bbba11d849dfe0620933c9d1fcf74d088cbdd6940792181ef66c8d	scarlet-violet	EN	moves:High Jump Kick+Rapid Spin	512,230,512,237
+# Move lists since Gen 4: a type label next to each PP counter ("PSYCHIC PP 20/20"), which is no move.
+dp-en-moves-surf-hydro-pump.png	https://archives.bulbagarden.net/media/upload/2/2e/Diamond_battle_move.png	78d19550c19d8b80b113293dc2c4b93e3f4cbb2f32daf574bd6643d919c90a3c	diamond-pearl	EN	moves:Surf+Hydro Pump+Drill Peck+Hydro Cannon	0,38,256,112
+hgss-en-moves-flamethrower-earthquake.png	https://archives.bulbagarden.net/media/upload/a/a9/HG_battle_move.png	517a8401d369c140b88a2e3703dc51f77c71a1e02292dca1ec6ce795d2751b0b	heartgold-soulsilver	EN	moves:Flamethrower+Earthquake+Solar Beam+Blast Burn	0,38,256,112
+bw-en-moves-tackle.png	https://archives.bulbagarden.net/media/upload/5/51/BW_battle_move.png	543d2730a9e6f31b3b1c0abd96e5e6a5cca4612dfba5fa5fc89a269f349c4052	black-white	EN	moves:Tackle	0,48,256,112
+bw-en-moves-zen-headbutt-flame-burst.png	https://archives.bulbagarden.net/media/upload/7/79/Pokemon_Battle_Moves_BW.png	877d52b9ce603d61738825eb75339904d0684cb8914be6f178af5d5095865b0a	black-white	EN	moves:Zen Headbutt+Flame Burst+Headbutt	0,40,256,100
+oras-en-moves-status-only.png	https://archives.bulbagarden.net/media/upload/1/15/ORAS_battle_move.png	7b9c9f1647c1ceee362f0103c65a0f5b32fcf7f793f1cb597795689516dd7379	omega-ruby-alpha-sapphire	EN	moves:	0,50,320,120
+oras-en-moves-brick-break-peck.png	https://archives.bulbagarden.net/media/upload/c/cb/Pok%C3%A9mon_battle_Moves_ORAS.png	933e4106b6c4adb524f7a213812d0bd5e9ab764efa24728192fcc700dacbf73b	omega-ruby-alpha-sapphire	EN	moves:Brick Break+Peck+Incinerate+Flamethrower	0,20,320,140
+sm-en-moves-sparkling-aria-moonblast.png	https://archives.bulbagarden.net/media/upload/6/62/Pok%C3%A9mon_battle_Moves_SM.png	1dba256632debcf9db3546074925f2d4ad44d7e69038e2210e2c91ab67c2f7b9	sun-moon	EN	moves:Sparkling Aria+Moonblast+Ice Beam	140,20,180,215
+swsh-en-moves-sacred-sword-behemoth-blade.jpg	https://archives.bulbagarden.net/media/upload/2/20/SS_battle_move.jpg	8f050991bc58ee545e9b6240449978a94b224f5102caa579eca23cc7267cccfb	sword-shield	EN	moves:Sacred Sword+Behemoth Blade+Crunch	530,110,750,290
 # ROM hacks (games/index.yaml romHacks). Few screenshots exist: Heartfelt Gold from pokehackdex.com (video frames, WebP:
 # read with the test-only TwelveMonkeys WebP plugin) and the hack's repository; Odyssey from its page on eeveeexpo.com.
 hfg-en-single-ironbolder.webp	https://pokehackdex.com/games/pokemon-heartfelt-gold/pokemon-heartfelt-gold-wild-ironboldor-battle.webp	475db753eedbc98156e8dd70ced3c206211b7fe4978ba6434da3fdd31158f318	heartfelt-gold	EN	IronBolder

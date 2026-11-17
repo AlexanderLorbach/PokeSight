@@ -68,14 +68,17 @@ class SettingsStoreTest {
                 .withSingleArea(new CaptureRegion(2, 210, 757, 211))
                 .withDoubleArea(null)
                 .withOwnDoubleArea(new CaptureRegion(500, 300, 420, 180))
-                .withTeam(TEAM);
+                .withTeam(TEAM)
+                .withDeclinedEvolutions(List.of(new Team.Evolution(280, 281)));
 
         store.saveGame("platinum", settings);
 
         assertThat(new SettingsStore(directory).game("platinum")).isEqualTo(settings);
         assertThat(new SettingsStore(directory).game("platinum").toTeam()).isEqualTo(TEAM);
+        assertThat(new SettingsStore(directory).game("platinum").toDeclinedEvolutions()).containsExactly(new Team.Evolution(280, 281));
         String yaml = Files.readString(directory.resolve("games/platinum.yaml"));
-        assertThat(yaml).startsWith("# PokeSight settings").contains("singleArea:", "width: 757", "ownDoubleArea:", "pokemon: 390");
+        assertThat(yaml).startsWith("# PokeSight settings").contains("singleArea:", "width: 757", "ownDoubleArea:", "pokemon: 390",
+                "declinedEvolutions:", "from: 280");
     }
 
     @Test

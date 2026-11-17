@@ -49,7 +49,7 @@ public final class CatchAdvice {
     /** The advice for a game, with its tier list if it has one. */
     public static CatchAdvice forGame(GameDefinition game, Ruleset ruleset, Language language) {
         TierList tierList = game.tierList() == null ? null : TierList.load(game.tierList());
-        return new CatchAdvice(game.id(), tierList, ruleset, PokedexHolder.POKEDEX, language);
+        return new CatchAdvice(game.id(), tierList, ruleset, Pokedex.shared(), language);
     }
 
     /** Why this species is worth catching; empty if it is not starred. */
@@ -109,8 +109,4 @@ public final class CatchAdvice {
         return species.stats().stream().mapToInt(Integer::intValue).sum();
     }
 
-    /** Loaded on first use; the same for every game. */
-    private static final class PokedexHolder {
-        static final Pokedex POKEDEX = Pokedex.load();
-    }
-}
+    /** Loaded on first use; the same for every game. */}

@@ -7,10 +7,15 @@ import java.awt.image.BufferedImage;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,9 +30,11 @@ import java.util.function.Consumer;
  * {@value #STABLE_READINGS} of the last {@value #RECENT_READINGS} scans and ends after {@value #END_AFTER_MISSES}
  * scans without any recognized name. A manual scan shows whatever it finds and stays until auto-detection sees a battle or the user resets.
  *
- * <p>If areas of the player's own name boxes are selected (single and/or double battle), the Pokémon read there in two
- * of the last three scans are the player's active ones: one in a single battle, two in a double battle. Like the
- * opponents' areas, the own area with the most recognized names wins. They are forgotten when the battle ends.
+ * <p>If areas of the player's own name boxes are selected (single and/or double battle), each Pokémon read there in
+ * two of the last three scans is one of the player's active ones: one in a single battle, two in a double battle, so a
+ * scan that misses one of two boxes does not lose the other. The player's team is matched there more loosely than other
+ * species (see {@link #setTeam}). Like the opponents' areas, the own area with the most recognized names wins. They are
+ * forgotten when the battle ends.
  */
 public final class BattleMonitor implements AutoCloseable {
 
@@ -71,6 +78,7 @@ public final class BattleMonitor implements AutoCloseable {
     });
 
     private volatile List<BufferedImage> lastCaptures = List.of();
+    private volatile Set<Integer> team = Set.of();
     private Update current = WAITING_UPDATE;
     private final Deque<List<Sighting>> recentReadings = new ArrayDeque<>();
     private final Deque<List<PokemonId>> recentOwn = new ArrayDeque<>();
@@ -115,6 +123,14 @@ public final class BattleMonitor implements AutoCloseable {
             forgetActive();
             publish(WAITING_UPDATE);
         });
+    }
+
+    /**
+     * The species of the player's team: in the own name boxes they are found despite more misread letters, since only a
+     * few Pokémon can stand there. May be called from any thread; the next scan uses it.
+     */
+    public void setTeam(Collection<Integer> species) {
+        team = Set.copyOf(species);
     }
 
     /** The screenshots of the last scan, one per region, for the capture preview. */
@@ -193,10 +209,11 @@ public final class BattleMonitor implements AutoCloseable {
             readings.add(scanner.scan(image));
         }
         List<List<Sighting>> ownReadings = new ArrayList<>();
+        Set<Integer> ownTeam = team;
         for (CaptureRegion region : ownRegions) {
             BufferedImage image = screen.capture(region);
             captures.add(image);
-            ownReadings.add(scanner.scan(image));
+            ownReadings.add(scanner.scan(image, ownTeam));
         }
         if (!ownRegions.isEmpty()) {
             readOwn(mostNames(ownReadings).stream().map(Sighting::pokemon).distinct().limit(MAX_ACTIVE).toList());
@@ -210,14 +227,32 @@ public final class BattleMonitor implements AutoCloseable {
         return readings.stream().max(Comparator.comparingInt(List::size)).orElseThrow();
     }
 
-    /** The same Pokémon in two of the last three own readings become the active ones; single misreads do not. */
+    /**
+     * Each Pokémon in two of the last three own readings is an active one; single misreads are not. They are ordered by
+     * their mean position in the readings (upper box first): a scan that missed the upper box has the lower one first.
+     * Without any, the active ones stay (a menu may cover the boxes).
+     */
     private void readOwn(List<PokemonId> reading) {
         recentOwn.addLast(reading);
         if (recentOwn.size() > RECENT_READINGS) {
             recentOwn.removeFirst();
         }
-        if (!reading.isEmpty() && recentOwn.stream().filter(reading::equals).count() >= STABLE_READINGS) {
-            active = reading;
+        Map<PokemonId, Integer> count = new LinkedHashMap<>();
+        Map<PokemonId, Integer> positions = new HashMap<>();
+        for (List<PokemonId> recent : recentOwn.reversed()) { // newest first: ties keep the newest order
+            for (int i = 0; i < recent.size(); i++) {
+                count.merge(recent.get(i), 1, Integer::sum);
+                positions.merge(recent.get(i), i, Integer::sum);
+            }
+        }
+        List<PokemonId> stable = count.entrySet().stream()
+                .filter(entry -> entry.getValue() >= STABLE_READINGS)
+                .map(Map.Entry::getKey)
+                .sorted(Comparator.comparingDouble(pokemon -> (double) positions.get(pokemon) / count.get(pokemon)))
+                .limit(MAX_ACTIVE)
+                .toList();
+        if (!stable.isEmpty()) {
+            active = stable;
         }
     }
 

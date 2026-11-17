@@ -579,19 +579,15 @@
     -fx-font-weight: bold;
 }
 
-.best-move-name.active-move {
-    -fx-underline: true;
+/* In Your best moves only the best move of each Pokémon on the field stands out: bold, green like its "OUT" name. */
+.best-moves-grid .best-move-name {
+    -fx-font-weight: normal;
 }
 
-/* "Infernape is out: ..." - green if it has the best move, yellow if another team member hits harder. */
-.active-hint {
-    -fx-font-size: 12px;
+.best-moves-grid .best-move-name.out-best-move {
     -fx-font-weight: bold;
-    -fx-padding: 2 0 4 0;
+    -fx-text-fill: ps-good;
 }
-
-.active-hint.stay   { -fx-text-fill: ps-good; }
-.active-hint.switch { -fx-text-fill: ps-pokemon-yellow; }
 
 .tera-badge {
     -fx-font-weight: bold;
@@ -608,10 +604,41 @@
     -fx-padding: 8 10;
 }
 
+/* Best switch-ins: Pokémon | best move | how it takes the opponent's types. */
 .switch-in-grid {
-    -fx-hgap: 6;
+    -fx-hgap: 8;
     -fx-vgap: 6;
     -fx-alignment: center-left;
+}
+
+.switch-in-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: ps-text-muted;
+}
+
+.best-move-user.switch-in-name {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: ps-text;
+}
+
+/* A Pokémon on the field takes 2× or more from the opponent's types: switch it out. */
+.danger-hint {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffb4a6;
+    -fx-background-color: rgba(227, 53, 13, 0.18);
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(227, 53, 13, 0.55);
+    -fx-border-radius: 8;
+    -fx-padding: 4 8;
+    -fx-max-width: infinity;
+}
+
+.danger-hint.one-hit {
+    -fx-text-fill: white;
+    -fx-background-color: rgba(227, 53, 13, 0.45);
+    -fx-border-color: ps-pokedex-red;
 }
 
 .action-label {
@@ -675,6 +702,39 @@
 .team-grid .search-field.team-pokemon {
     -fx-pref-width: 150;
 }
+
+/* A team member's types, under its name: smaller badges than on the opponent cards. */
+.team-editor .type-badge {
+    -fx-font-size: 10px;
+    -fx-padding: 1 7;
+    -fx-background-radius: 8;
+}
+
+/* Which types the team's moves hit super effectively, and which move types would fill the gaps. */
+.team-coverage {
+    -fx-background-color: rgba(255, 203, 5, 0.07);
+    -fx-background-radius: 10;
+    -fx-padding: 8 10;
+}
+
+.coverage-grid {
+    -fx-hgap: 10;
+    -fx-vgap: 6;
+}
+
+.coverage-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: ps-text-muted;
+}
+
+.coverage-tip {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: ps-pokemon-yellow;
+}
+
+.coverage-tip.coverage-good { -fx-text-fill: ps-good; }
+.coverage-tip.hint { -fx-font-weight: normal; -fx-text-fill: ps-text-muted; }
 
 /* Under a team member: whether physical or special moves suit it */
 .attack-style {

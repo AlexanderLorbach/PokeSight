@@ -20,6 +20,11 @@ class ImagePreprocessorTest {
     private static final Color PT_TEXT = new Color(0xF8, 0xF8, 0xF8);
     private static final Color PT_SHADOW = new Color(0x28, 0x30, 0x28);
     private static final Color PT_BOX = new Color(0x68, 0x70, 0x58);
+    /** Platinum Together: the name of the player's Pokémon whose turn it is, with a black outline. */
+    private static final Color TURN_TEXT = new Color(0xFF, 0xD8, 0x58);
+    private static final Color OUTLINE = new Color(0x08, 0x08, 0x0C);
+    private static final Color SKY = new Color(0x60, 0xB0, 0xF8);
+    private static final Color GRASS = new Color(0x58, 0xC8, 0x40);
 
     @Test
     void darkTextIsSeparatedFromTheBox() {
@@ -40,6 +45,34 @@ class ImagePreprocessorTest {
         assertThat(mask[index(box, 3, 4)]).isTrue();   // letter
         assertThat(mask[index(box, 5, 10)]).isFalse(); // shadow below the letter
         assertThat(mask[index(box, 3, 30)]).isFalse(); // box
+    }
+
+    @Test
+    void yellowTextIsOnlyReadWhereTheGameHasIt() {
+        BufferedImage box = letters(OUTLINE, TURN_TEXT, OUTLINE, 8);
+
+        boolean[] yellow = ImagePreprocessor.textMask(box, TextColor.LIGHT_OR_YELLOW);
+        boolean[] white = ImagePreprocessor.textMask(box, TextColor.LIGHT);
+
+        assertThat(yellow[index(box, 3, 4)]).isTrue();
+        assertThat(yellow[index(box, 3, 30)]).isFalse();
+        assertThat(white[index(box, 3, 4)]).isFalse(); // yellow sand behind other games' boxes is no text
+    }
+
+    @Test
+    void brightSkyAndGrassBesideTheBoxAreNotLightText() {
+        for (Color scene : List.of(SKY, GRASS)) {
+            BufferedImage box = letters(OUTLINE, PT_TEXT, OUTLINE, 8);
+            Graphics2D graphics = box.createGraphics();
+            graphics.setColor(scene); // bright enough for the limit: only its colour tells it from text
+            graphics.fillRect(150, 0, 50, box.getHeight());
+            graphics.dispose();
+
+            boolean[] mask = ImagePreprocessor.textMask(box, TextColor.LIGHT_OR_YELLOW);
+
+            assertThat(mask[index(box, 3, 4)]).as("letter beside %s", scene).isTrue();
+            assertThat(mask[index(box, 170, 10)]).as("%s", scene).isFalse();
+        }
     }
 
     @Test
