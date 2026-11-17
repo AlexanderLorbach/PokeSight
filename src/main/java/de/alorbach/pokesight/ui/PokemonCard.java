@@ -36,21 +36,23 @@ import javafx.util.Duration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.DoublePredicate;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
- * One opposing Pokémon: sprite, name, types, the team's best moves against it,
- * which team member takes its attacks best and which attack types are (not) effective. With the player's active
- * Pokémon known (two in a double battle), their moves are marked and a hint says whether another team member hits
- * harder. The compact variant
- * (borderless mode) drops the buttons, notes and switch-ins; {@link FitPane} scales it to fill.
+ * One opposing Pokémon: sprite, name, types, the team's best moves against it, the best switch-in and which attack
+ * types are (not) effective. With the player's active Pokémon known (two in a double battle), their moves are marked,
+ * the best one in bold, and a warning says to switch out one that takes 2× or more. The
+ * compact variant (borderless mode) drops the buttons and notes; {@link FitPane} scales it to fill.
  */
 final class PokemonCard extends VBox {
 
@@ -114,6 +116,9 @@ final class PokemonCard extends VBox {
                 types.getChildren().addFirst(tera);
             }
             titles.getChildren().add(types);
+            // Under its types: in a double battle each card shows whether this opponent counters your Pokémon.
+            // Also borderless: the one thing not to miss.
+            titles.getChildren().addAll(dangerWarnings(enemy, context));
         });
         HBox.setHgrow(titles, Priority.ALWAYS);
         titles.setMinWidth(0);
@@ -131,9 +136,7 @@ final class PokemonCard extends VBox {
         }
         analysis.ifPresent(enemy -> {
             bestMoves(enemy.bestMoves(), context, compact).ifPresent(getChildren()::add);
-            if (!compact) {
-                switchIns(enemy.switchIns(), context).ifPresent(getChildren()::add);
-            }
+            bestSwitchIns(enemy.switchIns(), context, compact).ifPresent(getChildren()::add);
             if (!context.teamSet() && !compact) {
                 Label hint = styled(new Label("Set your team to see which of your moves hits hardest."), "read-text");
                 hint.setWrapText(true);
@@ -238,14 +241,15 @@ final class PokemonCard extends VBox {
 
     /**
      * "YOUR BEST MOVES": the strongest moves of the team that deal damage at all. With the active Pokémon known, the
-     * best move of each is always listed and marked, and a hint per Pokémon says whether another team member hits harder.
+     * moves of each are marked and its best move is always listed, in bold.
      */
     private static Optional<VBox> bestMoves(List<MoveOption> options, Context context, boolean compact) {
-        List<MoveOption> hitting = options.stream().filter(option -> option.score() > 0).toList();
-        List<MoveOption> shown = new ArrayList<>(hitting.stream().limit(BEST_MOVES_SHOWN).toList());
-        for (PokemonId active : context.active()) {
-            bestOf(hitting, active).filter(option -> !shown.contains(option)).ifPresent(shown::add);
-        }
+        List<MoveOption> shown = new ArrayList<>(options.stream().filter(option -> option.score() > 0)
+                .limit(BEST_MOVES_SHOWN).toList());
+        Set<MoveOption> outBests = context.active().stream()
+                .flatMap(active -> outBest(options, active, context.ruleset()).stream())
+                .collect(Collectors.toSet());
+        outBests.stream().filter(option -> !shown.contains(option)).forEach(shown::add);
         if (shown.isEmpty()) {
             return Optional.empty();
         }
@@ -285,7 +289,9 @@ final class PokemonCard extends VBox {
             Label by = styled(new Label(user + (option.stab() ? "  ·  STAB" : "") + (active ? "  ·  OUT" : "")), "best-move-user");
             if (active) {
                 by.getStyleClass().add("active-user");
-                moveName.getStyleClass().add("active-move");
+            }
+            if (outBests.contains(option)) {
+                moveName.getStyleClass().add("out-best-move");
             }
             context.sprites().apply(option.user()).ifPresent(image -> by.setGraphic(miniSpriteView(image)));
             Label score = styled(new Label(String.valueOf(Math.round(option.score()))), "best-move-score");
@@ -296,53 +302,19 @@ final class PokemonCard extends VBox {
             by.setMinWidth(0);
             moves.addRow(rowIndex++, multiplier, moveName, type, by, score);
         }
-        VBox section = new VBox(styled(new Label("YOUR BEST MOVES"), "section-title"));
-        for (PokemonId active : context.active()) {
-            activeHint(hitting, active, context).ifPresent(section.getChildren()::add);
-        }
-        section.getChildren().add(moves);
+        VBox section = new VBox(styled(new Label("YOUR BEST MOVES"), "section-title"), moves);
         section.getStyleClass().addAll("matchup-section", "best-moves");
         return Optional.of(section);
     }
 
     /**
-     * Whether a Pokémon on the field already has the best move: "Infernape is out: Close Combat is your best move."
-     * or "Infernape is out: best Flamethrower (143). Garchomp hits harder: Earthquake (300)."
+     * The best move of a Pokémon on the field, so it is always listed: one that does not hit (score 0) if it has
+     * nothing better, an attack the opponent is immune to before a status move (its "0×" says why it does not hit).
      */
-    private static Optional<Label> activeHint(List<MoveOption> hitting, PokemonId active, Context context) {
-        if (hitting.isEmpty()) {
-            return Optional.empty();
-        }
-        Optional<MoveOption> activeBest = bestOf(hitting, active);
-        Ruleset ruleset = context.ruleset();
-        Language language = context.language();
-        String out = pokemonName(ruleset, active, language) + " is out: ";
-        MoveOption best = hitting.getFirst();
-        // In a double battle the harder hitter may be the other Pokémon on the field: attack this one with it
-        String bestText = pokemonName(ruleset, best.user(), language) + (context.isOut(best.user()) ? " (also out)" : "")
-                + " hits harder: " + moveName(ruleset, best, language)
-                + " (" + Math.round(best.score()) + ").";
-        String text;
-        boolean better;
-        if (activeBest.isEmpty()) {
-            text = out + "none of its moves hits. " + bestText;
-            better = true;
-        } else if (activeBest.get().score() >= best.score()) {
-            text = out + moveName(ruleset, activeBest.get(), language) + " is your best move.";
-            better = false;
-        } else {
-            text = out + "best " + moveName(ruleset, activeBest.get(), language) + " (" + Math.round(activeBest.get().score())
-                    + "). " + bestText;
-            better = true;
-        }
-        Label hint = styled(new Label(text), "active-hint", better ? "switch" : "stay");
-        hint.setWrapText(true);
-        return Optional.of(hint);
-    }
-
-    /** The best move of this team member; the options are sorted best first. */
-    private static Optional<MoveOption> bestOf(List<MoveOption> hitting, PokemonId member) {
-        return hitting.stream().filter(option -> option.user().equals(member)).findFirst();
+    private static Optional<MoveOption> outBest(List<MoveOption> options, PokemonId active, Ruleset ruleset) {
+        Comparator<MoveOption> best = Comparator.comparingDouble(MoveOption::score)
+                .thenComparing(option -> ruleset.findMove(option.moveId()).map(move -> move.power() > 0).orElse(false));
+        return options.stream().filter(option -> option.user().equals(active)).max(best);
     }
 
     private static String pokemonName(Ruleset ruleset, PokemonId pokemon, Language language) {
@@ -354,51 +326,101 @@ final class PokemonCard extends VBox {
     }
 
     /**
-     * "SAFEST SWITCH-INS": the team members that take the opponent's attacks of its own types best, with the
-     * multiplier per type; the active Pokémon are always listed.
+     * "BEST SWITCH-INS": the {@value #SWITCH_INS_SHOWN} team members that deal the most damage for the damage they take,
+     * best first, each with its best move and how it takes the opponent's own types. One on the field is marked OUT.
      */
-    private static Optional<VBox> switchIns(List<EnemyAnalysis.SwitchIn> switchIns, Context context) {
-        List<EnemyAnalysis.SwitchIn> shown = new ArrayList<>(switchIns.stream().limit(SWITCH_INS_SHOWN).toList());
-        switchIns.stream().filter(switchIn -> context.isOut(switchIn.member()) && !shown.contains(switchIn))
-                .forEach(shown::add);
-        if (shown.isEmpty()) {
+    private static Optional<VBox> bestSwitchIns(List<EnemyAnalysis.SwitchIn> switchIns, Context context, boolean compact) {
+        if (switchIns.isEmpty()) {
             return Optional.empty();
         }
-        TypeChart chart = context.ruleset().typeChart();
+        Ruleset ruleset = context.ruleset();
+        Language language = context.language();
         GridPane rows = new GridPane();
         rows.getStyleClass().add("switch-in-grid");
+        if (compact) {
+            rows.setMinWidth(Region.USE_PREF_SIZE); // FitPane scales the whole card instead of cutting off names
+        }
         ColumnConstraints nameColumn = new ColumnConstraints();
         nameColumn.setHgrow(Priority.ALWAYS);
-        rows.getColumnConstraints().add(nameColumn);
-        int rowIndex = 0;
-        for (EnemyAnalysis.SwitchIn switchIn : shown) {
-            boolean active = context.isOut(switchIn.member());
-            Label name = styled(new Label(pokemonName(context.ruleset(), switchIn.member(), context.language())
-                    + (active ? "  ·  OUT" : "")), "best-move-user");
-            if (active) {
+        rows.getColumnConstraints().addAll(nameColumn, new ColumnConstraints(), new ColumnConstraints());
+        rows.add(columnHeader("POKÉMON", "Best switch-in first"), 0, 0);
+        rows.add(columnHeader("BEST MOVE", "Its strongest move against this Pokémon and its type effectiveness"), 1, 0, 2, 1);
+        rows.add(columnHeader("TAKES", "The most it takes from the opponent's attacks of its own types (its STAB moves); "
+                + "hover a value for each type"), 3, 0);
+        int rowIndex = 1;
+        for (EnemyAnalysis.SwitchIn switchIn : switchIns.stream().limit(SWITCH_INS_SHOWN).toList()) {
+            boolean out = context.isOut(switchIn.member());
+            Label name = styled(new Label(rowIndex + ". " + pokemonName(ruleset, switchIn.member(), language)
+                    + (out ? "  ·  OUT" : "")), "best-move-user", "switch-in-name");
+            if (out) {
                 name.getStyleClass().add("active-user");
             }
             name.setMinWidth(0);
             context.sprites().apply(switchIn.member()).ifPresent(image -> name.setGraphic(miniSpriteView(image)));
             rows.add(name, 0, rowIndex);
-            int column = 1;
-            for (Map.Entry<PokemonType, Double> taken : switchIn.taken().entrySet()) {
-                Label multiplier = styled(new Label(format(taken.getValue())), "multiplier", multiplierStyle(taken.getValue()));
+            if (switchIn.bestMove().isPresent()) {
+                MoveOption move = switchIn.bestMove().get();
+                Label multiplier = styled(new Label(format(move.effectiveness())), "multiplier", multiplierStyle(move.effectiveness()));
+                Label moveName = styled(new Label(moveName(ruleset, move, language)), "best-move-name",
+                        SearchField.moveTypeStyle(ruleset.findMove(move.moveId()).orElseThrow().type()));
                 multiplier.setMinWidth(Region.USE_PREF_SIZE);
-                Label type = styled(new Label(chart.name(taken.getKey(), context.language()).toUpperCase(Locale.ROOT)),
-                        "type-badge", typeStyle(taken.getKey()));
-                type.setMinWidth(Region.USE_PREF_SIZE);
-                rows.add(multiplier, column++, rowIndex);
-                rows.add(type, column++, rowIndex);
+                moveName.setMinWidth(Region.USE_PREF_SIZE);
+                rows.add(multiplier, 1, rowIndex);
+                rows.add(moveName, 2, rowIndex);
+            } else {
+                Label none = styled(new Label("no hitting move"), "switch-in-label");
+                none.setMinWidth(Region.USE_PREF_SIZE);
+                rows.add(none, 1, rowIndex, 2, 1);
             }
+            // The worst multiplier only, so three rows fit a half-width card; the tooltip has it per type.
+            Label taken = styled(new Label(format(switchIn.worst())), "multiplier", multiplierStyle(switchIn.worst()));
+            taken.setMinWidth(Region.USE_PREF_SIZE);
+            Tooltip perType = new Tooltip(switchIn.taken().entrySet().stream()
+                    .map(entry -> ruleset.typeChart().name(entry.getKey(), language) + " " + format(entry.getValue()))
+                    .collect(Collectors.joining("\n")));
+            perType.setShowDelay(Duration.millis(150));
+            taken.setTooltip(perType);
+            rows.add(taken, 3, rowIndex);
             rowIndex++;
         }
-        Label title = styled(new Label("SAFEST SWITCH-INS"), "section-title");
-        title.setTooltip(new Tooltip("How your team takes its attacks of its own types (its strongest, STAB moves): "
-                + "the multiplier per type, safest Pokémon first"));
+
+        Label title = styled(new Label("BEST SWITCH-INS"), "section-title");
+        title.setTooltip(new Tooltip("Your team members that deal the most damage for the damage they take: the score of "
+                + "the best move / (the worst multiplier against the opponent's own types × the opponent's Attack / the "
+                + "Defense or Sp. Atk / Sp. Def, whichever is worse). Base stats: levels are not known"));
         VBox section = new VBox(title, rows);
         section.getStyleClass().addAll("matchup-section", "switch-ins");
         return Optional.of(section);
+    }
+
+    /**
+     * A warning per Pokémon on the field that takes 2× or more from the opponent's own types: "⚠ Kirlia takes 2× from
+     * GHOST: switch to Raichu." From 4× on it is likely knocked out in one hit.
+     */
+    private static List<Label> dangerWarnings(EnemyAnalysis enemy, Context context) {
+        List<Label> warnings = new ArrayList<>();
+        Ruleset ruleset = context.ruleset();
+        Language language = context.language();
+        Optional<EnemyAnalysis.SwitchIn> replacement = enemy.switchIns().stream()
+                .filter(switchIn -> !context.isOut(switchIn.member()))
+                .findFirst();
+        for (PokemonId active : context.active()) {
+            enemy.switchIn(active).filter(switchIn -> !switchIn.dangerTypes().isEmpty()).ifPresent(switchIn -> {
+                String types = switchIn.dangerTypes().stream()
+                        .map(type -> ruleset.typeChart().name(type, language).toUpperCase(Locale.ROOT))
+                        .collect(Collectors.joining(" and "));
+                boolean oneHit = switchIn.worst() >= EnemyAnalysis.ONE_HIT;
+                String text = "⚠ " + pokemonName(ruleset, active, language) + " takes " + format(switchIn.worst()) + " from "
+                        + types + (oneHit ? " and is likely knocked out in one hit" : "")
+                        + replacement.map(other -> ": switch to " + pokemonName(ruleset, other.member(), language) + ".")
+                        .orElse(".");
+                Label warning = styled(new Label(text), "danger-hint", oneHit ? "one-hit" : "weak");
+                warning.setWrapText(true);
+                warning.setMinHeight(Region.USE_PREF_SIZE); // wraps instead of cutting the text off with "..."
+                warnings.add(warning);
+            });
+        }
+        return warnings;
     }
 
     private static Label columnHeader(String text, String explanation) {
@@ -445,14 +467,20 @@ final class PokemonCard extends VBox {
         return rows;
     }
 
-    private static FlowPane badges(List<PokemonType> types, TypeChart chart, Language language) {
+    /** Type badges as the games colour them: "FIRE" on orange (also used by the team editor). */
+    static FlowPane badges(List<PokemonType> types, TypeChart chart, Language language) {
         FlowPane pane = new FlowPane();
         pane.getStyleClass().add("badges");
         for (PokemonType type : types) {
-            pane.getChildren().add(styled(new Label(chart.name(type, language).toUpperCase(Locale.ROOT)),
-                    "type-badge", typeStyle(type)));
+            pane.getChildren().add(typeBadge(type, chart, language));
         }
         return pane;
+    }
+
+    static Label typeBadge(PokemonType type, TypeChart chart, Language language) {
+        Label badge = styled(new Label(chart.name(type, language).toUpperCase(Locale.ROOT)), "type-badge", typeStyle(type));
+        badge.setMinWidth(Region.USE_PREF_SIZE); // never "FIG..."
+        return badge;
     }
 
     /** Style class and looked-up colour name of a type, e.g. "type-fire". */

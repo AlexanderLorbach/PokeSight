@@ -1,5 +1,6 @@
 package de.alorbach.pokesight.game;
 
+import de.alorbach.pokesight.ocr.ImagePreprocessor;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.ruleset.PokemonType;
 import de.alorbach.pokesight.ruleset.Ruleset;
@@ -28,6 +29,13 @@ class GameCatalogTest {
                 .startsWith("https://raw.githubusercontent.com/PokeAPI/sprites/")
                 .endsWith("/generation-iv/platinum/{name}.png");
         assertThat(platinum.capitalNames()).isTrue();
+        assertThat(platinum.nameColors()).isEqualTo(ImagePreprocessor.DARK_AND_LIGHT);
+    }
+
+    @Test
+    void onlyPlatinumTogetherReadsYellowNames() {
+        assertThat(GameCatalog.load()).filteredOn(GameDefinition::yellowNames).extracting(GameDefinition::id)
+                .containsExactly("platinum-together");
     }
 
     @Test

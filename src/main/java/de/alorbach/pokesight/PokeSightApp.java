@@ -102,13 +102,14 @@ public final class PokeSightApp extends Application {
             Path glyphFile = GlyphFont.defaultFile(settings.game().id());
             GlyphFont glyphs = GlyphFont.load(glyphFile);
             BattleScanner scanner = new BattleScanner(recognizer, new NameMatcher(ruleset, settings.language(), settings.game().region()),
-                    settings.game().capitalNames(), settings.game().floatingNames(), glyphs);
+                    settings.game().capitalNames(), settings.game().floatingNames(), glyphs, settings.game().nameColors());
             BattleView view = new BattleView(settings, new MatchupCalculator(ruleset), store, this::showStartView);
             BattleMonitor monitor = new BattleMonitor(new RobotScreenSource(), settings.regions(), settings.ownRegions(), scanner,
                     update -> Platform.runLater(() -> view.show(update)));
             view.setOnScanNow(monitor::scanNow);
             view.setOnReset(monitor::reset);
             view.setCaptureSupplier(monitor::lastCaptures);
+            view.setOnTeamChange(monitor::setTeam);
 
             ScheduledExecutorService saver = Executors.newSingleThreadScheduledExecutor(runnable -> {
                 Thread thread = new Thread(runnable, "glyph-saver");

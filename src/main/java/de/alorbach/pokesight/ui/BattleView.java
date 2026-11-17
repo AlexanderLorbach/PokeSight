@@ -3,6 +3,7 @@ package de.alorbach.pokesight.ui;
 import de.alorbach.pokesight.battle.BattleMonitor;
 import de.alorbach.pokesight.battle.PokemonId;
 import de.alorbach.pokesight.catching.CatchAdvice;
+import de.alorbach.pokesight.catching.Pokedex;
 import de.alorbach.pokesight.game.GameDefinition;
 import de.alorbach.pokesight.matchup.EnemyAnalysis;
 import de.alorbach.pokesight.matchup.MatchupCalculator;
@@ -32,6 +33,7 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -39,6 +41,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -84,9 +88,12 @@ public final class BattleView extends BorderPane {
     private List<PokemonId> lastReadActive = List.of();
 
     private Team team;
+    /** Evolutions the player undid in the team editor: not applied again from battle readings. */
+    private List<Team.Evolution> declinedEvolutions;
     private Runnable onScanNow = () -> { };
     private Runnable onReset = () -> { };
     private Supplier<List<BufferedImage>> captures = List::of;
+    private Consumer<Set<Integer>> onTeamChange = species -> { };
     private double dragX;
     private double dragY;
 
@@ -99,6 +106,7 @@ public final class BattleView extends BorderPane {
         this.sprites = new SpriteLibrary(SpriteCache.forGame(settings.game()).orElse(null), calculator.ruleset());
         this.pokemonOptions = SearchField.pokemon(calculator.ruleset(), language);
         this.team = store.game(gameId).toTeam();
+        this.declinedEvolutions = store.game(gameId).toDeclinedEvolutions();
         this.terastal = settings.game().terastal();
         this.catchAdvice = CatchAdvice.forGame(settings.game(), calculator.ruleset(), language);
         getStyleClass().add("battle-view");
@@ -158,8 +166,8 @@ public final class BattleView extends BorderPane {
             render();
         });
         activeChoice.getStyleClass().add("active-choice");
-        activeChoice.setTooltip(new Tooltip("Your Pokémon on the field: its moves are marked, and the cards say whether "
-                + "another team member hits harder. Read from your own name box if its area is selected on the start screen."));
+        activeChoice.setTooltip(new Tooltip("Your Pokémon on the field: its moves are marked, its best move in bold. "
+                + "Read from your own name box if its area is selected on the start screen."));
         partnerChoice.getStyleClass().add("active-choice");
         partnerChoice.setTooltip(new Tooltip("Your second Pokémon in a double battle. Read from your own name boxes if "
                 + "the double battle area is selected on the start screen."));
@@ -234,16 +242,57 @@ public final class BattleView extends BorderPane {
     private void editTeam() {
         TeamEditor.show(getScene().getWindow(), team, calculator.ruleset(), language, sprites,
                 new TeamScan(store, game, calculator.ruleset(), language), saved -> {
-            Theme.saveOrWarn(getScene().getWindow(), () -> store.saveGame(gameId, store.game(gameId).withTeam(saved)));
+            declinedEvolutions = declinedAfterEdit(saved);
+            Theme.saveOrWarn(getScene().getWindow(), () -> store.saveGame(gameId,
+                    store.game(gameId).withTeam(saved).withDeclinedEvolutions(declinedEvolutions)));
             useTeam(saved);
         });
+    }
+
+    /**
+     * The declined evolutions after the player saved {@code saved}: a member changed back to an earlier stage (Kirlia
+     * to Ralts) is declined; one the player evolved by hand (Kirlia in the team again) no longer is.
+     */
+    private List<Team.Evolution> declinedAfterEdit(Team saved) {
+        List<Team.Evolution> declined = new ArrayList<>(declinedEvolutions);
+        declined.removeIf(evolution -> saved.species().contains(evolution.toSpecies()));
+        team.undoneEvolutions(saved, Pokedex.shared()).stream().filter(evolution -> !declined.contains(evolution)).forEach(declined::add);
+        return List.copyOf(declined);
     }
 
     /** Shows the best moves of this team (not saved; see {@link #editTeam}). */
     void useTeam(Team newTeam) {
         team = newTeam;
+        onTeamChange.accept(team.species());
         refreshActiveChoices();
         render();
+    }
+
+    /**
+     * A team member read under the name of a later stage has evolved: the saved team follows, keeping its moves, so
+     * the team need not be edited; unless the player undid that evolution before (see {@link #declinedAfterEdit}). Only called for single battles: in a double battle the second own name box may
+     * show an ally's Pokémon (Platinum Together is multiplayer), which must not replace a team member.
+     */
+    private void adoptEvolution(PokemonId read) {
+        Optional<Team> evolved = team.withEvolution(read, Pokedex.shared(), declinedEvolutions);
+        if (evolved.isEmpty()) {
+            return;
+        }
+        String before = team.members().stream()
+                .filter(member -> !evolved.get().members().contains(member))
+                .findFirst()
+                .map(member -> pokemonName(member.pokemon()))
+                .orElse("?");
+        Window owner = getScene() == null ? null : getScene().getWindow();
+        Theme.saveOrWarn(owner, () -> store.saveGame(gameId, store.game(gameId).withTeam(evolved.get())));
+        useTeam(evolved.get());
+        status.setText(before + " evolved into " + pokemonName(read) + ": team updated");
+    }
+
+    private String pokemonName(PokemonId pokemon) {
+        return calculator.ruleset().findSpecies(pokemon.speciesId())
+                .map(species -> species.form(pokemon.form()).name(language))
+                .orElse("?");
     }
 
     /** One entry of the "Out:" choice; a null Pokémon means unknown. */
@@ -279,11 +328,17 @@ public final class BattleView extends BorderPane {
         select(partnerChoice, pokemon.size() < 2 ? null : pokemon.get(1));
     }
 
+    /**
+     * Selects the team member that is this Pokémon. The battle name box shows only the species name, so a scanned
+     * Pokémon has the base (or regional) form: without an exact match, the only team member of that species is taken.
+     */
     private static void select(ComboBox<ActiveChoice> choice, PokemonId pokemon) {
-        choice.setValue(choice.getItems().stream()
-                .filter(item -> Objects.equals(item.pokemon(), pokemon))
-                .findFirst()
-                .orElse(choice.getItems().getFirst()));
+        List<ActiveChoice> items = choice.getItems();
+        Optional<ActiveChoice> exact = items.stream().filter(item -> Objects.equals(item.pokemon(), pokemon)).findFirst();
+        List<ActiveChoice> sameSpecies = pokemon == null ? List.of() : items.stream()
+                .filter(item -> item.pokemon() != null && item.pokemon().speciesId() == pokemon.speciesId())
+                .toList();
+        choice.setValue(exact.orElse(sameSpecies.size() == 1 ? sameSpecies.getFirst() : items.getFirst()));
     }
 
     private static PokemonId chosen(ComboBox<ActiveChoice> choice) {
@@ -318,12 +373,21 @@ public final class BattleView extends BorderPane {
         this.captures = supplier;
     }
 
+    /** @param listener gets the team's species now and whenever the team changes (for reading the own name boxes) */
+    public void setOnTeamChange(Consumer<Set<Integer>> listener) {
+        this.onTeamChange = Objects.requireNonNull(listener);
+        listener.accept(team.species());
+    }
+
     public void show(BattleMonitor.Update update) {
         status.setText(update.message());
         status.getStyleClass().removeIf(style -> style.startsWith("state-"));
         status.getStyleClass().add("state-" + update.state().name().toLowerCase(Locale.ROOT).replace('_', '-'));
         // Newly read own Pokémon replace the choices; the user's choices stay until the scan reads others.
         if (!update.active().isEmpty() && !update.active().equals(lastReadActive)) {
+            if (update.active().size() == 1) {
+                adoptEvolution(update.active().getFirst());
+            }
             selectActive(update.active());
         } else if (update.state() == BattleMonitor.State.WAITING && !lastReadActive.isEmpty()) {
             selectActive(List.of()); // the battle is over

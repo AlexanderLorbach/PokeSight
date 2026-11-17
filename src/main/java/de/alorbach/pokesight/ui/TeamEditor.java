@@ -3,21 +3,28 @@ package de.alorbach.pokesight.ui;
 import de.alorbach.pokesight.battle.PokemonId;
 import de.alorbach.pokesight.matchup.AttackStyle;
 import de.alorbach.pokesight.matchup.Team;
+import de.alorbach.pokesight.matchup.TeamCoverage;
 import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.ruleset.Move;
 import de.alorbach.pokesight.ruleset.Ruleset;
 import de.alorbach.pokesight.ruleset.Species;
+import de.alorbach.pokesight.ruleset.TypeChart;
 import de.alorbach.pokesight.capture.CaptureRegion;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -36,6 +43,8 @@ import java.util.function.Predicate;
 final class TeamEditor {
 
     private static final double SPRITE_SIZE = 40;
+    /** Coverage suggestions shown at most, so the panel stays short; each names the types it would cover. */
+    private static final int SUGGESTIONS_SHOWN = 3;
 
     private TeamEditor() {
     }
@@ -64,14 +73,19 @@ final class TeamEditor {
         List<SearchField.Option<PokemonId>> pokemonOptions = SearchField.pokemon(ruleset, language);
         List<SearchField.Option<Integer>> moveOptions = SearchField.moves(ruleset, language);
         List<Row> rows = new ArrayList<>();
+        VBox coverage = new VBox();
+        coverage.getStyleClass().addAll("matchup-section", "team-coverage");
+        Runnable showCoverage = () -> showCoverage(coverage, currentTeam(rows), ruleset, language);
         GridPane grid = new GridPane();
         grid.getStyleClass().add("team-grid");
         grid.addRow(0, new Label(), header("Pokémon"), header("Move 1"), header("Move 2"), header("Move 3"), header("Move 4"));
         for (int i = 0; i < Team.MAX_MEMBERS; i++) {
             Team.Member member = i < team.members().size() ? team.members().get(i) : null;
-            Row row = new Row(pokemonOptions, moveOptions, sprites, ruleset, member);
+            Row row = new Row(pokemonOptions, moveOptions, sprites, ruleset, language, member, showCoverage);
             rows.add(row);
-            grid.addRow(i + 1, row.sprite, new VBox(2, row.pokemon, row.style), row.moves.get(0), row.moves.get(1),
+            HBox details = new HBox(6, row.types, row.style);
+            details.setAlignment(Pos.CENTER_LEFT);
+            grid.addRow(i + 1, row.sprite, new VBox(3, row.pokemon, details), row.moves.get(0), row.moves.get(1),
                     row.moves.get(2), row.moves.get(3));
             if (teamScan != null) {
                 grid.add(readButton(row, teamScan), 6, i + 1);
@@ -93,9 +107,7 @@ final class TeamEditor {
         save.getStyleClass().addAll("primary", "small");
         save.setDefaultButton(true);
         save.setOnAction(event -> {
-            List<Team.Member> members = new ArrayList<>();
-            rows.forEach(row -> row.member().ifPresent(members::add));
-            onSave.accept(new Team(members));
+            onSave.accept(currentTeam(rows));
             onClose.run();
         });
         Button cancel = new Button("Cancel");
@@ -103,9 +115,12 @@ final class TeamEditor {
         cancel.setCancelButton(true);
         cancel.setOnAction(event -> onClose.run());
 
-        VBox content = new VBox(16, grid, hint);
+        showCoverage.run();
+        VBox content = new VBox(16, grid, coverage, hint);
         content.getStyleClass().add("team-editor");
-        BorderPane root = new BorderPane(content);
+        ScrollPane scroll = new ScrollPane(content); // the coverage panel can make the editor taller than the window
+        scroll.setFitToWidth(true);
+        BorderPane root = new BorderPane(scroll);
         if (teamScan != null) {
             Button nameArea = new Button(teamScan.nameArea().isPresent() ? "Name area ✓" : "Name area…");
             nameArea.getStyleClass().addAll("ghost", "small");
@@ -121,6 +136,65 @@ final class TeamEditor {
             root.setTop(TitleBar.of("Your team", null, save, cancel));
         }
         return root;
+    }
+
+    /** The team as entered so far: rows without a Pokémon are left out. */
+    private static Team currentTeam(List<Row> rows) {
+        return new Team(rows.stream().map(Row::member).flatMap(Optional::stream).toList());
+    }
+
+    /**
+     * "TEAM COVERAGE": the types of the team's moves, the ones it lacks, the types no move hits super effectively and
+     * the move types that would hit most of those ("Add a GROUND move: hits STEEL ELECTRIC ROCK").
+     */
+    private static void showCoverage(VBox panel, Team team, Ruleset ruleset, Language language) {
+        TypeChart chart = ruleset.typeChart();
+        TeamCoverage coverage = TeamCoverage.of(team, ruleset);
+        Label title = new Label("TEAM COVERAGE");
+        title.getStyleClass().add("section-title");
+        title.setTooltip(new Tooltip("Which types your team's damaging moves hit super effectively"));
+        panel.getChildren().setAll(title);
+        if (coverage.moveTypes().isEmpty()) {
+            panel.getChildren().add(coverageNote("Choose damaging moves to see which types your team hits super effectively.", false));
+            return;
+        }
+        GridPane rows = new GridPane();
+        rows.getStyleClass().add("coverage-grid");
+        rows.addRow(0, coverageLabel("Your move types"), PokemonCard.badges(coverage.moveTypes(), chart, language));
+        rows.addRow(1, coverageLabel("Missing"), PokemonCard.badges(coverage.missing(), chart, language));
+        if (!coverage.unhit().isEmpty()) {
+            rows.addRow(2, coverageLabel("No super-effective move against"), PokemonCard.badges(coverage.unhit(), chart, language));
+        }
+        panel.getChildren().add(rows);
+        if (coverage.unhit().isEmpty()) {
+            panel.getChildren().add(coverageNote("Your moves hit every type super effectively.", true));
+            return;
+        }
+        for (TeamCoverage.Suggestion suggestion : coverage.suggestions().stream().limit(SUGGESTIONS_SHOWN).toList()) {
+            FlowPane line = PokemonCard.badges(suggestion.hits(), chart, language);
+            Label add = new Label("Add a");
+            Label hits = new Label("move: hits");
+            add.getStyleClass().add("coverage-tip");
+            hits.getStyleClass().add("coverage-tip");
+            line.getChildren().addAll(0, List.of(add, PokemonCard.typeBadge(suggestion.moveType(), chart, language), hits));
+            line.setAlignment(Pos.CENTER_LEFT);
+            panel.getChildren().add(line);
+        }
+    }
+
+    private static Label coverageLabel(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("coverage-label");
+        label.setMinWidth(Region.USE_PREF_SIZE);
+        GridPane.setValignment(label, VPos.TOP); // beside the first line of badges when they wrap
+        return label;
+    }
+
+    private static Label coverageNote(String text, boolean good) {
+        Label note = new Label(text);
+        note.getStyleClass().addAll("coverage-tip", good ? "coverage-good" : "hint");
+        note.setWrapText(true);
+        return note;
     }
 
     private static Optional<CaptureRegion> selectMovesArea(Node owner, TeamScan teamScan) {
@@ -179,21 +253,28 @@ final class TeamEditor {
         return label;
     }
 
-    /** One team slot: sprite, Pokémon and four moves. */
+    /** One team slot: sprite, Pokémon with its types and four moves. */
     private static final class Row {
         final StackPane sprite = new StackPane();
         final SearchField<PokemonId> pokemon;
         final List<SearchField<Integer>> moves = new ArrayList<>();
         final Button clear = new Button("Clear");
+        /** The Pokémon's types as badges; empty without a Pokémon. */
+        final HBox types = new HBox(4);
         /** Whether the Pokémon hits harder with physical or special moves: a hint for choosing its moves. */
         final Label style = new Label();
         private final SpriteLibrary sprites;
         private final Ruleset ruleset;
+        private final Language language;
 
+        /** @param onChange runs whenever the Pokémon or a move changes (typed, picked, read or cleared) */
         Row(List<SearchField.Option<PokemonId>> pokemonOptions, List<SearchField.Option<Integer>> moveOptions,
-            SpriteLibrary sprites, Ruleset ruleset, Team.Member member) {
+            SpriteLibrary sprites, Ruleset ruleset, Language language, Team.Member member, Runnable onChange) {
             this.sprites = sprites;
             this.ruleset = ruleset;
+            this.language = language;
+            types.getStyleClass().add("team-types");
+            types.setAlignment(Pos.CENTER_LEFT);
             sprite.getStyleClass().add("team-sprite");
             sprite.setMinSize(SPRITE_SIZE, SPRITE_SIZE);
             style.getStyleClass().add("attack-style");
@@ -221,6 +302,9 @@ final class TeamEditor {
                 }
             }
             sprite.setAlignment(Pos.CENTER);
+            // After filling in the saved member: the editor shows the coverage once all rows exist.
+            pokemon.textProperty().addListener((obs, old, text) -> onChange.run());
+            moves.forEach(field -> field.textProperty().addListener((obs, old, text) -> onChange.run()));
         }
 
         private void showSprite(SpriteLibrary sprites, PokemonId chosen) {
@@ -240,6 +324,8 @@ final class TeamEditor {
             Optional<Species.Form> form = Optional.ofNullable(chosen)
                     .flatMap(id -> ruleset.findSpecies(id.speciesId()).map(species -> species.form(id.form())));
             style.setText(form.map(Row::styleText).orElse(""));
+            types.getChildren().setAll(form.map(found -> found.types().stream()
+                    .map(type -> PokemonCard.typeBadge(type, ruleset.typeChart(), language)).toList()).orElse(List.of()));
             Optional<Move.Category> suits = form.map(AttackStyle::of).flatMap(Row::category);
             moves.forEach(field -> field.prefer(suits.<Predicate<Integer>>map(category -> moveId -> ruleset.findMove(moveId)
                     .filter(move -> move.category() == category).isPresent()).orElse(null)));

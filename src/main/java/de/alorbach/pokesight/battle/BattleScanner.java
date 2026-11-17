@@ -12,10 +12,14 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /** Reads the opponents' name boxes from a screenshot (a selected area or the whole screen). */
 public final class BattleScanner {
@@ -37,12 +41,15 @@ public final class BattleScanner {
     private static final int LEARN_DISTANCE = 1;
     /** Gap between two words, in letter heights, from which they belong to different name boxes. */
     private static final int MIN_BOX_GAP_LETTERS = 5;
+    /** Variants that must read a Pokémon for it to be added to the reading most variants agree on (see {@link #best}). */
+    private static final int MIN_SUPPORT_OF_ADDED_NAME = 2;
 
     private final TextRecognizer recognizer;
     private final NameMatcher matcher;
     private final boolean capitalNames;
     private final boolean floatingNames;
     private final GlyphFont glyphs;
+    private final List<ImagePreprocessor.TextColor> textColors;
 
     /** @param capitalNames the game writes names in capitals; words in mixed case are then not taken for names */
     public BattleScanner(TextRecognizer recognizer, NameMatcher matcher, boolean capitalNames) {
@@ -63,11 +70,21 @@ public final class BattleScanner {
      */
     public BattleScanner(TextRecognizer recognizer, NameMatcher matcher, boolean capitalNames, boolean floatingNames,
                          GlyphFont glyphs) {
+        this(recognizer, matcher, capitalNames, floatingNames, glyphs, ImagePreprocessor.DARK_AND_LIGHT);
+    }
+
+    /** @param textColors the colours of the game's names, each tried (see {@link ImagePreprocessor.TextColor}) */
+    public BattleScanner(TextRecognizer recognizer, NameMatcher matcher, boolean capitalNames, boolean floatingNames,
+                         GlyphFont glyphs, List<ImagePreprocessor.TextColor> textColors) {
         this.recognizer = Objects.requireNonNull(recognizer);
         this.matcher = Objects.requireNonNull(matcher);
         this.capitalNames = capitalNames;
         this.floatingNames = floatingNames;
         this.glyphs = glyphs;
+        if (textColors.isEmpty()) {
+            throw new IllegalArgumentException("At least one text colour is required");
+        }
+        this.textColors = List.copyOf(textColors);
     }
 
     /**
@@ -77,8 +94,16 @@ public final class BattleScanner {
      * {@link ImagePreprocessor}).
      */
     public List<Sighting> scan(BufferedImage image) {
+        return scan(image, Set.of());
+    }
+
+    /**
+     * @param preferred species found more loosely (see {@link NameMatcher#match(String, Set)}): the player's team, when
+     *                  reading their own name boxes; empty for the opponents
+     */
+    public List<Sighting> scan(BufferedImage image, Set<Integer> preferred) {
         if (!floatingNames) {
-            return scanBoxes(image);
+            return scanBoxes(image, (box, prepared) -> true, preferred);
         }
         List<Sighting> sightings = new ArrayList<>();
         List<Rectangle> read = new ArrayList<>();
@@ -92,7 +117,7 @@ public final class BattleScanner {
             BiPredicate<List<Word>, BufferedImage> centred = (box, prepared) -> Math.abs(ImagePreprocessor.sourceShare(prepared,
                     (box.getFirst().left() + box.getLast().right()) / 2) - barCentre) <= maxOffset;
             // The name is the line right above the bar; anything higher up in the area is the scene behind the label.
-            Optional<Sighting> sighting = scanBoxes(image.getSubimage(area.x, area.y, area.width, area.height), centred)
+            Optional<Sighting> sighting = scanBoxes(image.getSubimage(area.x, area.y, area.width, area.height), centred, preferred)
                     .stream()
                     .reduce((upper, lower) -> lower);
             if (sighting.isPresent()) {
@@ -103,22 +128,18 @@ public final class BattleScanner {
         return sightings;
     }
 
-    private List<Sighting> scanBoxes(BufferedImage image) {
-        return scanBoxes(image, (box, prepared) -> true);
-    }
-
     /** @param accept whether a box of words of a prepared image may hold a name */
-    private List<Sighting> scanBoxes(BufferedImage image, BiPredicate<List<Word>, BufferedImage> accept) {
+    private List<Sighting> scanBoxes(BufferedImage image, BiPredicate<List<Word>, BufferedImage> accept, Set<Integer> preferred) {
         List<List<Sighting>> readings = new ArrayList<>();
-        for (ImagePreprocessor.TextColor textColor : ImagePreprocessor.TextColor.values()) {
+        for (ImagePreprocessor.TextColor textColor : textColors) {
             for (boolean joinStrokes : new boolean[]{false, true}) {
                 for (BufferedImage prepared : ImagePreprocessor.prepare(image, textColor, joinStrokes)) {
                     List<Word> words = recognizer.read(prepared);
-                    readings.add(sightings(words, prepared, accept));
+                    readings.add(sightings(words, prepared, accept, preferred));
                     if (glyphs != null) {
                         // Read with what earlier images taught, then learn from this one.
                         if (!glyphs.isEmpty()) {
-                            readings.add(sightings(glyphs.read(prepared), prepared, accept));
+                            readings.add(sightings(glyphs.read(prepared), prepared, accept, preferred));
                         }
                         learn(words, prepared);
                     }
@@ -128,12 +149,13 @@ public final class BattleScanner {
         return best(readings);
     }
 
-    private List<Sighting> sightings(List<Word> words, BufferedImage prepared, BiPredicate<List<Word>, BufferedImage> accept) {
+    private List<Sighting> sightings(List<Word> words, BufferedImage prepared, BiPredicate<List<Word>, BufferedImage> accept,
+                                     Set<Integer> preferred) {
         List<Sighting> sightings = new ArrayList<>();
         for (List<Word> line : lines(words)) {
             for (List<Word> box : boxes(line)) {
                 if (accept.test(box, prepared)) {
-                    toSighting(box).ifPresent(sightings::add);
+                    toSighting(box, preferred).ifPresent(sightings::add);
                 }
             }
         }
@@ -165,7 +187,47 @@ public final class BattleScanner {
                 best = reading;
             }
         }
-        return best;
+        return withMissedNames(best, readings, order);
+    }
+
+    /**
+     * A reading that has the best one's Pokémon in the same order plus others, each read by at least
+     * {@value #MIN_SUPPORT_OF_ADDED_NAME} variants: with two name boxes, a box that only some variants read (Platinum
+     * Together's W looks like an H) is not lost because more variants read the other box alone. Measured on the
+     * screenshot tests: 564 instead of 563 views, 586 instead of 582 with learned letters.
+     */
+    private static List<Sighting> withMissedNames(List<Sighting> best, List<List<Sighting>> readings,
+                                                  Comparator<List<Sighting>> order) {
+        if (best.isEmpty()) {
+            return best;
+        }
+        Map<PokemonId, Long> support = readings.stream()
+                .flatMap(reading -> reading.stream().map(Sighting::pokemon).distinct())
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        List<PokemonId> bestPokemon = best.stream().map(Sighting::pokemon).toList();
+        List<Sighting> result = best;
+        for (List<Sighting> reading : readings) {
+            List<PokemonId> pokemon = reading.stream().map(Sighting::pokemon).toList();
+            boolean addsSupportedNames = pokemon.size() > bestPokemon.size()
+                    && isSubsequence(bestPokemon, pokemon)
+                    && pokemon.stream().filter(candidate -> !bestPokemon.contains(candidate))
+                            .allMatch(added -> support.get(added) >= MIN_SUPPORT_OF_ADDED_NAME);
+            if (addsSupportedNames && (reading.size() > result.size() || reading.size() == result.size()
+                    && order.compare(reading, result) > 0)) {
+                result = reading;
+            }
+        }
+        return result;
+    }
+
+    private static boolean isSubsequence(List<PokemonId> part, List<PokemonId> whole) {
+        int found = 0;
+        for (PokemonId pokemon : whole) {
+            if (found < part.size() && part.get(found).equals(pokemon)) {
+                found++;
+            }
+        }
+        return found == part.size();
     }
 
     /** The same Pokémon in the same order; the raw text does not count. */
@@ -221,6 +283,10 @@ public final class BattleScanner {
      * of Black/White).
      */
     Optional<Sighting> toSighting(List<Word> line) {
+        return toSighting(line, Set.of());
+    }
+
+    private Optional<Sighting> toSighting(List<Word> line, Set<Integer> preferred) {
         List<String> nameTokens = new ArrayList<>();
         for (Word word : line) {
             if (!capitalNames || isMostlyCapitals(word.text())) {
@@ -229,7 +295,7 @@ public final class BattleScanner {
         }
         String text = String.join(" ", line.stream().map(Word::text).toList());
         return candidates(nameTokens, floatingNames ? BattleScanner::startsWithCapital : token -> true).stream()
-                .map(matcher::match)
+                .map(candidate -> matcher.match(candidate, preferred))
                 .flatMap(Optional::stream)
                 .min(Comparator.comparingInt(NameMatcher.Match::distance))
                 .map(match -> new Sighting(text, match.pokemon()));

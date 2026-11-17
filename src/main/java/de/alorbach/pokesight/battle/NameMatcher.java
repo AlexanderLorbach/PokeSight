@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Finds the species whose name is closest to an OCR reading. There are only a few hundred
@@ -25,6 +26,10 @@ public final class NameMatcher {
      * WEEDLE, "Mecuth" for Meowth). Swapping two letters of a group costs half a letter.
      */
     private static final List<String> LOOK_ALIKES = List.of("GSC", "OCDQ", "UVWY", "ILTJ", "EF", "HWNM", "BR");
+    /** Names from this length on may be found loosely among the preferred species; shorter ones need a strict match. */
+    private static final int MIN_LOOSE_LENGTH = 5;
+    /** Half letters by which the closest preferred name must beat the next one to be taken loosely (two look-alikes). */
+    private static final int LOOSE_MARGIN = 4;
 
     private final Map<String, PokemonId> pokemonByName = new LinkedHashMap<>();
     private final Map<String, String> nameByKey = new LinkedHashMap<>();
@@ -82,6 +87,55 @@ public final class NameMatcher {
             }
         }
         return Optional.ofNullable(best);
+    }
+
+    /**
+     * Like {@link #match(String)}, but the names of the preferred species (the player's team, read in their own name
+     * boxes) are also found with up to half their letters misread, as long as no other preferred name is nearly as close:
+     * among six names that is still unambiguous, among all species it is not. Any other species needs a strict match
+     * and wins only if it is closer (an ally's Pokémon in a multiplayer double battle).
+     */
+    public Optional<Match> match(String text, Set<Integer> preferred) {
+        Optional<Match> strict = match(text);
+        if (preferred.isEmpty()) {
+            return strict;
+        }
+        Optional<Match> loose = preferredMatch(normalize(text), preferred);
+        if (loose.isPresent() && (strict.isEmpty() || loose.get().distance() <= strict.get().distance())) {
+            return loose;
+        }
+        return strict;
+    }
+
+    private Optional<Match> preferredMatch(String candidate, Set<Integer> preferred) {
+        if (candidate.length() < 3) {
+            return Optional.empty();
+        }
+        Match best = null;
+        String bestName = null;
+        int second = Integer.MAX_VALUE;
+        for (Map.Entry<String, PokemonId> entry : pokemonByName.entrySet()) {
+            if (!preferred.contains(entry.getValue().speciesId())) {
+                continue;
+            }
+            int distance = ocrDistance(candidate, entry.getKey());
+            if (best == null || distance < best.distance()) {
+                second = best == null ? second : best.distance();
+                best = new Match(entry.getValue(), distance);
+                bestName = entry.getKey();
+            } else {
+                second = Math.min(second, distance);
+            }
+        }
+        if (best == null || best.distance() > looseDistance(bestName.length()) || second - best.distance() < LOOSE_MARGIN) {
+            return Optional.empty();
+        }
+        return Optional.of(best);
+    }
+
+    /** Half letters a preferred name may differ by: half its letters wrong, short names as strictly as ever. */
+    static int looseDistance(int nameLength) {
+        return nameLength < MIN_LOOSE_LENGTH ? 2 * maxDistance(nameLength) : nameLength;
     }
 
     /**
