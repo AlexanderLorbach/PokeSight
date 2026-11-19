@@ -753,6 +753,19 @@
     -fx-border-color: ps-pokemon-yellow;
 }
 
+/* Read keeps its label, so the slot keeps its width: yellow while reading, red when nothing was found. */
+.team-slot .button.reading, .team-slot .button.reading:disabled {
+    -fx-opacity: 1;
+    -fx-text-fill: ps-pokemon-yellow;
+    -fx-border-color: ps-pokemon-yellow;
+}
+
+.team-slot .button.read-missed {
+    -fx-text-fill: #ffb4a6;
+    -fx-border-color: rgba(227, 53, 13, 0.55);
+    -fx-background-color: rgba(227, 53, 13, 0.18);
+}
+
 .team-move-type {
     -fx-font-size: 10px;
     -fx-font-weight: bold;

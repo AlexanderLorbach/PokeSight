@@ -20,14 +20,16 @@ public final class RulesetMerge {
     /**
      * The newer games' types: the source's type chart, the source's types for every species and form of the base (Ralts
      * becomes Psychic/Fairy) and the source's data of the base's moves (Knock Off 65). Species the source lacks keep
-     * their types.
+     * their types. Moves keep their names like species do: the game still shows its own ("Faint Attack" in Platinum,
+     * "Feint Attack" since Gen 6).
      */
     public static Ruleset withTypesFrom(Ruleset base, Ruleset source) {
         Map<Integer, Species> species = new HashMap<>();
         base.species().forEach((id, own) -> species.put(id, source.findSpecies(id).map(newer -> new Species(own.name(),
                 newer.types(), own.stats(), retypedForms(own, newer), own.sprite())).orElse(own)));
         Map<Integer, Move> moves = new HashMap<>();
-        base.moves().forEach((id, own) -> moves.put(id, source.findMove(id).orElse(own)));
+        base.moves().forEach((id, own) -> moves.put(id, source.findMove(id)
+                .map(newer -> new Move(own.name(), newer.type(), newer.power(), newer.category())).orElse(own)));
         return checked(new Ruleset(base.id() + "+types:" + source.id(), source.typeChart(), species, moves));
     }
 

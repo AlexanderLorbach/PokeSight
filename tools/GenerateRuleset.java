@@ -10,8 +10,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 /**
@@ -70,6 +72,17 @@ public class GenerateRuleset {
      */
     private static final Map<String, int[]> OLD_POWERS = Map.of(
             "295", new int[]{70, 8}, "803", new int[]{70, 8}, "817", new int[]{80, 8}, "824", new int[]{130, 8});
+    /**
+     * English move names PokeAPI only has in their current spelling: move id -> {old name, last generation with it},
+     * oldest first. Gen 6 lifted the 12-letter limit (Faint Attack became Feint Attack), Gen 8 renamed Vice Grip to
+     * Vise Grip. Only renames that change letters: joined words ("ThunderPunch") match without spaces anyway, so names
+     * keep the current spacing.
+     */
+    private static final Map<String, List<Map.Entry<String, Integer>>> OLD_ENGLISH_NAMES = Map.of(
+            "11", List.of(Map.entry("Vice Grip", 7)),
+            "136", List.of(Map.entry("Hi Jump Kick", 5)),
+            "185", List.of(Map.entry("Faint Attack", 5)),
+            "265", List.of(Map.entry("Smelling Salt", 5)));
     /** Stellar (Gen 9) only exists as a Terastal type: no Pokémon has it, and it is no attack type in the chart. */
     private static final String STELLAR = "stellar";
     /** Water Shuriken (594) was physical in Gen 6; PokeAPI has no history of damage classes (Showdown gen6 mod). */
@@ -309,7 +322,7 @@ public class GenerateRuleset {
             } else if (move.get("id").equals(WATER_SHURIKEN) && generation <= WATER_SHURIKEN_PHYSICAL_UNTIL) {
                 category = "PHYSICAL";
             }
-            yaml.append("  ").append(move.get("id")).append(": { name: ").append(nameMap(moveNames.get(move.get("id"))))
+            yaml.append("  ").append(move.get("id")).append(": { name: ").append(nameMap(moveNameOf(moveNames, move.get("id"))))
                     .append(", type: ").append(type)
                     .append(", power: ").append(power).append(", category: ").append(category).append(" }\n");
         }
@@ -485,6 +498,19 @@ public class GenerateRuleset {
             }
         }
         return names;
+    }
+
+    /** The move's names as this generation's games show them, see {@link #OLD_ENGLISH_NAMES}. */
+    private Map<String, String> moveNameOf(Map<String, Map<String, String>> moveNames, String moveId) {
+        Map<String, String> names = moveNames.get(moveId);
+        Optional<String> oldName = OLD_ENGLISH_NAMES.getOrDefault(moveId, List.of()).stream()
+                .filter(old -> generation <= old.getValue()).map(Map.Entry::getKey).findFirst();
+        if (names == null || oldName.isEmpty()) {
+            return names;
+        }
+        Map<String, String> renamed = new LinkedHashMap<>(names);
+        renamed.put("EN", oldName.get());
+        return renamed;
     }
 
     private static String nameMap(Map<String, String> names) {

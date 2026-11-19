@@ -1,5 +1,6 @@
 package de.alorbach.pokesight.game;
 
+import de.alorbach.pokesight.ruleset.Language;
 import de.alorbach.pokesight.ruleset.PokemonType;
 import de.alorbach.pokesight.ruleset.Ruleset;
 import de.alorbach.pokesight.ruleset.RulesetLoader;
@@ -32,6 +33,7 @@ class GameRulesetsTest {
     private static final int SCOVILLAIN = 952;
     private static final int KNOCK_OFF = 282;
     private static final int MOONBLAST = 585;
+    private static final int FAINT_ATTACK = 185;
 
     private static final GameDefinition TOGETHER = game("platinum-together");
     private static final Map<String, Ruleset> CACHE = new HashMap<>();
@@ -73,6 +75,15 @@ class GameRulesetsTest {
         assertThat(modern.findMove(KNOCK_OFF).orElseThrow().power()).isEqualTo(65);
         assertThat(modern.findMove(MOONBLAST).orElseThrow().type()).isEqualTo(FAIRY);
         assertThat(modern.findSpecies(SYLVEON).orElseThrow().name().values()).contains("Sylveon");
+    }
+
+    @Test
+    void movesKeepPlatinumsNames() {
+        for (boolean modernPokemon : new boolean[]{false, true}) {
+            Ruleset ruleset = ruleset(TOGETHER, Map.of(MODERN_POKEMON, modernPokemon));
+
+            assertThat(ruleset.findMove(FAINT_ATTACK).orElseThrow().name(Language.EN)).isEqualTo("Faint Attack");
+        }
     }
 
     @Test

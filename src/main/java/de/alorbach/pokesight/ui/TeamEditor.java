@@ -66,6 +66,10 @@ final class TeamEditor {
     private static final int REPLACEMENTS_SHOWN = 3;
     /** Style class of a move field with a valid move: filled in its type colour. */
     private static final String TYPED = "typed";
+    /** Style classes of the Read button: yellow while the OCR runs, red when it found nothing new. */
+    private static final String READING = "reading";
+    private static final String READ_MISSED = "read-missed";
+    private static final String READ_TOOLTIP = "Read this Pokémon (name area) and its moves (moves area) from the game";
 
     private TeamEditor() {
     }
@@ -455,18 +459,22 @@ final class TeamEditor {
     /**
      * Reads the Pokémon on screen into the row: OCR runs off the JavaFX thread. A name that shows another Pokémon than
      * the row has replaces it, with its moves; otherwise the found moves fill the empty move fields (moves already in
-     * the row are skipped), so reading again after moving the cursor adds missed moves.
+     * the row are skipped), so reading again after moving the cursor adds missed moves. The label stays "Read" (a
+     * longer one would widen this slot's button column): the state shows as a colour, see {@link #READING}.
      */
     private static Button readButton(Row row, TeamScan teamScan, Supplier<Map<String, PokemonId>> nicknames) {
         Button read = new Button("Read");
         read.getStyleClass().addAll("ghost", "small");
-        read.setTooltip(new Tooltip("Read this Pokémon (name area) and its moves (moves area) from the game"));
+        Tooltip tooltip = new Tooltip(READ_TOOLTIP);
+        read.setTooltip(tooltip);
         read.setOnAction(event -> {
             if (teamScan.movesArea().isEmpty() && selectMovesArea(read, teamScan).isEmpty()) {
                 return;
             }
             read.setDisable(true);
-            read.setText("Reading…");
+            read.getStyleClass().remove(READ_MISSED);
+            read.getStyleClass().add(READING);
+            tooltip.setText(READ_TOOLTIP);
             Map<String, PokemonId> known = nicknames.get(); // on the JavaFX thread, before reading off it
             Thread.ofVirtual().name("team-reader").start(() -> {
                 try {
@@ -474,12 +482,16 @@ final class TeamEditor {
                     Platform.runLater(() -> {
                         boolean newPokemon = reading.pokemon().filter(found -> row.setPokemon(found)).isPresent();
                         int added = row.addMoves(reading.moves());
-                        read.setText(added == 0 && !newPokemon ? "None found" : "Read");
+                        read.getStyleClass().remove(READING);
+                        if (added == 0 && !newPokemon) {
+                            read.getStyleClass().add(READ_MISSED);
+                            tooltip.setText("Nothing new found. " + READ_TOOLTIP);
+                        }
                         read.setDisable(false);
                     });
                 } catch (IOException | AWTException | RuntimeException e) {
                     Platform.runLater(() -> {
-                        read.setText("Read");
+                        read.getStyleClass().remove(READING);
                         read.setDisable(false);
                         Theme.showError(read.getScene().getWindow(), "Cannot read the Pokémon", e.getMessage());
                     });
