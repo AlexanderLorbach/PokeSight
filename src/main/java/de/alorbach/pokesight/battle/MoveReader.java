@@ -94,7 +94,7 @@ public final class MoveReader {
         List<List<String>> segments = new ArrayList<>();
         List<String> segment = new ArrayList<>();
         for (Word word : box) {
-            if (isTypeLabel(line, line.indexOf(word))) {
+            if (isTypeLabel(box, line, line.indexOf(word))) {
                 segments.add(segment);
                 segment = new ArrayList<>();
             } else {
@@ -111,25 +111,38 @@ public final class MoveReader {
      * One case is not told apart: in Gen 3 a Psychic as the top-right move stands next to the PP of the side panel and
      * is skipped, which is safer than adding Psychic for every Psychic-type move.
      */
-    private boolean isTypeLabel(List<Word> line, int index) {
+    private boolean isTypeLabel(List<Word> box, List<Word> line, int index) {
         if (!isTypeName(line.get(index).text())) {
             return false;
         }
-        Optional<Word> before = neighbour(line, index, -1);
-        Optional<Word> after = neighbour(line, index, 1);
+        Optional<Word> before = neighbour(box, line, index, -1);
+        Optional<Word> after = neighbour(box, line, index, 1);
         return before.filter(MoveReader::isPpCounter).isPresent() || after.filter(MoveReader::isPpCounter).isPresent()
                 || before.filter(word -> TYPE_CAPTIONS.contains(NameMatcher.normalize(word.text()))).isPresent();
     }
 
-    /** The nearest word in this direction that is a PP counter or has {@value #MIN_WORD_LETTERS} letters or more. */
-    private static Optional<Word> neighbour(List<Word> line, int index, int step) {
+    /** The nearest word in this direction that is a PP counter or no icon noise ({@link #isIconNoise}). */
+    private Optional<Word> neighbour(List<Word> box, List<Word> line, int index, int step) {
         for (int i = index + step; i >= 0 && i < line.size(); i += step) {
             Word word = line.get(i);
-            if (isPpCounter(word) || NameMatcher.normalize(word.text()).length() >= MIN_WORD_LETTERS) {
+            if (isPpCounter(word) || !isIconNoise(word, box.contains(word))) {
                 return Optional.of(word);
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * A word misread from an icon: fewer than {@value #MIN_WORD_LETTERS} letters, or, in the label's own box, a word
+     * that names no move and no type. The status icon beside "PSYCHIC" under Hypnosis is read as "CaN" (Platinum
+     * Together); a name beside a label still counts ("Psychic PSYCHIC 10/10" in Sword/Shield).
+     */
+    private boolean isIconNoise(Word word, boolean inLabelBox) {
+        String text = NameMatcher.normalize(word.text());
+        if (text.length() < MIN_WORD_LETTERS) {
+            return true;
+        }
+        return inLabelBox && !TYPE_CAPTIONS.contains(text) && !isTypeName(word.text()) && match(text).isEmpty();
     }
 
     private static boolean isPpCounter(Word word) {

@@ -11,7 +11,7 @@ moves:
   8: { name: { DE: "Eishieb", EN: "Ice Punch" }, type: ICE, power: 75, category: PHYSICAL }
   9: { name: { DE: "Donnerschlag", EN: "Thunder Punch" }, type: ELECTRIC, power: 75, category: PHYSICAL }
   10: { name: { DE: "Kratzer", EN: "Scratch" }, type: NORMAL, power: 40, category: PHYSICAL }
-  11: { name: { DE: "Klammer", EN: "Vise Grip" }, type: NORMAL, power: 55, category: PHYSICAL }
+  11: { name: { DE: "Klammer", EN: "Vice Grip" }, type: NORMAL, power: 55, category: PHYSICAL }
   13: { name: { DE: "Klingensturm", EN: "Razor Wind" }, type: NORMAL, power: 80, category: SPECIAL }
   15: { name: { DE: "Zerschneider", EN: "Cut" }, type: NORMAL, power: 50, category: PHYSICAL }
   16: { name: { DE: "Windstoß", EN: "Gust" }, type: FLYING, power: 40, category: SPECIAL }
@@ -83,7 +83,7 @@ moves:
   130: { name: { DE: "Schädelwumme", EN: "Skull Bash" }, type: NORMAL, power: 100, category: PHYSICAL }
   131: { name: { DE: "Dornkanone", EN: "Spike Cannon" }, type: NORMAL, power: 20, category: PHYSICAL }
   132: { name: { DE: "Umklammerung", EN: "Constrict" }, type: NORMAL, power: 10, category: PHYSICAL }
-  136: { name: { DE: "Turmkick", EN: "High Jump Kick" }, type: FIGHTING, power: 130, category: PHYSICAL }
+  136: { name: { DE: "Turmkick", EN: "Hi Jump Kick" }, type: FIGHTING, power: 130, category: PHYSICAL }
   138: { name: { DE: "Traumfresser", EN: "Dream Eater" }, type: PSYCHIC, power: 100, category: SPECIAL }
   140: { name: { DE: "Stakkato", EN: "Barrage" }, type: NORMAL, power: 15, category: PHYSICAL }
   141: { name: { DE: "Blutsauger", EN: "Leech Life" }, type: BUG, power: 20, category: PHYSICAL }
@@ -106,7 +106,7 @@ moves:
   177: { name: { DE: "Luftstoß", EN: "Aeroblast" }, type: FLYING, power: 100, category: SPECIAL }
   181: { name: { DE: "Pulverschnee", EN: "Powder Snow" }, type: ICE, power: 40, category: SPECIAL }
   183: { name: { DE: "Tempohieb", EN: "Mach Punch" }, type: FIGHTING, power: 40, category: PHYSICAL }
-  185: { name: { DE: "Finte", EN: "Feint Attack" }, type: DARK, power: 60, category: PHYSICAL }
+  185: { name: { DE: "Finte", EN: "Faint Attack" }, type: DARK, power: 60, category: PHYSICAL }
   188: { name: { DE: "Matschbombe", EN: "Sludge Bomb" }, type: POISON, power: 90, category: SPECIAL }
   189: { name: { DE: "Lehmschelle", EN: "Mud-Slap" }, type: GROUND, power: 20, category: SPECIAL }
   190: { name: { DE: "Octazooka", EN: "Octazooka" }, type: WATER, power: 65, category: SPECIAL }
@@ -143,7 +143,7 @@ moves:
   257: { name: { DE: "Hitzewelle", EN: "Heat Wave" }, type: FIRE, power: 100, category: SPECIAL }
   263: { name: { DE: "Fassade", EN: "Facade" }, type: NORMAL, power: 70, category: PHYSICAL }
   264: { name: { DE: "Power-Punch", EN: "Focus Punch" }, type: FIGHTING, power: 150, category: PHYSICAL }
-  265: { name: { DE: "Riechsalz", EN: "Smelling Salts" }, type: NORMAL, power: 60, category: PHYSICAL }
+  265: { name: { DE: "Riechsalz", EN: "Smelling Salt" }, type: NORMAL, power: 60, category: PHYSICAL }
   276: { name: { DE: "Kraftkoloss", EN: "Superpower" }, type: FIGHTING, power: 120, category: PHYSICAL }
   279: { name: { DE: "Vergeltung", EN: "Revenge" }, type: FIGHTING, power: 60, category: PHYSICAL }
   280: { name: { DE: "Durchbruch", EN: "Brick Break" }, type: FIGHTING, power: 75, category: PHYSICAL }

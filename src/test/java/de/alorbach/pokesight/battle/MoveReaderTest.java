@@ -83,6 +83,17 @@ class MoveReaderTest {
     }
 
     @Test
+    void aStatusIconReadAsAWordDoesNotHideTheLabel() {
+        // Platinum Together at a smaller capture: Hypnosis's grey status icon is read as "CaN)".
+        List<Word> words = List.of(
+                new Word("Hypnosis", 10, 10, 120, 30),
+                new Word("PSYCHIC", 10, 50, 100, 70), new Word("CaN)", 110, 50, 150, 70), new Word("PP", 160, 50, 180, 70),
+                new Word("20/20", 186, 50, 240, 70));
+
+        assertThat(read(words, GEN8)).isEmpty();
+    }
+
+    @Test
     void aMoveNamedLikeItsTypeIsReadBesideItsLabel() {
         // Sword/Shield: name, label and PP counter in one row.
         List<Word> words = List.of(

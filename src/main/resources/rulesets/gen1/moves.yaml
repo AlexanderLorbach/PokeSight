@@ -11,7 +11,7 @@ moves:
   8: { name: { DE: "Eishieb", EN: "Ice Punch" }, type: ICE, power: 75, category: SPECIAL }
   9: { name: { DE: "Donnerschlag", EN: "Thunder Punch" }, type: ELECTRIC, power: 75, category: SPECIAL }
   10: { name: { DE: "Kratzer", EN: "Scratch" }, type: NORMAL, power: 40, category: PHYSICAL }
-  11: { name: { DE: "Klammer", EN: "Vise Grip" }, type: NORMAL, power: 55, category: PHYSICAL }
+  11: { name: { DE: "Klammer", EN: "Vice Grip" }, type: NORMAL, power: 55, category: PHYSICAL }
   13: { name: { DE: "Klingensturm", EN: "Razor Wind" }, type: NORMAL, power: 80, category: PHYSICAL }
   15: { name: { DE: "Zerschneider", EN: "Cut" }, type: NORMAL, power: 50, category: PHYSICAL }
   16: { name: { DE: "Windstoß", EN: "Gust" }, type: NORMAL, power: 40, category: PHYSICAL }
@@ -84,7 +84,7 @@ moves:
   130: { name: { DE: "Schädelwumme", EN: "Skull Bash" }, type: NORMAL, power: 100, category: PHYSICAL }
   131: { name: { DE: "Dornkanone", EN: "Spike Cannon" }, type: NORMAL, power: 20, category: PHYSICAL }
   132: { name: { DE: "Umklammerung", EN: "Constrict" }, type: NORMAL, power: 10, category: PHYSICAL }
-  136: { name: { DE: "Turmkick", EN: "High Jump Kick" }, type: FIGHTING, power: 85, category: PHYSICAL }
+  136: { name: { DE: "Turmkick", EN: "Hi Jump Kick" }, type: FIGHTING, power: 85, category: PHYSICAL }
   138: { name: { DE: "Traumfresser", EN: "Dream Eater" }, type: PSYCHIC, power: 100, category: SPECIAL }
   140: { name: { DE: "Stakkato", EN: "Barrage" }, type: NORMAL, power: 15, category: PHYSICAL }
   141: { name: { DE: "Blutsauger", EN: "Leech Life" }, type: BUG, power: 20, category: PHYSICAL }
